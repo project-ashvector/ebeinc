@@ -1,4 +1,4 @@
-# EBE INC Hub v2.2.0 — Single-Page GitHub Build
+# EBE INC Hub v2.3.0 — Single-Page GitHub Build
 
 This is the GitHub Pages–ready EBE INC hub and Cody Richenberg online résumé.
 
@@ -31,8 +31,17 @@ ebeinc.online
 Public downloads remain limited to completed APK files. Source packages are not offered through the website interface.
 
 
-## v2.2.0 mobile polish
+## v2.3.0 mobile polish
 
 - Rebuilt the phone navigation as a touch-friendly two-column menu with backdrop, scroll lock, Escape support, and an animated close state.
 - Improved mobile typography, spacing, project-card proportions, filters, download buttons, résumé readability, and safe-area behavior.
 - Preserves the single-page clean-domain navigation at `https://ebeinc.online/`.
+
+
+## v2.3.0 fresh responsive redesign
+
+- Eliminates mobile horizontal overflow and clipped text/buttons.
+- Removes the mobile sticky-header overlap.
+- Rebuilds mobile hero actions, category chips, console card, project filters, and resume spacing.
+- Refreshes desktop navigation, hero balance, cards, metrics, section rhythm, and glass treatment.
+- Preserves the single-page clean URL behavior and GitHub Pages custom-domain setup.
