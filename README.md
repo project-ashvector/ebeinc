@@ -1,31 +1,31 @@
-# EBE INC Hub v2.0.2
+# EBE INC Hub v2.1.0 — Single-Page GitHub Build
 
-GitHub Pages–ready hub and online résumé for **EBE INC**, Cody Richenberg, BitByt3s, Ebmarah, EBE Designs, and EBE Comics.
+This is the GitHub Pages–ready EBE INC hub and Cody Richenberg online résumé.
 
-## GitHub destination
+## What changed
 
-- Account: `project-ashvector`
-- Repository: `ebeinc`
-- Repository URL: `https://github.com/project-ashvector/ebeinc`
-- Temporary GitHub Pages URL: `https://project-ashvector.github.io/ebeinc/`
-- Final custom domain: `https://ebeinc.online`
+- All internal tabs now run inside `index.html`.
+- The visible address stays `https://ebeinc.online/` while visitors switch between Hub, Projects, Capabilities, Music, About, Contact, and Résumé.
+- The selected tab is remembered for the current browser session without adding a path, hash, or query string.
+- `music.html`, `resume.html`, and `404.html` redirect old links back to the clean root domain.
+- The résumé can still be printed or saved as PDF from its tab.
 
-## Upload
+## GitHub upload
 
-Extract this ZIP and upload **all files inside it** to the root of the `ebeinc` repository. Do not upload the ZIP itself. `index.html`, `.nojekyll`, and `CNAME` must remain at the repository root.
+Extract the ZIP and upload all files directly to the root of the `project-ashvector/ebeinc` repository. Uploading the included redirect files is important because it replaces the previous separate Music and Résumé pages.
 
-The root-level `CNAME` file is already set to:
+Keep these files at the repository root:
+
+- `index.html`
+- `styles.css`
+- `app.js`
+- `CNAME`
+- `.nojekyll`
+
+The `CNAME` file must contain exactly:
 
 ```text
 ebeinc.online
 ```
 
-For exact GitHub Pages and DNS steps, open `DEPLOY-TO-GITHUB.md`.
-
-## Public downloads
-
-The website offers APK downloads only. The GitHub repository necessarily contains the website's HTML, CSS, JavaScript, and images because GitHub Pages publishes those files directly.
-
-## Ownership
-
-Copyright © EBE INC / Cody Richenberg. All rights reserved. See `LICENSE.txt`.
+Public downloads remain limited to completed APK files. Source packages are not offered through the website interface.

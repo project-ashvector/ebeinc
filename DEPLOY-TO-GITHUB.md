@@ -89,3 +89,8 @@ For extra protection, verify `ebeinc.online` in the GitHub account's domain sett
 - **www does not work**: confirm `www` is a CNAME to `project-ashvector.github.io`, not to the repository URL.
 - **HTTPS option unavailable**: wait for DNS propagation, then remove and re-add `ebeinc.online` under GitHub Pages if needed.
 - **CNAME disappears after an upload**: restore the root-level `CNAME` file containing only `ebeinc.online`.
+
+
+## v2.1 single-page update
+
+Upload every file from the v2.1 ZIP, including `music.html`, `resume.html`, and `404.html`. Those three small files redirect old URLs to `https://ebeinc.online/`. The active site tabs are now all contained in `index.html`, so no tab adds `/index.html`, `/music.html`, `/resume.html`, or a `#section` to the visible address.

@@ -1,14 +1,121 @@
 (() => {
+  const githubProjectPath = '/ebeinc/';
+  const rootPath = window.location.hostname.endsWith('github.io') ? githubProjectPath : '/';
+  const validViews = new Set(['hub', 'projects', 'capabilities', 'music', 'about', 'contact', 'resume']);
+  const titles = {
+    hub: 'EBE INC | Creative Technology Hub',
+    projects: 'Projects | EBE INC',
+    capabilities: 'Capabilities | EBE INC',
+    music: 'Music | EBE INC · Ebmarah',
+    about: 'About | EBE INC',
+    contact: 'Contact | EBE INC',
+    resume: 'Cody Richenberg Résumé | EBE INC'
+  };
+
+  // Remove /index.html, hashes, query strings, and old page paths from the visible address.
+  if (window.location.pathname !== rootPath || window.location.search || window.location.hash) {
+    window.history.replaceState({ ebeView: 'hub' }, '', rootPath);
+  }
+
   const menuButton = document.querySelector('.menu-button');
   const nav = document.querySelector('.site-nav');
-  menuButton?.addEventListener('click', () => {
-    const open = nav.classList.toggle('open');
-    menuButton.setAttribute('aria-expanded', String(open));
-  });
-  nav?.querySelectorAll('a').forEach(link => link.addEventListener('click', () => {
-    nav.classList.remove('open');
+  const panels = [...document.querySelectorAll('[data-view-panel]')];
+  const viewControls = [...document.querySelectorAll('[data-view]')];
+  const navTabs = [...document.querySelectorAll('.nav-tab[data-view]')];
+
+  const closeMenu = () => {
+    nav?.classList.remove('open');
     menuButton?.setAttribute('aria-expanded', 'false');
-  }));
+  };
+
+  menuButton?.addEventListener('click', () => {
+    const open = nav?.classList.toggle('open');
+    menuButton.setAttribute('aria-expanded', String(Boolean(open)));
+  });
+
+  let revealObserver;
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!prefersReduced && 'IntersectionObserver' in window) {
+    revealObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+  }
+
+  const activateReveals = panel => {
+    const reveals = panel.querySelectorAll('.reveal:not(.visible)');
+    if (prefersReduced || !revealObserver) {
+      reveals.forEach(el => el.classList.add('visible'));
+    } else {
+      reveals.forEach(el => revealObserver.observe(el));
+    }
+  };
+
+  const showView = (requested, options = {}) => {
+    const view = validViews.has(requested) ? requested : 'hub';
+    const { scroll = true, focus = false } = options;
+
+    panels.forEach(panel => {
+      const active = panel.dataset.viewPanel === view;
+      panel.hidden = !active;
+      panel.classList.toggle('active', active);
+      panel.setAttribute('aria-hidden', String(!active));
+    });
+
+    navTabs.forEach(tab => {
+      if (tab.dataset.view === view) tab.setAttribute('aria-current', 'page');
+      else tab.removeAttribute('aria-current');
+    });
+
+    document.body.dataset.activeView = view;
+    document.title = titles[view] || titles.hub;
+    sessionStorage.setItem('ebe-active-view', view);
+    window.history.replaceState({ ebeView: view }, '', rootPath);
+    closeMenu();
+
+    const panel = document.querySelector(`[data-view-panel="${view}"]`);
+    if (panel) activateReveals(panel);
+    if (scroll) window.scrollTo({ top: 0, behavior: prefersReduced ? 'auto' : 'smooth' });
+    if (focus && panel) {
+      const heading = panel.querySelector('h1, h2');
+      if (heading) {
+        heading.setAttribute('tabindex', '-1');
+        heading.focus({ preventScroll: true });
+      }
+    }
+  };
+
+  viewControls.forEach(control => {
+    control.addEventListener('click', () => showView(control.dataset.view, { focus: false }));
+  });
+
+  document.querySelectorAll('[data-scroll-target]').forEach(control => {
+    control.addEventListener('click', () => {
+      showView('hub', { scroll: false });
+      requestAnimationFrame(() => {
+        document.getElementById(control.dataset.scrollTarget)?.scrollIntoView({
+          behavior: prefersReduced ? 'auto' : 'smooth', block: 'start'
+        });
+      });
+    });
+  });
+
+  document.querySelector('[data-scroll-top]')?.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: prefersReduced ? 'auto' : 'smooth' });
+  });
+
+  document.querySelector('[data-skip-main]')?.addEventListener('click', () => {
+    const active = document.querySelector('[data-view-panel]:not([hidden])');
+    const target = active?.querySelector('h1, h2') || document.getElementById('main');
+    if (target) {
+      target.setAttribute('tabindex', '-1');
+      target.focus();
+    }
+  });
 
   const filters = [...document.querySelectorAll('.filter')];
   const cards = [...document.querySelectorAll('.project-card')];
@@ -22,19 +129,16 @@
     });
   }));
 
-  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const reveals = document.querySelectorAll('.reveal');
-  if (prefersReduced || !('IntersectionObserver' in window)) {
-    reveals.forEach(el => el.classList.add('visible'));
-  } else {
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
-    reveals.forEach(el => observer.observe(el));
-  }
+  const clearPrintMode = () => document.body.classList.remove('printing-resume');
+  document.querySelector('[data-print-resume]')?.addEventListener('click', () => {
+    showView('resume', { scroll: false });
+    document.body.classList.add('printing-resume');
+    setTimeout(() => window.print(), 40);
+  });
+  window.addEventListener('afterprint', clearPrintMode);
+
+  const initial = validViews.has(history.state?.ebeView)
+    ? history.state.ebeView
+    : (validViews.has(sessionStorage.getItem('ebe-active-view')) ? sessionStorage.getItem('ebe-active-view') : 'hub');
+  showView(initial, { scroll: false });
 })();
