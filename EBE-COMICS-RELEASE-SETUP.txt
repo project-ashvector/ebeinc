@@ -1,0 +1,20 @@
+EBE COMICS v2.13.2 — REQUIRED GITHUB RELEASE SETUP
+
+WHY THIS IS NEEDED
+The APK is about 53 MB. GitHub's browser uploader only accepts repository files up to 25 MiB. GitHub Releases accept files up to 2 GiB.
+
+CREATE THE RELEASE
+1. Open https://github.com/project-ashvector/ebeinc/releases
+2. Click "Draft a new release".
+3. Click "Choose a tag".
+4. Enter exactly: ebe-comics-v2.13.2
+5. Click "Create new tag: ebe-comics-v2.13.2 on publish".
+6. Release title: EBE Comics v2.13.2
+7. Upload the file named exactly: EBE-Comics-v2.13.2.apk
+8. Click "Publish release".
+
+THEN UPDATE THE WEBSITE
+Extract the EBE INC v2.3.2 ZIP and upload all extracted files to the repository root. Replace index.html, README.md, VERSION.txt, and downloads/SHA256SUMS.txt. Do not upload the ZIP itself.
+
+TEST
+Open https://ebeinc.online, select Projects, and press the EBE Comics Download APK button.
