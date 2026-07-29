@@ -1,0 +1,10 @@
+EBEINC.ONLINE DNS FOR GITHUB PAGES
+
+A     @     185.199.108.153
+A     @     185.199.109.153
+A     @     185.199.110.153
+A     @     185.199.111.153
+CNAME www   project-ashvector.github.io
+
+GitHub Pages custom domain: ebeinc.online
+Repository: https://github.com/project-ashvector/ebeinc

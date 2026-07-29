@@ -1,56 +1,31 @@
-# EBE INC — GitHub Pages Hub v2.0.0
+# EBE INC Hub v2.0.2
 
-EBE INC is Cody Richenberg’s central hub and online résumé. It connects:
+GitHub Pages–ready hub and online résumé for **EBE INC**, Cody Richenberg, BitByt3s, Ebmarah, EBE Designs, and EBE Comics.
 
-- **BitByt3s** — apps, games, Linux tools, web development, IT, networking, and cybersecurity work
-- **Ebmarah** — music production, audio engineering, mixing, mastering, and the SoundCloud catalog
-- **EBE Designs** — practical digital products at `https://ebedesigns.online/`
-- **EBE Comics** — original comic publishing and Android reading
-- **Cody Richenberg’s résumé** — a printable online résumé at `resume.html`
+## GitHub destination
 
-## Publish with GitHub Pages
+- Account: `project-ashvector`
+- Repository: `ebeinc`
+- Repository URL: `https://github.com/project-ashvector/ebeinc`
+- Temporary GitHub Pages URL: `https://project-ashvector.github.io/ebeinc/`
+- Final custom domain: `https://ebeinc.online`
 
-1. Create a GitHub repository such as `ebe-inc`.
-2. Extract the ZIP and upload **all files and folders from the ZIP root** to the repository root. Do not upload the ZIP itself as the website.
-3. Commit the files to the `main` branch.
-4. In the repository, open **Settings → Pages**.
-5. Under **Build and deployment**, choose **Deploy from a branch**.
-6. Select `main` and `/(root)`, then save.
+## Upload
 
-GitHub will publish the site at a URL similar to:
+Extract this ZIP and upload **all files inside it** to the root of the `ebeinc` repository. Do not upload the ZIP itself. `index.html`, `.nojekyll`, and `CNAME` must remain at the repository root.
 
-`https://YOUR-USERNAME.github.io/ebe-inc/`
+The root-level `CNAME` file is already set to:
 
-For an account-level site, name the repository `YOUR-USERNAME.github.io`.
-
-## Custom domain
-
-After the GitHub Pages URL works, add a domain in **Settings → Pages → Custom domain** and configure the matching DNS records with the domain provider. Do not create a `CNAME` file until the final domain is chosen.
-
-## Main files
-
-- `index.html` — EBE INC hub, company divisions, projects, skills, and contact
-- `resume.html` — Cody Richenberg’s printable online résumé
-- `music.html` — Ebmarah catalog and professional audio profile
-- `styles.css` — responsive purple EBE INC visual system
-- `app.js` — navigation, filtering, and reveal interactions
-- `downloads/` — completed APK files only
-- `.nojekyll` — tells GitHub Pages to publish the static site directly
-- `404.html` — custom not-found page
-
-## Public-source warning
-
-A public GitHub repository allows visitors to view and download the website files from GitHub. The **website interface** offers only finished APK downloads, but repository files cannot be hidden inside a public repository. `LICENSE.txt` states that the work remains proprietary and all rights are reserved.
-
-## Local Zorin preview
-
-```bash
-chmod +x "START SITE - ZORIN.sh"
-./"START SITE - ZORIN.sh"
+```text
+ebeinc.online
 ```
 
-Stop with `Ctrl+C` or:
+For exact GitHub Pages and DNS steps, open `DEPLOY-TO-GITHUB.md`.
 
-```bash
-./"STOP SITE - ZORIN.sh"
-```
+## Public downloads
+
+The website offers APK downloads only. The GitHub repository necessarily contains the website's HTML, CSS, JavaScript, and images because GitHub Pages publishes those files directly.
+
+## Ownership
+
+Copyright © EBE INC / Cody Richenberg. All rights reserved. See `LICENSE.txt`.
