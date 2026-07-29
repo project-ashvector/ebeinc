@@ -18,19 +18,41 @@
   }
 
   const menuButton = document.querySelector('.menu-button');
+  const menuLabel = menuButton?.querySelector('.sr-only');
   const nav = document.querySelector('.site-nav');
+  const navBackdrop = document.querySelector('.nav-backdrop');
   const panels = [...document.querySelectorAll('[data-view-panel]')];
   const viewControls = [...document.querySelectorAll('[data-view]')];
   const navTabs = [...document.querySelectorAll('.nav-tab[data-view]')];
 
-  const closeMenu = () => {
-    nav?.classList.remove('open');
-    menuButton?.setAttribute('aria-expanded', 'false');
+  const setMenuState = open => {
+    nav?.classList.toggle('open', open);
+    document.body.classList.toggle('nav-open', open);
+    menuButton?.setAttribute('aria-expanded', String(open));
+    navBackdrop?.setAttribute('tabindex', open ? '0' : '-1');
+    if (menuLabel) menuLabel.textContent = open ? 'Close menu' : 'Open menu';
+  };
+
+  const closeMenu = ({ returnFocus = false } = {}) => {
+    const wasOpen = nav?.classList.contains('open');
+    setMenuState(false);
+    if (returnFocus && wasOpen) menuButton?.focus();
   };
 
   menuButton?.addEventListener('click', () => {
-    const open = nav?.classList.toggle('open');
-    menuButton.setAttribute('aria-expanded', String(Boolean(open)));
+    const open = !nav?.classList.contains('open');
+    setMenuState(open);
+    if (open) requestAnimationFrame(() => navTabs[0]?.focus());
+  });
+
+  navBackdrop?.addEventListener('click', () => closeMenu({ returnFocus: true }));
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && nav?.classList.contains('open')) {
+      closeMenu({ returnFocus: true });
+    }
+  });
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 980) closeMenu();
   });
 
   let revealObserver;

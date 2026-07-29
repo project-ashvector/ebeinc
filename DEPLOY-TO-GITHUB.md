@@ -94,3 +94,6 @@ For extra protection, verify `ebeinc.online` in the GitHub account's domain sett
 ## v2.1 single-page update
 
 Upload every file from the v2.1 ZIP, including `music.html`, `resume.html`, and `404.html`. Those three small files redirect old URLs to `https://ebeinc.online/`. The active site tabs are now all contained in `index.html`, so no tab adds `/index.html`, `/music.html`, `/resume.html`, or a `#section` to the visible address.
+
+
+This package is EBE INC v2.2.0 with the mobile interface polish update.
