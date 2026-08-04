@@ -1,0 +1,30 @@
+name: Export Android Build Tools
+
+on:
+  push:
+    branches: [ebe-companion-android-build]
+    paths:
+      - '.github/workflows/export-android-build-tools.yml'
+  workflow_dispatch:
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: android-actions/setup-android@v3
+      - name: Install build tools
+        run: sdkmanager 'build-tools;35.0.0'
+      - name: Collect apksigner and zipalign
+        run: |
+          mkdir -p android-build-tools/lib64
+          cp "$ANDROID_HOME/build-tools/35.0.0/apksigner" android-build-tools/
+          cp "$ANDROID_HOME/build-tools/35.0.0/zipalign" android-build-tools/
+          cp "$ANDROID_HOME/build-tools/35.0.0/lib/apksigner.jar" android-build-tools/
+          cp -a "$ANDROID_HOME/build-tools/35.0.0/lib64/." android-build-tools/lib64/ 2>/dev/null || true
+          chmod +x android-build-tools/apksigner android-build-tools/zipalign
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-build-tools-signing-linux
+          path: android-build-tools/
+          retention-days: 7
