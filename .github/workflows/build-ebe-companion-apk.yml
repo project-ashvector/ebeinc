@@ -1,0 +1,56 @@
+name: Build EBE Companion Remote APK
+
+on:
+  push:
+    branches: [ebe-companion-android-build]
+    paths:
+      - 'ebe-companion-android/**'
+      - 'build-input/ebe-companion-android-v0.4.1.zip.b64'
+      - '.github/workflows/build-ebe-companion-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ebe-companion-android-build
+      - name: Restore Android source bundle
+        run: |
+          rm -rf ebe-companion-android
+          mkdir -p ebe-companion-android
+          base64 -d build-input/ebe-companion-android-v0.4.1.zip.b64 > /tmp/ebe-android.zip
+          unzip -q /tmp/ebe-android.zip -d ebe-companion-android
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - uses: android-actions/setup-android@v3
+      - name: Install Android SDK
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Build unsigned release APK
+        working-directory: ebe-companion-android
+        run: gradle --no-daemon :app:assembleRelease
+      - name: Export APK as base64
+        run: |
+          mkdir -p build-output
+          base64 -w0 ebe-companion-android/app/build/outputs/apk/release/app-release-unsigned.apk > build-output/EBE-Companion-Remote-v0.4.1-unsigned.apk.b64
+      - name: Commit build output to build branch
+        run: |
+          git config user.name 'EBE APK Builder'
+          git config user.email 'actions@users.noreply.github.com'
+          git add build-output/EBE-Companion-Remote-v0.4.1-unsigned.apk.b64
+          git commit -m 'Build EBE Companion Remote v0.4.1 APK [skip ci]' || exit 0
+          git push origin HEAD:ebe-companion-android-build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ebe-companion-remote-v0.4.1-unsigned
+          path: ebe-companion-android/app/build/outputs/apk/release/app-release-unsigned.apk
+          if-no-files-found: error
