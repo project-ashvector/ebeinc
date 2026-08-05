@@ -1,8 +1,8 @@
-name: Build EBE Forge APK v0.2.5
+name: Build EBE Forge APK v0.2.6
 on:
   push:
     branches:
-      - ebe-forge-apk-build-v0.2.5-r2
+      - ebe-forge-apk-build-v0.2.6
   workflow_dispatch:
 permissions:
   contents: read
@@ -21,26 +21,30 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - name: Expand EBE Forge Android v0.2.5 source
+      - name: Expand EBE Forge Android v0.2.5 base
         run: |
           base64 --decode ebe-forge-android-v0.2.5-source.zip.b64 > ebe-forge-android-v0.2.5-source.zip
           rm -rf ebe-forge-build
           mkdir -p ebe-forge-build
           unzip -q ebe-forge-android-v0.2.5-source.zip -d ebe-forge-build
+      - name: Apply EBE Forge Android v0.2.6 isolation patch
+        run: |
+          base64 --decode ebe-forge-v0.2.6-patch.zip.b64 > ebe-forge-v0.2.6-patch.zip
+          unzip -oq ebe-forge-v0.2.6-patch.zip -d ebe-forge-build
           grep -q '^android.useAndroidX=true$' ebe-forge-build/gradle.properties || echo 'android.useAndroidX=true' >> ebe-forge-build/gradle.properties
       - name: Build signed release APK
         working-directory: ebe-forge-build
         run: gradle --no-daemon clean assembleRelease
       - name: Verify and name APK
         run: |
-          cp ebe-forge-build/app/build/outputs/apk/release/app-release.apk EBE-Forge-v0.2.5.apk
-          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs EBE-Forge-v0.2.5.apk | tee APK-SIGNATURE.txt
-          sha256sum EBE-Forge-v0.2.5.apk > EBE-Forge-v0.2.5.apk.sha256
+          cp ebe-forge-build/app/build/outputs/apk/release/app-release.apk EBE-Forge-v0.2.6.apk
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs EBE-Forge-v0.2.6.apk | tee APK-SIGNATURE.txt
+          sha256sum EBE-Forge-v0.2.6.apk > EBE-Forge-v0.2.6.apk.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: EBE-Forge-v0.2.5-android
+          name: EBE-Forge-v0.2.6-android
           path: |
-            EBE-Forge-v0.2.5.apk
-            EBE-Forge-v0.2.5.apk.sha256
+            EBE-Forge-v0.2.6.apk
+            EBE-Forge-v0.2.6.apk.sha256
             APK-SIGNATURE.txt
           if-no-files-found: error
