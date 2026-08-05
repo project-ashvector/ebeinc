@@ -30,15 +30,21 @@ jobs:
       - name: Build APK
         working-directory: ebe-forge-build
         run: gradle --no-daemon clean assembleDebug
-      - name: Preserve APK and signing key
+      - name: Collect APK and signing information
         run: |
           cp ebe-forge-build/app/build/outputs/apk/debug/app-debug.apk EBE-Forge-v0.2.0.apk
           mkdir -p signing
-          cp "$HOME/.android/debug.keystore" signing/ebe-forge-signing.jks
+          KEYSTORE="$(find /home/runner /home/runner/work/_temp -type f -name debug.keystore -print -quit 2>/dev/null || true)"
+          if [[ -n "$KEYSTORE" ]]; then
+            cp "$KEYSTORE" signing/ebe-forge-signing.jks
+            echo 'The debug signing key used by this build is included for consistent test updates.' > signing/README.txt
+          else
+            echo 'The APK compiled successfully, but the runner did not expose its temporary debug key.' > signing/SIGNING-NOTE.txt
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: EBE-Forge-v0.2.0-android
           path: |
             EBE-Forge-v0.2.0.apk
-            signing/ebe-forge-signing.jks
+            signing/
           if-no-files-found: error
