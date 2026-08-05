@@ -1,0 +1,34 @@
+name: Package Android Signing Tools
+
+on:
+  push:
+    branches: [ebe-os-build-v050]
+    paths:
+      - '.github/workflows/ebe-os-sign-tools.yml'
+  workflow_dispatch:
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android build tools
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager 'build-tools;35.0.0'
+
+      - name: Collect tools
+        run: |
+          mkdir -p android-sign-tools/lib
+          cp "$ANDROID_HOME/build-tools/35.0.0/lib/apksigner.jar" android-sign-tools/lib/
+          cp "$ANDROID_HOME/build-tools/35.0.0/zipalign" android-sign-tools/
+          chmod +x android-sign-tools/zipalign
+
+      - name: Upload tools
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-sign-tools-35
+          path: android-sign-tools
+          if-no-files-found: error
