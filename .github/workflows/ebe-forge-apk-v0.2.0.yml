@@ -1,8 +1,8 @@
-name: Build EBE Forge APK v0.2.0 r2
+name: Build EBE Forge APK v0.2.5
 on:
   push:
     branches:
-      - ebe-forge-apk-build-v0.2.0-r2
+      - ebe-forge-apk-build-v0.2.5-r2
   workflow_dispatch:
 permissions:
   contents: read
@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -21,30 +21,25 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - name: Expand current EBE Forge Android source
+      - name: Expand EBE Forge Android v0.2.5 source
         run: |
-          base64 --decode ebe-forge-android-v0.2.0-source.zip.b64 > ebe-forge-android-v0.2.0-source.zip
+          base64 --decode ebe-forge-android-v0.2.5-source.zip.b64 > ebe-forge-android-v0.2.5-source.zip
           rm -rf ebe-forge-build
           mkdir -p ebe-forge-build
-          unzip -q ebe-forge-android-v0.2.0-source.zip -d ebe-forge-build
-      - name: Build APK
+          unzip -q ebe-forge-android-v0.2.5-source.zip -d ebe-forge-build
+      - name: Build signed release APK
         working-directory: ebe-forge-build
-        run: gradle --no-daemon clean assembleDebug
-      - name: Collect APK and signing information
+        run: gradle --no-daemon clean assembleRelease
+      - name: Verify and name APK
         run: |
-          cp ebe-forge-build/app/build/outputs/apk/debug/app-debug.apk EBE-Forge-v0.2.0.apk
-          mkdir -p signing
-          KEYSTORE="$(find /home/runner /home/runner/work/_temp -type f -name debug.keystore -print -quit 2>/dev/null || true)"
-          if [[ -n "$KEYSTORE" ]]; then
-            cp "$KEYSTORE" signing/ebe-forge-signing.jks
-            echo 'The debug signing key used by this build is included for consistent test updates.' > signing/README.txt
-          else
-            echo 'The APK compiled successfully, but the runner did not expose its temporary debug key.' > signing/SIGNING-NOTE.txt
-          fi
+          cp ebe-forge-build/app/build/outputs/apk/release/app-release.apk EBE-Forge-v0.2.5.apk
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs EBE-Forge-v0.2.5.apk | tee APK-SIGNATURE.txt
+          sha256sum EBE-Forge-v0.2.5.apk > EBE-Forge-v0.2.5.apk.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: EBE-Forge-v0.2.0-android
+          name: EBE-Forge-v0.2.5-android
           path: |
-            EBE-Forge-v0.2.0.apk
-            signing/
+            EBE-Forge-v0.2.5.apk
+            EBE-Forge-v0.2.5.apk.sha256
+            APK-SIGNATURE.txt
           if-no-files-found: error
