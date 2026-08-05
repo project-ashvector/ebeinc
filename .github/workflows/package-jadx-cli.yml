@@ -1,0 +1,24 @@
+name: Package JADX CLI
+
+on:
+  push:
+    branches: [ebe-os-build-v050]
+    paths:
+      - '.github/workflows/package-jadx-cli.yml'
+  workflow_dispatch:
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download JADX
+        run: |
+          curl -L --fail --retry 3 -o jadx.zip https://github.com/skylot/jadx/releases/download/v1.5.5/jadx-1.5.5.zip
+          unzip -q jadx.zip -d jadx
+          chmod +x jadx/bin/jadx jadx/bin/jadx-gui
+      - name: Upload JADX CLI
+        uses: actions/upload-artifact@v4
+        with:
+          name: jadx-1.5.5-cli
+          path: jadx
+          if-no-files-found: error
