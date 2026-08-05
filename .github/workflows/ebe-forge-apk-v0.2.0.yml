@@ -1,8 +1,8 @@
-name: Build EBE Forge APK v0.2.0
+name: Build EBE Forge APK v0.2.0 r2
 on:
   push:
     branches:
-      - ebe-forge-apk-build-v0.2.0
+      - ebe-forge-apk-build-v0.2.0-r2
   workflow_dispatch:
 permissions:
   contents: read
@@ -21,13 +21,24 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - name: Build debug APK
+      - name: Expand current EBE Forge Android source
+        run: |
+          base64 --decode ebe-forge-android-v0.2.0-source.zip.b64 > ebe-forge-android-v0.2.0-source.zip
+          rm -rf ebe-forge-build
+          mkdir -p ebe-forge-build
+          unzip -q ebe-forge-android-v0.2.0-source.zip -d ebe-forge-build
+      - name: Build APK
         working-directory: ebe-forge-build
         run: gradle --no-daemon clean assembleDebug
-      - name: Name APK
-        run: cp ebe-forge-build/app/build/outputs/apk/debug/app-debug.apk EBE-Forge-Remote-v0.2.0-debug.apk
+      - name: Preserve APK and signing key
+        run: |
+          cp ebe-forge-build/app/build/outputs/apk/debug/app-debug.apk EBE-Forge-v0.2.0.apk
+          mkdir -p signing
+          cp "$HOME/.android/debug.keystore" signing/ebe-forge-signing.jks
       - uses: actions/upload-artifact@v4
         with:
-          name: EBE-Forge-Remote-v0.2.0-debug-apk
-          path: EBE-Forge-Remote-v0.2.0-debug.apk
+          name: EBE-Forge-v0.2.0-android
+          path: |
+            EBE-Forge-v0.2.0.apk
+            signing/ebe-forge-signing.jks
           if-no-files-found: error
