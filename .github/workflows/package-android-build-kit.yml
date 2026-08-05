@@ -1,0 +1,33 @@
+name: Package Android Build Kit
+
+on:
+  push:
+    branches: [ebe-os-build-v050]
+    paths:
+      - '.github/workflows/package-android-build-kit.yml'
+  workflow_dispatch:
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: android-actions/setup-android@v3
+      - name: Install Android SDK pieces
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Collect build kit
+        run: |
+          mkdir -p android-build-kit/lib
+          cp "$ANDROID_HOME/platforms/android-35/android.jar" android-build-kit/
+          cp "$ANDROID_HOME/build-tools/35.0.0/aapt2" android-build-kit/
+          cp "$ANDROID_HOME/build-tools/35.0.0/zipalign" android-build-kit/
+          cp "$ANDROID_HOME/build-tools/35.0.0/lib/d8.jar" android-build-kit/lib/
+          cp "$ANDROID_HOME/build-tools/35.0.0/lib/apksigner.jar" android-build-kit/lib/
+          cp "$ANDROID_HOME/build-tools/35.0.0/lib64/libc++_shared.so" android-build-kit/lib/ || true
+          chmod +x android-build-kit/aapt2 android-build-kit/zipalign
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-build-kit-35
+          path: android-build-kit
+          if-no-files-found: error
