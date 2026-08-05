@@ -27,6 +27,7 @@ jobs:
           rm -rf ebe-forge-build
           mkdir -p ebe-forge-build
           unzip -q ebe-forge-android-v0.2.5-source.zip -d ebe-forge-build
+          grep -q '^android.useAndroidX=true$' ebe-forge-build/gradle.properties || echo 'android.useAndroidX=true' >> ebe-forge-build/gradle.properties
       - name: Build signed release APK
         working-directory: ebe-forge-build
         run: gradle --no-daemon clean assembleRelease
