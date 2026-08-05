@@ -21,14 +21,15 @@ jobs:
 
       - name: Collect tools
         run: |
-          mkdir -p android-sign-tools/lib
+          mkdir -p android-sign-tools/lib android-sign-tools/lib64
           cp "$ANDROID_HOME/build-tools/35.0.0/lib/apksigner.jar" android-sign-tools/lib/
           cp "$ANDROID_HOME/build-tools/35.0.0/zipalign" android-sign-tools/
+          cp "$ANDROID_HOME/build-tools/35.0.0/lib64/libc++.so" android-sign-tools/lib64/
           chmod +x android-sign-tools/zipalign
 
       - name: Upload tools
         uses: actions/upload-artifact@v4
         with:
-          name: android-sign-tools-35
+          name: android-sign-tools-35-complete
           path: android-sign-tools
           if-no-files-found: error
