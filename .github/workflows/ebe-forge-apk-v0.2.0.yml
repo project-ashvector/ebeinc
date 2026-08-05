@@ -1,0 +1,33 @@
+name: Build EBE Forge APK v0.2.0
+on:
+  push:
+    branches:
+      - ebe-forge-apk-build-v0.2.0
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Install Android SDK
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Build debug APK
+        working-directory: ebe-forge-build
+        run: gradle --no-daemon clean assembleDebug
+      - name: Name APK
+        run: cp ebe-forge-build/app/build/outputs/apk/debug/app-debug.apk EBE-Forge-Remote-v0.2.0-debug.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: EBE-Forge-Remote-v0.2.0-debug-apk
+          path: EBE-Forge-Remote-v0.2.0-debug.apk
+          if-no-files-found: error
