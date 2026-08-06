@@ -1,0 +1,12 @@
+{
+  "name": "AllThings140Radio",
+  "short_name": "AllThings140",
+  "description": "24/7 140 BPM and bass music.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#08070b",
+  "theme_color": "#09070d",
+  "icons": [
+    {"src": "assets/radio-mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"}
+  ]
+}

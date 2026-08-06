@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="AllThings140Radio mark">
+  <defs>
+    <linearGradient id="g" x1="38" y1="28" x2="220" y2="232" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#df8cff"/><stop offset=".48" stop-color="#9b45ff"/><stop offset="1" stop-color="#4f1bb0"/>
+    </linearGradient>
+    <filter id="s" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect x="19" y="19" width="218" height="218" rx="62" fill="#0d0913" stroke="#7b39b3" stroke-width="5"/>
+  <path d="M62 89v78M86 70v116M110 94v68M134 50v156M158 83v90M182 67v122M206 98v60" stroke="url(#g)" stroke-width="14" stroke-linecap="round" filter="url(#s)"/>
+  <path d="M49 128h158" stroke="#f3ddff" stroke-opacity=".23" stroke-width="3"/>
+</svg>
