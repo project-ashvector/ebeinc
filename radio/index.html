@@ -6,7 +6,18 @@
 <meta name="theme-color" content="#07040d">
 <meta name="description" content="AllThings140Radio — a synchronized 24/7 dubstep, riddim and 140 BPM radio transmission hosted by Ebmarah and Eyewitnis.">
 <title>AllThings140Radio // Live Transmission</title>
-<link rel="stylesheet" href="styles.css?v=0.4.14">
+<link rel="stylesheet" href="styles.css?v=0.4.15">
+<style>
+.hero{grid-template-columns:minmax(0,1fr) minmax(460px,610px);gap:68px}
+.terminal{contain:layout paint;transform:translateZ(0)}
+.visual{height:clamp(310px,31vw,390px);border-radius:18px;box-shadow:inset 0 0 34px rgba(0,0,0,.4),0 18px 50px rgba(0,0,0,.28)}
+.visual-video{opacity:0;transform:translateZ(0) scale(1.01);backface-visibility:hidden;will-change:opacity;transition:opacity .65s ease;object-fit:cover}
+.visual.visual-loaded .visual-video{opacity:1}
+.visual.visual-fallback{background:radial-gradient(circle at center,rgba(166,60,255,.25),transparent 42%),linear-gradient(135deg,#090510,#170927)}
+@media(max-width:1100px){.hero{grid-template-columns:1fr}.terminal{width:min(760px,100%)}.visual{height:clamp(300px,52vw,410px)}}
+@media(max-width:680px){.visual{height:260px}.visual-hud{font-size:.56rem;letter-spacing:.1em}}
+@media(prefers-reduced-motion:reduce){.visual-video{display:none}.orbit,.spectrum i{animation:none!important}}
+</style>
 </head>
 <body>
 <div class="bg"></div><div class="grid"></div><div class="noise"></div><div class="scan"></div><div class="orbs"></div>
@@ -33,7 +44,7 @@
   <section class="terminal corners" aria-label="AllThings140Radio player">
     <div class="terminal-head"><span class="mode" id="mode" data-state="offline"><i></i>SCANNING</span><span class="listeners"><b id="listeners">0</b> CONNECTED</span></div>
     <div class="visual">
-      <video id="visualVideo" class="visual-video" autoplay muted playsinline loop></video>
+      <video id="visualVideo" class="visual-video" autoplay muted playsinline loop preload="metadata"></video>
       <div class="visual-shade"></div>
       <div class="visual-hud"><span>ALLTHINGS140 VISUAL FEED</span><b id="visualMode">CATALOG VISUALIZER</b></div>
       <div class="orbit orbit-a"></div><div class="orbit orbit-b"></div>
@@ -52,5 +63,5 @@
 <section class="section wrap catalog" id="catalog"><div><p class="kicker">CATALOG UPLINK</p><h2>ONE REAL<br>RADIO FEED.</h2><p class="lead">The always-on Linux server streams approved master files—not separate browser playlists. Skip, Previous, Restart and Play Now commands change the transmission for everybody listening.</p></div><div class="catalog-panel"><b>SERVER PLAYBACK SEQUENCE</b><ol><li><strong>Ebmarah masters</strong> are uploaded to the rights-cleared catalog.</li><li>The server loops the catalog continuously through AutoDJ.</li><li>A live DJ temporarily overrides AutoDJ without dead air.</li><li>When the host disconnects, the catalog automatically returns.</li></ol></div></section>
 </main>
 <footer class="wrap"><a class="brand" href="./"><span class="sigil"><b>140</b></span><span><strong>ALLTHINGS140</strong><small>RADIO</small></span></a><div class="foot-status" id="footerStatus">SYSTEM STATUS: CONNECTING</div></footer>
-<script src="app.js?v=0.4.14"></script>
+<script src="app.js?v=0.4.15"></script>
 </body></html>
