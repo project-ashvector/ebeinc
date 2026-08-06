@@ -9,7 +9,10 @@
     "https://status.ebeinc.online/api/public/status",
     "https://stream.ebeinc.online/api/public/status",
   ];
-  const VISUAL_PARTS = ["assets/visuals/micro/chunk-00.txt", "assets/visuals/micro/chunk-01.txt"];
+  const VISUAL_PARTS = [
+    "assets/visuals/micro/chunk-00.txt",
+    "assets/visuals/micro/chunk-01.txt",
+  ];
 
   const $ = (selector) => document.querySelector(selector);
   const audio = $("#audio");
@@ -29,6 +32,8 @@
   const footer = $("#footerStatus");
   const share = $("#share");
   const video = $("#visualVideo");
+  const visual = $(".visual");
+  const terminal = $(".terminal");
   const visualMode = $("#visualMode");
 
   let status = null;
@@ -36,6 +41,9 @@
   let streamReady = false;
   let wantsPlayback = false;
   let attempt = 0;
+  let visualStarted = false;
+  let visualVisible = true;
+  let visualObjectUrl = "";
 
   const clean = (value) => String(value ?? "")
     .replace(/â€”/g, "—").replace(/â€“/g, "–")
@@ -102,24 +110,73 @@
     setMessage("Connected to the live feed.", "good");
   }
 
+  function playVisual() {
+    if (!video || !visualStarted || !visualVisible || document.hidden) return;
+    const promise = video.play();
+    if (promise && promise.catch) promise.catch(() => {});
+  }
+
   async function loadVisual() {
-    if (!video) return;
+    if (!video || visualStarted || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    visualStarted = true;
+    video.muted = true;
+    video.defaultMuted = true;
+    video.loop = true;
+    video.playsInline = true;
+    video.preload = "metadata";
+    video.disablePictureInPicture = true;
+    video.setAttribute("muted", "");
+
     try {
-      const responses = await Promise.all(VISUAL_PARTS.map((path) => fetch(path, { cache: "force-cache" })));
-      if (responses.some((response) => !response.ok)) throw new Error();
-      const parts = await Promise.all(responses.map((response) => response.text()));
-      const binary = atob(parts.map((part) => part.trim()).join(""));
+      const encoded = [];
+      for (const path of VISUAL_PARTS) {
+        const response = await fetch(path, { cache: "force-cache" });
+        if (!response.ok) throw new Error("visual asset unavailable");
+        encoded.push((await response.text()).trim());
+      }
+
+      const binary = atob(encoded.join(""));
       const bytes = new Uint8Array(binary.length);
-      for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
-      video.src = URL.createObjectURL(new Blob([bytes], { type: "video/mp4" }));
-      video.muted = true;
-      video.loop = true;
-      video.playsInline = true;
-      await video.play();
+      for (let index = 0; index < binary.length; index += 1) {
+        bytes[index] = binary.charCodeAt(index);
+      }
+
+      visualObjectUrl = URL.createObjectURL(new Blob([bytes], { type: "video/mp4" }));
+      video.src = visualObjectUrl;
+      video.addEventListener("loadeddata", () => {
+        if (visual) visual.classList.add("visual-loaded");
+        playVisual();
+      }, { once: true });
+      video.load();
     } catch (_error) {
-      video.removeAttribute("src");
+      visualStarted = false;
+      if (visual) visual.classList.add("visual-fallback");
     }
   }
+
+  function scheduleVisual() {
+    if ("requestIdleCallback" in window) {
+      requestIdleCallback(loadVisual, { timeout: 1400 });
+    } else {
+      window.setTimeout(loadVisual, 450);
+    }
+  }
+
+  if (video && terminal && "IntersectionObserver" in window) {
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        visualVisible = entry.isIntersecting;
+        if (visualVisible) playVisual();
+        else video.pause();
+      }
+    }, { threshold: 0.12 });
+    observer.observe(terminal);
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && video) video.pause();
+    else playVisual();
+  });
 
   function loadStream(index = 0) {
     const url = STREAMS[index];
@@ -140,6 +197,7 @@
     const id = ++attempt;
     if (!audio.dataset.src) loadStream(0);
     wantsPlayback = true;
+    playVisual();
     setMessage("Opening synchronized transmission…");
     audio.play().catch(() => {});
 
@@ -237,9 +295,13 @@
     catch (_error) { window.prompt("Copy station link", location.href); }
   });
 
-  loadVisual();
+  scheduleVisual();
   loadStream(0);
   pollStatus();
   window.setInterval(pollStatus, 5000);
   window.setInterval(updateClock, 500);
+
+  window.addEventListener("pagehide", () => {
+    if (visualObjectUrl) URL.revokeObjectURL(visualObjectUrl);
+  });
 })();
