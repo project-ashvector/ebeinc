@@ -7,6 +7,7 @@
   "background_color": "#08070b",
   "theme_color": "#09070d",
   "icons": [
-    {"src": "assets/radio-mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"}
+    {"src": "assets/favicon-64.png", "sizes": "64x64", "type": "image/png"},
+    {"src": "assets/radio-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
   ]
 }
