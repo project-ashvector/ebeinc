@@ -1,113 +1,15 @@
-(() => {
-  "use strict";
-  const ENDPOINT = "wss://chat.ebeinc.online/ws";
-  const stateEl = document.querySelector("#chatState");
-  const countEl = document.querySelector("#chatCount");
-  const messagesEl = document.querySelector("#chatMessages");
-  const nameForm = document.querySelector("#chatNameForm");
-  const nameInput = document.querySelector("#chatName");
-  const compose = document.querySelector("#chatCompose");
-  const textInput = document.querySelector("#chatText");
-  const feedback = document.querySelector("#chatFeedback");
-  let socket;
-  let joined = false;
-  let reconnectDelay = 1000;
-  let stopped = false;
-
-  const savedName = localStorage.getItem("allthings140-chat-name");
-  if (savedName) nameInput.value = savedName;
-
-  function setState(label, state) {
-    stateEl.dataset.state = state;
-    stateEl.querySelector("b").textContent = label;
-  }
-
-  function notice(text) {
-    const item = document.createElement("li");
-    item.className = "chat-notice";
-    item.textContent = text;
-    messagesEl.append(item);
-    messagesEl.scrollTop = messagesEl.scrollHeight;
-  }
-
-  function addMessage(message) {
-    if (!message || document.getElementById(`chat-${message.id}`)) return;
-    const item = document.createElement("li");
-    item.className = "chat-message";
-    item.id = `chat-${message.id}`;
-    const meta = document.createElement("div");
-    const name = document.createElement("b");
-    const time = document.createElement("time");
-    const body = document.createElement("p");
-    name.textContent = message.name;
-    time.dateTime = new Date(message.ts).toISOString();
-    time.textContent = new Date(message.ts).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-    body.textContent = message.text;
-    meta.append(name, time);
-    item.append(meta, body);
-    messagesEl.append(item);
-    while (messagesEl.children.length > 60) messagesEl.firstElementChild.remove();
-    messagesEl.scrollTop = messagesEl.scrollHeight;
-  }
-
-  function sendJoin() {
-    const name = nameInput.value.trim();
-    if (!name || socket?.readyState !== WebSocket.OPEN) return;
-    localStorage.setItem("allthings140-chat-name", name);
-    socket.send(JSON.stringify({ type: "join", name }));
-  }
-
-  function connect() {
-    setState("CONNECTING", "connecting");
-    socket = new WebSocket(ENDPOINT);
-    socket.addEventListener("open", () => {
-      reconnectDelay = 1000;
-      setState("ONLINE", "online");
-      feedback.textContent = "";
-      if (joined || nameInput.value.trim()) sendJoin();
-    });
-    socket.addEventListener("message", event => {
-      let data;
-      try { data = JSON.parse(event.data); } catch { return; }
-      if (data.type === "history") {
-        messagesEl.replaceChildren();
-        data.messages.forEach(addMessage);
-        if (!data.messages.length) notice("You’re early—the room is open.");
-        countEl.textContent = String(data.count || 0);
-        if (!nameInput.value) nameInput.value = data.name || "";
-      } else if (data.type === "message") addMessage(data.message);
-      else if (data.type === "presence") countEl.textContent = String(data.count || 0);
-      else if (data.type === "joined") {
-        joined = true;
-        nameInput.value = data.name;
-        localStorage.setItem("allthings140-chat-name", data.name);
-        nameForm.hidden = true;
-        compose.hidden = false;
-        textInput.focus();
-        feedback.textContent = `Chatting as ${data.name}`;
-      } else if (data.type === "error") feedback.textContent = data.message;
-    });
-    socket.addEventListener("close", () => {
-      setState("RECONNECTING", "connecting");
-      countEl.textContent = "0";
-      if (!stopped) setTimeout(connect, reconnectDelay);
-      reconnectDelay = Math.min(reconnectDelay * 2, 15000);
-    });
-    socket.addEventListener("error", () => socket.close());
-  }
-
-  nameForm.addEventListener("submit", event => {
-    event.preventDefault();
-    if (socket?.readyState === WebSocket.OPEN) sendJoin();
-    else feedback.textContent = "Chat is reconnecting—try again in a moment.";
-  });
-  compose.addEventListener("submit", event => {
-    event.preventDefault();
-    const text = textInput.value.trim();
-    if (!text || socket?.readyState !== WebSocket.OPEN) return;
-    socket.send(JSON.stringify({ type: "message", text }));
-    textInput.value = "";
-  });
-  window.addEventListener("pagehide", () => { stopped = true; socket?.close(1000, "Page closed"); });
-  connect();
+(()=>{"use strict";
+const ENDPOINT="wss://chat.ebeinc.online/ws",$=s=>document.querySelector(s),drawer=$("#chat"),backdrop=$("#chatBackdrop"),stateEl=$("#chatState"),countEl=$("#chatCount"),launcherCount=$("#chatLauncherCount"),messagesEl=$("#chatMessages"),nameForm=$("#chatNameForm"),nameInput=$("#chatName"),colorInput=$("#chatColor"),compose=$("#chatCompose"),textInput=$("#chatText"),feedback=$("#chatFeedback"),hostActions=$("#hostActions");
+let socket,joined=false,reconnectDelay=1000,stopped=false,isHost=false;
+nameInput.value=localStorage.getItem("allthings140-chat-name")||"";colorInput.value=localStorage.getItem("allthings140-chat-color")||"purple";
+function openChat(){drawer.classList.add("open");drawer.setAttribute("aria-hidden","false");backdrop.hidden=false;document.body.classList.add("chat-open");setTimeout(()=>joined?textInput.focus():nameInput.focus(),220)}
+function closeChat(){drawer.classList.remove("open");drawer.setAttribute("aria-hidden","true");backdrop.hidden=true;document.body.classList.remove("chat-open")}
+document.querySelectorAll("[data-open-chat]").forEach(button=>button.addEventListener("click",openChat));$("#chatClose").onclick=closeChat;backdrop.onclick=closeChat;document.addEventListener("keydown",event=>{if(event.key==="Escape")closeChat();if(event.altKey&&event.key.toLowerCase()==="m"){openChat();$("#hostTools").open=true}});
+function setState(label,state){stateEl.dataset.state=state;stateEl.querySelector("b").textContent=label}
+function notice(text,kind=""){const item=document.createElement("li");item.className="chat-notice "+kind;item.textContent=text;messagesEl.append(item);messagesEl.scrollTop=messagesEl.scrollHeight}
+function command(type,extra={}){if(socket?.readyState===WebSocket.OPEN)socket.send(JSON.stringify({type,...extra}))}
+function addMessage(message){if(!message||document.getElementById(`chat-${message.id}`))return;const item=document.createElement("li");item.className="chat-message"+(message.verified?" verified":"");item.id=`chat-${message.id}`;item.dataset.sender=message.senderId||"";const avatar=document.createElement("i"),content=document.createElement("section"),meta=document.createElement("div"),name=document.createElement("b"),time=document.createElement("time"),body=document.createElement("p");avatar.className=`avatar ${message.color||"purple"}`;avatar.textContent=String(message.name||"?").slice(0,1).toUpperCase();name.textContent=message.name+(message.verified?" ✓":"");time.dateTime=new Date(message.ts).toISOString();time.textContent=new Date(message.ts).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});body.textContent=message.text;meta.append(name,time);content.append(meta,body);item.append(avatar,content);if(isHost){const tools=document.createElement("span");tools.className="message-tools";const del=document.createElement("button"),mute=document.createElement("button");del.textContent="DELETE";mute.textContent="MUTE";del.onclick=()=>command("moderate",{action:"delete",messageId:message.id});mute.onclick=()=>command("moderate",{action:"mute",senderId:message.senderId});tools.append(del,mute);content.append(tools)}messagesEl.append(item);while(messagesEl.children.length>60)messagesEl.firstElementChild.remove();messagesEl.scrollTop=messagesEl.scrollHeight}
+function sendJoin(){const name=nameInput.value.trim();if(!name||socket?.readyState!==WebSocket.OPEN)return;localStorage.setItem("allthings140-chat-name",name);localStorage.setItem("allthings140-chat-color",colorInput.value);command("join",{name,color:colorInput.value})}
+function connect(){setState("CONNECTING","connecting");socket=new WebSocket(ENDPOINT);socket.addEventListener("open",()=>{reconnectDelay=1000;setState("ONLINE","online");feedback.textContent="";if(joined||nameInput.value.trim())sendJoin()});socket.addEventListener("message",event=>{let data;try{data=JSON.parse(event.data)}catch{return}if(data.type==="history"){messagesEl.replaceChildren();data.messages.forEach(addMessage);if(!data.messages.length)notice("You’re early—the room is open.");countEl.textContent=launcherCount.textContent=String(data.count||0);if(!nameInput.value)nameInput.value=data.name||""}else if(data.type==="message")addMessage(data.message);else if(data.type==="announcement")notice(`HOST: ${data.text}`,"announcement");else if(data.type==="presence")countEl.textContent=launcherCount.textContent=String(data.count||0);else if(data.type==="joined"){joined=true;nameInput.value=data.name;nameForm.hidden=true;compose.hidden=false;feedback.textContent=`Chatting as ${data.name}${data.verified?" ✓":""}`}else if(data.type==="deleted")document.getElementById(`chat-${data.id}`)?.remove();else if(data.type==="cleared"){messagesEl.replaceChildren();notice("Chat was cleared by a host.")}else if(data.type==="moderator"){isHost=true;hostActions.hidden=false;$("#hostLogin").hidden=true;feedback.textContent="Host controls unlocked.";messagesEl.querySelectorAll(".chat-message").forEach(el=>el.remove());command("history")}else if(data.type==="error")feedback.textContent=data.message});socket.addEventListener("close",()=>{setState("RECONNECTING","connecting");countEl.textContent=launcherCount.textContent="0";if(!stopped)setTimeout(connect,reconnectDelay);reconnectDelay=Math.min(reconnectDelay*2,15000)});socket.addEventListener("error",()=>socket.close())}
+nameForm.addEventListener("submit",event=>{event.preventDefault();sendJoin()});compose.addEventListener("submit",event=>{event.preventDefault();const text=textInput.value.trim();if(!text)return;command("message",{text});textInput.value=""});$("#hostLogin").addEventListener("submit",event=>{event.preventDefault();command("moderator_auth",{key:$("#hostKey").value});$("#hostKey").value=""});$("#clearChat").onclick=()=>{if(confirm("Clear all visible chat messages?"))command("moderate",{action:"clear"})};$("#pinAnnouncement").onclick=()=>{const text=prompt("Announcement for everyone in chat:");if(text)command("moderate",{action:"announce",text})};window.addEventListener("pagehide",()=>{stopped=true;socket?.close(1000,"Page closed")});connect();
 })();

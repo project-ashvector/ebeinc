@@ -1,146 +1,31 @@
 import { DurableObject } from "cloudflare:workers";
 
-interface Env {
-  CHAT_ROOM: DurableObjectNamespace<ChatRoom>;
-}
+interface Env { CHAT_ROOM: DurableObjectNamespace<ChatRoom>; MODERATOR_KEY?: string }
+type Color = "purple"|"cyan"|"pink"|"green";
+type StoredMessage={id:string;name:string;text:string;ts:number;color:Color;verified:boolean;senderId:string};
+type SocketState={id:string;name:string;color:Color;verified:boolean;moderator:boolean;muted:boolean;recent:number[];lastText:string;lastTextAt:number};
+const ALLOWED_ORIGINS=new Set(["https://ebeinc.online","https://www.ebeinc.online","https://ebeinc-uqt.pages.dev"]),NAME_RE=/[^\p{L}\p{N} _-]/gu,URL_RE=/(?:https?:\/\/|www\.)/gi,BLOCKED_RE=/\b(?:n[i1]gg(?:er|a)|f[a@]gg?[o0]t|k[i1]ke|ch[i1]nk)\b/gi,COLORS=new Set<Color>(["purple","cyan","pink","green"]);
+function originAllowed(origin:string|null){return !!origin&&(ALLOWED_ORIGINS.has(origin)||/^https:\/\/[a-z0-9-]+\.ebeinc-uqt\.pages\.dev$/.test(origin)||/^http:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/.test(origin))}
+function cleanName(value:unknown,fallback:string){const valueClean=String(value??"").normalize("NFKC").replace(NAME_RE,"").replace(/\s+/g," ").trim().slice(0,24);return valueClean.length>=2?valueClean:fallback}
+function cleanMessage(value:unknown){return String(value??"").normalize("NFKC").replace(/[\u0000-\u001f\u007f]/g," ").replace(/\s+/g," ").trim().slice(0,280)}
+function json(data:unknown,status=200){return Response.json(data,{status,headers:{"cache-control":"no-store"}})}
+async function safeEqual(input:string,secret:string){const enc=new TextEncoder(),a=await crypto.subtle.digest("SHA-256",enc.encode(input)),b=await crypto.subtle.digest("SHA-256",enc.encode(secret));const av=new Uint8Array(a),bv=new Uint8Array(b);let diff=0;for(let i=0;i<av.length;i++)diff|=av[i]^bv[i];return diff===0}
 
-type StoredMessage = { id: string; name: string; text: string; ts: number };
-type SocketState = {
-  id: string;
-  name: string;
-  recent: number[];
-  lastText: string;
-  lastTextAt: number;
-};
+export default {async fetch(request:Request,env:Env){const url=new URL(request.url);if(url.pathname==="/health")return json({ok:true,service:"allthings140-live-chat"});if(url.pathname!=="/ws")return json({error:"Not found"},404);if(request.headers.get("Upgrade")?.toLowerCase()!=="websocket")return json({error:"WebSocket upgrade required"},426);if(!originAllowed(request.headers.get("Origin")))return json({error:"Origin not allowed"},403);return env.CHAT_ROOM.getByName("allthings140-public-v1").fetch(request)}} satisfies ExportedHandler<Env>;
 
-const ALLOWED_ORIGINS = new Set([
-  "https://ebeinc.online",
-  "https://www.ebeinc.online",
-  "https://ebeinc-uqt.pages.dev",
-]);
-const NAME_RE = /[^\p{L}\p{N} _-]/gu;
-const URL_RE = /(?:https?:\/\/|www\.)/gi;
-const BLOCKED_RE = /\b(?:n[i1]gg(?:er|a)|f[a@]gg?[o0]t|k[i1]ke|ch[i1]nk)\b/gi;
-
-function originAllowed(origin: string | null): boolean {
-  if (!origin) return false;
-  if (ALLOWED_ORIGINS.has(origin)) return true;
-  if (/^https:\/\/[a-z0-9-]+\.ebeinc-uqt\.pages\.dev$/.test(origin)) return true;
-  return /^http:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/.test(origin);
-}
-
-function cleanName(value: unknown, fallback: string): string {
-  const clean = String(value ?? "").normalize("NFKC").replace(NAME_RE, "").replace(/\s+/g, " ").trim().slice(0, 24);
-  return clean.length >= 2 ? clean : fallback;
-}
-
-function cleanMessage(value: unknown): string {
-  return String(value ?? "").normalize("NFKC").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 280);
-}
-
-function json(data: unknown, status = 200): Response {
-  return Response.json(data, { status, headers: { "cache-control": "no-store" } });
-}
-
-export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    const url = new URL(request.url);
-    if (url.pathname === "/health") return json({ ok: true, service: "allthings140-live-chat" });
-    if (url.pathname !== "/ws") return json({ error: "Not found" }, 404);
-    if (request.headers.get("Upgrade")?.toLowerCase() !== "websocket") return json({ error: "WebSocket upgrade required" }, 426);
-    if (!originAllowed(request.headers.get("Origin"))) return json({ error: "Origin not allowed" }, 403);
-    return env.CHAT_ROOM.getByName("allthings140-public-v1").fetch(request);
-  },
-} satisfies ExportedHandler<Env>;
-
-export class ChatRoom extends DurableObject<Env> {
-  constructor(ctx: DurableObjectState, env: Env) {
-    super(ctx, env);
-    ctx.storage.sql.exec(`CREATE TABLE IF NOT EXISTS messages (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      text TEXT NOT NULL,
-      created_at INTEGER NOT NULL
-    )`);
-    ctx.storage.sql.exec("CREATE INDEX IF NOT EXISTS messages_created_at ON messages(created_at)");
-  }
-
-  async fetch(request: Request): Promise<Response> {
-    if (request.headers.get("Upgrade")?.toLowerCase() !== "websocket") return json({ error: "WebSocket upgrade required" }, 426);
-    const pair = new WebSocketPair();
-    const [client, server] = Object.values(pair);
-    const id = crypto.randomUUID();
-    const fallback = `Listener-${id.slice(0, 4).toUpperCase()}`;
-    const state: SocketState = { id, name: fallback, recent: [], lastText: "", lastTextAt: 0 };
-    server.serializeAttachment(state);
-    this.ctx.acceptWebSocket(server);
-
-    const rows = [...this.ctx.storage.sql.exec<{ id: string; name: string; text: string; created_at: number }>(
-      "SELECT id, name, text, created_at FROM messages ORDER BY created_at DESC LIMIT 50"
-    )].reverse();
-    server.send(JSON.stringify({
-      type: "history",
-      messages: rows.map(row => ({ id: row.id, name: row.name, text: row.text, ts: row.created_at })),
-      count: this.ctx.getWebSockets().length,
-      name: fallback,
-    }));
-    this.broadcast({ type: "presence", count: this.ctx.getWebSockets().length });
-    return new Response(null, { status: 101, webSocket: client });
-  }
-
-  async webSocketMessage(ws: WebSocket, raw: string | ArrayBuffer): Promise<void> {
-    if (typeof raw !== "string" || raw.length > 2048) return this.sendError(ws, "That message is too large.");
-    let body: { type?: unknown; name?: unknown; text?: unknown };
-    try { body = JSON.parse(raw) as typeof body; } catch { return this.sendError(ws, "Invalid message."); }
-    const state = ws.deserializeAttachment() as SocketState | null;
-    if (!state) return ws.close(1011, "Missing session");
-
-    if (body.type === "join") {
-      state.name = cleanName(body.name, state.name);
-      ws.serializeAttachment(state);
-      ws.send(JSON.stringify({ type: "joined", name: state.name }));
-      return;
-    }
-    if (body.type !== "message") return this.sendError(ws, "Unknown action.");
-
-    const now = Date.now();
-    state.recent = state.recent.filter(ts => now - ts < 10_000);
-    if (state.recent.length >= 4 || (state.recent.at(-1) && now - state.recent.at(-1)! < 800)) {
-      return this.sendError(ws, "Slow down for a moment.");
-    }
-    let text = cleanMessage(body.text);
-    if (!text) return this.sendError(ws, "Type a message first.");
-    if ((text.match(URL_RE) ?? []).length > 1) return this.sendError(ws, "Only one link is allowed per message.");
-    if (text.toLocaleLowerCase() === state.lastText && now - state.lastTextAt < 30_000) return this.sendError(ws, "Please don’t repeat the same message.");
-    text = text.replace(BLOCKED_RE, "***");
-
-    const message: StoredMessage = { id: crypto.randomUUID(), name: state.name, text, ts: now };
-    this.ctx.storage.sql.exec("INSERT INTO messages (id, name, text, created_at) VALUES (?, ?, ?, ?)", message.id, message.name, message.text, message.ts);
-    this.ctx.storage.sql.exec("DELETE FROM messages WHERE id NOT IN (SELECT id FROM messages ORDER BY created_at DESC LIMIT 100)");
-    state.recent.push(now);
-    state.lastText = text.toLocaleLowerCase();
-    state.lastTextAt = now;
-    ws.serializeAttachment(state);
-    this.broadcast({ type: "message", message });
-  }
-
-  async webSocketClose(ws: WebSocket, code: number, reason: string, wasClean: boolean): Promise<void> {
-    ws.close(code, reason);
-    this.broadcast({ type: "presence", count: Math.max(0, this.ctx.getWebSockets().length - (wasClean ? 0 : 1)) });
-  }
-
-  async webSocketError(ws: WebSocket): Promise<void> {
-    ws.close(1011, "Connection error");
-  }
-
-  private sendError(ws: WebSocket, message: string): void {
-    ws.send(JSON.stringify({ type: "error", message }));
-  }
-
-  private broadcast(payload: unknown): void {
-    const data = JSON.stringify(payload);
-    for (const socket of this.ctx.getWebSockets()) {
-      try { socket.send(data); } catch (error) { console.warn("chat_broadcast_failed", { error: String(error) }); }
-    }
-  }
+export class ChatRoom extends DurableObject<Env>{
+ constructor(ctx:DurableObjectState,env:Env){super(ctx,env);ctx.blockConcurrencyWhile(async()=>{ctx.storage.sql.exec("CREATE TABLE IF NOT EXISTS messages (id TEXT PRIMARY KEY,name TEXT NOT NULL,text TEXT NOT NULL,created_at INTEGER NOT NULL,color TEXT NOT NULL DEFAULT 'purple',verified INTEGER NOT NULL DEFAULT 0,sender_id TEXT NOT NULL DEFAULT '')");const columns=new Set(ctx.storage.sql.exec<{name:string}>("PRAGMA table_info(messages)").toArray().map(row=>row.name));if(!columns.has("color"))ctx.storage.sql.exec("ALTER TABLE messages ADD COLUMN color TEXT NOT NULL DEFAULT 'purple'");if(!columns.has("verified"))ctx.storage.sql.exec("ALTER TABLE messages ADD COLUMN verified INTEGER NOT NULL DEFAULT 0");if(!columns.has("sender_id"))ctx.storage.sql.exec("ALTER TABLE messages ADD COLUMN sender_id TEXT NOT NULL DEFAULT ''");ctx.storage.sql.exec("CREATE INDEX IF NOT EXISTS messages_created_at ON messages(created_at)")})}
+ async fetch(request:Request){if(request.headers.get("Upgrade")?.toLowerCase()!=="websocket")return json({error:"WebSocket upgrade required"},426);const pair=new WebSocketPair(),[client,server]=Object.values(pair),id=crypto.randomUUID(),fallback=`Listener-${id.slice(0,4).toUpperCase()}`,state:SocketState={id,name:fallback,color:"purple",verified:false,moderator:false,muted:false,recent:[],lastText:"",lastTextAt:0};server.serializeAttachment(state);this.ctx.acceptWebSocket(server);this.sendHistory(server,state);this.broadcast({type:"presence",count:this.ctx.getWebSockets().length});return new Response(null,{status:101,webSocket:client})}
+ async webSocketMessage(ws:WebSocket,raw:string|ArrayBuffer){if(typeof raw!=="string"||raw.length>2048)return this.error(ws,"That message is too large.");let body:{type?:unknown;name?:unknown;text?:unknown;color?:unknown;key?:unknown;action?:unknown;messageId?:unknown;senderId?:unknown};try{body=JSON.parse(raw) as typeof body}catch{return this.error(ws,"Invalid message.")}const state=ws.deserializeAttachment() as SocketState|null;if(!state)return ws.close(1011,"Missing session");
+  if(body.type==="join"){state.name=cleanName(body.name,state.name);state.color=COLORS.has(body.color as Color)?body.color as Color:"purple";ws.serializeAttachment(state);ws.send(JSON.stringify({type:"joined",name:state.name,color:state.color,verified:state.verified}));return}
+  if(body.type==="history"){this.sendHistory(ws,state);return}
+  if(body.type==="moderator_auth"){if(!this.env.MODERATOR_KEY||!await safeEqual(String(body.key??""),this.env.MODERATOR_KEY))return this.error(ws,"Invalid host key.");state.moderator=state.verified=true;state.name="EBMARAH";ws.serializeAttachment(state);ws.send(JSON.stringify({type:"moderator"}));return}
+  if(body.type==="moderate"){if(!state.moderator)return this.error(ws,"Host access required.");return this.moderate(body)}
+  if(body.type!=="message")return this.error(ws,"Unknown action.");if(state.muted)return this.error(ws,"You have been muted by a host.");const now=Date.now();state.recent=state.recent.filter(ts=>now-ts<10000);if(state.recent.length>=4||(state.recent.at(-1)&&now-state.recent.at(-1)!<800))return this.error(ws,"Slow down for a moment.");let text=cleanMessage(body.text);if(!text)return this.error(ws,"Type a message first.");if((text.match(URL_RE)??[]).length>1)return this.error(ws,"Only one link is allowed per message.");if(text.toLocaleLowerCase()===state.lastText&&now-state.lastTextAt<30000)return this.error(ws,"Please don’t repeat the same message.");text=text.replace(BLOCKED_RE,"***");const msg:StoredMessage={id:crypto.randomUUID(),name:state.name,text,ts:now,color:state.color,verified:state.verified,senderId:state.id};this.ctx.storage.sql.exec("INSERT INTO messages (id,name,text,created_at,color,verified,sender_id) VALUES (?,?,?,?,?,?,?)",msg.id,msg.name,msg.text,msg.ts,msg.color,msg.verified?1:0,msg.senderId);this.ctx.storage.sql.exec("DELETE FROM messages WHERE id NOT IN (SELECT id FROM messages ORDER BY created_at DESC LIMIT 100)");state.recent.push(now);state.lastText=text.toLocaleLowerCase();state.lastTextAt=now;ws.serializeAttachment(state);this.broadcast({type:"message",message:msg})}
+ async webSocketClose(ws:WebSocket,code:number,reason:string){ws.close(code,reason);this.broadcast({type:"presence",count:Math.max(0,this.ctx.getWebSockets().length-1)})}
+ async webSocketError(ws:WebSocket){ws.close(1011,"Connection error")}
+ private sendHistory(ws:WebSocket,state:SocketState){const rows=[...this.ctx.storage.sql.exec<{id:string;name:string;text:string;created_at:number;color:Color;verified:number;sender_id:string}>("SELECT id,name,text,created_at,color,verified,sender_id FROM messages ORDER BY created_at DESC LIMIT 50")].reverse();ws.send(JSON.stringify({type:"history",messages:rows.map(r=>({id:r.id,name:r.name,text:r.text,ts:r.created_at,color:r.color,verified:!!r.verified,senderId:r.sender_id})),count:this.ctx.getWebSockets().length,name:state.name}))}
+ private moderate(body:{action?:unknown;messageId?:unknown;senderId?:unknown;text?:unknown}){if(body.action==="delete"){const id=String(body.messageId??"");this.ctx.storage.sql.exec("DELETE FROM messages WHERE id=?",id);this.broadcast({type:"deleted",id});return}if(body.action==="clear"){this.ctx.storage.sql.exec("DELETE FROM messages");this.broadcast({type:"cleared"});return}if(body.action==="announce"){const text=cleanMessage(body.text);if(text)this.broadcast({type:"announcement",text});return}if(body.action==="mute"){const senderId=String(body.senderId??"");for(const socket of this.ctx.getWebSockets()){const other=socket.deserializeAttachment() as SocketState|null;if(other?.id===senderId){other.muted=true;socket.serializeAttachment(other);this.error(socket,"A host muted this session.")}}}}
+ private error(ws:WebSocket,message:string){ws.send(JSON.stringify({type:"error",message}))}
+ private broadcast(payload:unknown){const data=JSON.stringify(payload);for(const socket of this.ctx.getWebSockets())try{socket.send(data)}catch(error){console.warn("chat_broadcast_failed",{error:String(error)})}}
 }
