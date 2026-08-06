@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#07040d">
 <meta name="description" content="AllThings140Radio — a synchronized 24/7 dubstep, riddim and 140 BPM radio transmission hosted by Ebmarah and Eyewitnis.">
 <title>AllThings140Radio // Live Transmission</title>
@@ -11,12 +11,12 @@
 <link rel="manifest" href="manifest.webmanifest?v=0.4.21">
 <link rel="preload" href="assets/allthings140-background.webp" as="image" type="image/webp">
 <link rel="preload" href="assets/atomic-pressure.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="styles.css?v=0.5.0">
+<link rel="stylesheet" href="styles.css?v=0.5.1">
 <link rel="stylesheet" href="atomic-pressure.css?v=0.4.23">
 </head>
 <body>
 <div class="live-takeover" id="liveTakeover" hidden><b>● LIVE HOST</b><span id="liveHostName">ALLTHINGS140 TAKEOVER</span></div>
-<div class="bg-media" aria-hidden="true"><video id="backgroundVideo" autoplay muted loop playsinline preload="auto" poster="assets/allthings140-background.webp"><source src="assets/allthings140-background.mp4" type="video/mp4"></video></div>
+<div class="bg-media" aria-hidden="true"><video id="backgroundVideo" autoplay muted loop playsinline webkit-playsinline preload="metadata" poster="assets/allthings140-background.webp"><source src="assets/allthings140-background-mobile.mp4?v=0.5.1" type="video/mp4" media="(max-width: 680px)"><source src="assets/allthings140-background.mp4" type="video/mp4"></video></div>
 <div class="bg"></div><div class="grid"></div><div class="noise"></div><div class="scan"></div><div class="orbs"></div>
 <header class="topbar wrap">
   <a class="brand" href="./"><span class="sigil"><img src="assets/allthings140-logo-64.png?v=0.4.22" alt=""></span><span><strong>ALLTHINGS140</strong><small>RADIO</small></span></a>
@@ -35,7 +35,7 @@
         <span>LIVE DJ TAKEOVERS</span>
         <span>FUTURISTIC VISUALS</span>
       </div>
-      <div class="hero-actions"><button class="btn primary" id="heroPlay">▶ CONNECT TO FEED</button><button class="btn" id="shareStation">↗ SHARE STATION</button><button class="btn icon-btn" id="motionToggle" aria-pressed="false" title="Reduce background motion">◉</button></div>
+      <div class="hero-actions"><button class="btn primary" id="heroPlay">▶ CONNECT TO FEED</button><button class="btn" id="shareStation">↗ SHARE STATION</button><button class="btn icon-btn" id="motionToggle" aria-pressed="false" title="Pause background visuals">◉ VISUALS</button></div>
       <section class="now-playing" aria-live="polite">
         <div class="now-playing-head"><span class="mode" id="mode" data-state="offline"><i></i>SCANNING</span><span class="listeners"><b id="listeners">0</b> CONNECTED</span></div>
         <small class="track-label">NOW TRANSMITTING</small><h2 class="track-title" id="trackTitle">Awaiting station uplink</h2><p class="track-artist" id="trackArtist">AllThings140Radio</p>
@@ -91,6 +91,6 @@
 <div class="mini-player" id="miniPlayer" hidden><button id="miniPlay" type="button" aria-label="Play station">▶</button><img src="assets/allthings140-logo-64.png?v=0.4.22" alt=""><div><small>NOW TRANSMITTING</small><b id="miniTitle">ALLTHINGS140RADIO</b><span id="miniArtist">CONNECTING…</span></div><span class="mini-listeners"><b id="miniListeners">0</b> LIVE</span><button id="miniChat" type="button" data-open-chat>CHAT</button></div>
 <footer class="wrap"><a class="brand" href="./"><span class="sigil"><img src="assets/allthings140-logo-64.png?v=0.4.22" alt=""></span><span><strong>ALLTHINGS140</strong><small>RADIO</small></span></a><div class="foot-status" id="footerStatus">SYSTEM STATUS: CONNECTING</div></footer>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
-<script src="app.js?v=0.5.0"></script>
+<script src="app.js?v=0.5.1"></script>
 <script src="chat.js?v=1.1.0"></script>
 </body></html>
