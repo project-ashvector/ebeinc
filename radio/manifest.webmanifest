@@ -7,7 +7,7 @@
   "background_color": "#08070b",
   "theme_color": "#09070d",
   "icons": [
-    {"src": "assets/favicon-64.png", "sizes": "64x64", "type": "image/png"},
-    {"src": "assets/radio-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+    {"src": "assets/allthings140-logo-64.png?v=0.4.19", "sizes": "64x64", "type": "image/png", "purpose": "any"},
+    {"src": "assets/allthings140-logo-512.png?v=0.4.19", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
   ]
 }
