@@ -1,0 +1,76 @@
+@font-face {
+  font-family: "Atomic Pressure";
+  src: url("assets/atomic-pressure.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+/* Display typography: the decorative face is used where it stays readable.
+   Paragraphs and long-form copy keep the existing UI sans-serif. */
+.brand strong,
+.brand small,
+.nav a,
+.status-chip,
+.kicker,
+h1,
+.section h2,
+.host h3,
+.btn,
+.hero-tags span,
+.subcard small,
+.mode,
+.listeners,
+.track-label,
+.track-title,
+.next-up small,
+.telemetry b,
+.telemetry span,
+.host small,
+.catalog-panel > b,
+.visual-hud,
+.foot-status {
+  font-family: "Atomic Pressure", Impact, "Arial Black", sans-serif;
+  font-weight: 400;
+}
+
+h1,
+.section h2 {
+  letter-spacing: .01em;
+}
+
+.brand strong {
+  letter-spacing: .06em;
+}
+
+.brand small {
+  letter-spacing: .2em;
+}
+
+.nav a,
+.status-chip,
+.kicker,
+.btn,
+.hero-tags span,
+.subcard small,
+.mode,
+.track-label,
+.next-up small,
+.telemetry span,
+.host small,
+.catalog-panel > b,
+.visual-hud,
+.foot-status {
+  letter-spacing: .08em;
+}
+
+.track-title {
+  letter-spacing: .025em;
+}
+
+@media (max-width: 680px) {
+  h1,
+  .section h2 {
+    letter-spacing: 0;
+  }
+}
