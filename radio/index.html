@@ -6,7 +6,8 @@
 <meta name="theme-color" content="#07040d">
 <meta name="description" content="AllThings140Radio — a synchronized 24/7 dubstep, riddim and 140 BPM radio transmission hosted by Ebmarah and Eyewitnis.">
 <title>AllThings140Radio // Live Transmission</title>
-<link rel="stylesheet" href="styles.css?v=0.4.11">
+<link rel="preload" href="assets/allthings140-city.webp" as="image" type="image/webp">
+<link rel="stylesheet" href="styles.css?v=0.4.12">
 </head>
 <body>
 <div class="bg"></div><div class="grid"></div><div class="noise"></div><div class="scan"></div><div class="orbs"></div>
@@ -40,8 +41,6 @@
       <video id="visualVideo" class="visual-video" autoplay muted playsinline loop></video>
       <div class="visual-shade"></div>
       <div class="visual-hud"><span>ALLTHINGS140 VISUAL FEED</span><b id="visualMode">CATALOG VISUALIZER</b></div>
-      <div class="orbit orbit-a"></div><div class="orbit orbit-b"></div>
-      <div class="spectrum" id="spectrum"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
     </div>
     <small class="track-label">NOW TRANSMITTING</small><h2 class="track-title" id="trackTitle">Awaiting station uplink</h2><p class="track-artist" id="trackArtist">AllThings140Radio</p>
     <div class="timeline"><span id="timeline"></span></div><div class="time-row"><span id="elapsed">0:00</span><span id="duration">0:00</span></div>
@@ -57,5 +56,5 @@
 </main>
 <footer class="wrap"><a class="brand" href="./"><span class="sigil"><b>140</b></span><span><strong>ALLTHINGS140</strong><small>RADIO</small></span></a><div class="foot-status" id="footerStatus">SYSTEM STATUS: CONNECTING</div></footer>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
-<script src="app.js?v=0.4.11"></script>
+<script src="app.js?v=0.4.12"></script>
 </body></html>
