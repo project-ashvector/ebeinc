@@ -9,10 +9,11 @@
 <link rel="icon" href="assets/favicon-64.png" sizes="64x64" type="image/png">
 <link rel="apple-touch-icon" href="assets/radio-icon-512.png">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="preload" href="assets/allthings140-stage.webp" as="image" type="image/webp">
-<link rel="stylesheet" href="styles.css?v=0.4.13">
+<link rel="preload" href="assets/allthings140-background.webp" as="image" type="image/webp">
+<link rel="stylesheet" href="styles.css?v=0.4.14">
 </head>
 <body>
+<div class="bg-media" aria-hidden="true"><video autoplay muted loop playsinline preload="metadata" poster="assets/allthings140-background.webp"><source src="assets/allthings140-background.mp4" type="video/mp4"></video></div>
 <div class="bg"></div><div class="grid"></div><div class="noise"></div><div class="scan"></div><div class="orbs"></div>
 <header class="topbar wrap">
   <a class="brand" href="./"><span class="sigil"><b>140</b></span><span><strong>ALLTHINGS140</strong><small>RADIO</small></span></a>
@@ -39,18 +40,13 @@
         <p class="message" id="message">Establishing connection to the station server…</p>
         <div class="next-up"><small>NEXT IN ROTATION</small><b id="nextTrack">—</b></div>
       </section>
+      <audio id="audio" preload="none"></audio>
     </div>
     <div class="subgrid">
       <article class="subcard"><small>REAL STATION FLOW</small><b>Server rotation, live host override, then automatic return to catalog.</b></article>
       <article class="subcard"><small>ONE SHARED LISTEN</small><b>Skip, next, restart and play-now commands change the same feed for everybody.</b></article>
     </div>
   </div>
-  <section class="terminal" aria-label="AllThings140Radio visual feed">
-    <div class="visual">
-      <video id="visualVideo" class="visual-video" autoplay muted playsinline loop></video>
-    </div>
-    <audio id="audio" preload="none"></audio>
-  </section>
 </section>
 <section class="telemetry wrap-shell"><div><b>24/7</b><span>SERVER-CONTROLLED ROTATION</span></div><div><b>140</b><span>BPM AT THE CORE</span></div><div><b>SYNC</b><span>ONE FEED FOR EVERY LISTENER</span></div><div><b>LIVE</b><span>DJ TAKEOVERS + MIC</span></div></section>
 <section class="section wrap" id="hosts"><div class="section-head"><div><p class="kicker">TRANSMISSION OPERATORS</p><h2>LIVE FROM<br>THE UNDERGROUND.</h2></div><p>The AutoDJ keeps the Ebmarah catalog moving around the clock. Either host can take over the stream, queue tracks, speak on mic, then return the station to its automated rotation.</p></div><div class="hosts"><article class="host"><small>DJ // ADMIN</small><h3>EBMARAH</h3><p>Original catalog, heavy selections, station control and live announcements.</p></article><article class="host"><small>DJ // HOST</small><h3>EYEWITNIS</h3><p>Live takeovers, guest selections and new-release discovery.</p></article></div></section>
@@ -58,5 +54,5 @@
 </main>
 <footer class="wrap"><a class="brand" href="./"><span class="sigil"><b>140</b></span><span><strong>ALLTHINGS140</strong><small>RADIO</small></span></a><div class="foot-status" id="footerStatus">SYSTEM STATUS: CONNECTING</div></footer>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
-<script src="app.js?v=0.4.13"></script>
+<script src="app.js?v=0.4.14"></script>
 </body></html>
