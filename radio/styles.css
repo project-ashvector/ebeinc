@@ -45,4 +45,3 @@ button,a,input{font:inherit}
 
 @media(max-width:1100px){.bg-media video{object-position:64% center;filter:saturate(1.04) contrast(1.04) brightness(.66)}.bg{background:linear-gradient(180deg,rgba(3,1,8,.42),rgba(4,2,10,.58) 45%,rgba(5,3,11,.9))}.hero{width:min(100% - 28px,900px);min-height:auto;padding:58px 0 90px}.hero-copy{width:min(680px,100%);margin:auto;text-align:center}.now-playing{text-align:left}.subgrid{margin-top:10px}}
 @media(max-width:680px){.bg-media video{object-position:66% center}.hero{width:min(100% - 24px,900px);padding-top:42px}.hero h1{font-size:18vw}.now-playing{margin-top:14px}.hero-copy{gap:17px}}
-@media(prefers-reduced-motion:reduce){.bg-media video{display:none}}

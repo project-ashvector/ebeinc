@@ -10,14 +10,14 @@
 <link rel="apple-touch-icon" href="assets/radio-icon-512.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preload" href="assets/allthings140-background.webp" as="image" type="image/webp">
-<link rel="stylesheet" href="styles.css?v=0.4.14">
+<link rel="stylesheet" href="styles.css?v=0.4.15">
 </head>
 <body>
-<div class="bg-media" aria-hidden="true"><video autoplay muted loop playsinline preload="metadata" poster="assets/allthings140-background.webp"><source src="assets/allthings140-background.mp4" type="video/mp4"></video></div>
+<div class="bg-media" aria-hidden="true"><video id="backgroundVideo" autoplay muted loop playsinline preload="auto" poster="assets/allthings140-background.webp"><source src="assets/allthings140-background.mp4" type="video/mp4"></video></div>
 <div class="bg"></div><div class="grid"></div><div class="noise"></div><div class="scan"></div><div class="orbs"></div>
 <header class="topbar wrap">
   <a class="brand" href="./"><span class="sigil"><b>140</b></span><span><strong>ALLTHINGS140</strong><small>RADIO</small></span></a>
-  <nav class="nav"><a href="#listen">LISTEN</a><a href="#hosts">HOSTS</a><a href="#catalog">CATALOG</a></nav>
+  <nav class="nav"><a href="#listen">LISTEN</a><a href="#hosts">HOSTS</a><a href="#station">STATION</a></nav>
   <span class="status-chip" id="headerStatus" data-state="offline"><i></i>CONNECTING</span>
 </header>
 <main>
@@ -26,13 +26,13 @@
     <div class="hero-stack">
       <p class="kicker">SYNCHRONIZED BASS TRANSMISSION</p>
       <h1>HEAVY<br>MUSIC.<span>ALWAYS ON.</span></h1>
-      <p class="lead">A real 24/7 station powered by the Ebmarah catalog, with live DJ takeovers from Ebmarah and Eyewitnis. The server controls one shared playlist, so every listener hears the same song at the same time.</p>
+      <p class="lead">A 24/7 heavy dubstep radio station hosted by Ebmarah and Eyewitnis. One synchronized live feed delivers nonstop bass music, underground selections, and live DJ takeovers to every listener.</p>
       <div class="hero-tags">
-        <span>24/7 CATALOG FEED</span>
+        <span>24/7 HEAVY DUBSTEP</span>
         <span>LIVE DJ TAKEOVERS</span>
         <span>FUTURISTIC VISUALS</span>
       </div>
-      <div class="hero-actions"><button class="btn primary" id="heroPlay">▶ CONNECT TO FEED</button><a class="btn" href="#catalog">VIEW THE SYSTEM</a></div>
+      <div class="hero-actions"><button class="btn primary" id="heroPlay">▶ CONNECT TO FEED</button><a class="btn" href="#station">HOW IT WORKS</a></div>
       <section class="now-playing" aria-live="polite">
         <div class="now-playing-head"><span class="mode" id="mode" data-state="offline"><i></i>SCANNING</span><span class="listeners"><b id="listeners">0</b> CONNECTED</span></div>
         <small class="track-label">NOW TRANSMITTING</small><h2 class="track-title" id="trackTitle">Awaiting station uplink</h2><p class="track-artist" id="trackArtist">AllThings140Radio</p>
@@ -43,16 +43,16 @@
       <audio id="audio" preload="none"></audio>
     </div>
     <div class="subgrid">
-      <article class="subcard"><small>REAL STATION FLOW</small><b>Server rotation, live host override, then automatic return to catalog.</b></article>
+      <article class="subcard"><small>REAL STATION FLOW</small><b>Nonstop heavy dubstep, live host takeovers, and seamless transitions without dead air.</b></article>
       <article class="subcard"><small>ONE SHARED LISTEN</small><b>Skip, next, restart and play-now commands change the same feed for everybody.</b></article>
     </div>
   </div>
 </section>
-<section class="telemetry wrap-shell"><div><b>24/7</b><span>SERVER-CONTROLLED ROTATION</span></div><div><b>140</b><span>BPM AT THE CORE</span></div><div><b>SYNC</b><span>ONE FEED FOR EVERY LISTENER</span></div><div><b>LIVE</b><span>DJ TAKEOVERS + MIC</span></div></section>
-<section class="section wrap" id="hosts"><div class="section-head"><div><p class="kicker">TRANSMISSION OPERATORS</p><h2>LIVE FROM<br>THE UNDERGROUND.</h2></div><p>The AutoDJ keeps the Ebmarah catalog moving around the clock. Either host can take over the stream, queue tracks, speak on mic, then return the station to its automated rotation.</p></div><div class="hosts"><article class="host"><small>DJ // ADMIN</small><h3>EBMARAH</h3><p>Original catalog, heavy selections, station control and live announcements.</p></article><article class="host"><small>DJ // HOST</small><h3>EYEWITNIS</h3><p>Live takeovers, guest selections and new-release discovery.</p></article></div></section>
-<section class="section wrap catalog" id="catalog"><div><p class="kicker">CATALOG UPLINK</p><h2>ONE REAL<br>RADIO FEED.</h2><p class="lead">The always-on Linux server streams approved master files—not separate browser playlists. Skip, Previous, Restart and Play Now commands change the transmission for everybody listening.</p></div><div class="catalog-panel"><b>SERVER PLAYBACK SEQUENCE</b><ol><li><strong>Ebmarah masters</strong> are uploaded to the rights-cleared catalog.</li><li>The server loops the catalog continuously through AutoDJ.</li><li>A live DJ temporarily overrides AutoDJ without dead air.</li><li>When the host disconnects, the catalog automatically returns.</li></ol></div></section>
+<section class="telemetry wrap-shell"><div><b>24/7</b><span>NONSTOP HEAVY DUBSTEP</span></div><div><b>140</b><span>BPM AT THE CORE</span></div><div><b>SYNC</b><span>ONE FEED FOR EVERY LISTENER</span></div><div><b>LIVE</b><span>DJ TAKEOVERS + MIC</span></div></section>
+<section class="section wrap" id="hosts"><div class="section-head"><div><p class="kicker">TRANSMISSION OPERATORS</p><h2>LIVE FROM<br>THE UNDERGROUND.</h2></div><p>AllThings140Radio broadcasts heavy dubstep around the clock. Ebmarah and Eyewitnis can take over the shared stream live, bring their own selections, speak on mic, and keep the bass moving without dead air.</p></div><div class="hosts"><article class="host"><small>DJ // ADMIN</small><h3>EBMARAH</h3><p>Heavy selections, station control, live mixes, and underground bass transmissions.</p></article><article class="host"><small>DJ // HOST</small><h3>EYEWITNIS</h3><p>Live takeovers, guest selections, new discoveries, and high-energy dubstep sessions.</p></article></div></section>
+<section class="section wrap catalog" id="station"><div><p class="kicker">STATION UPLINK</p><h2>ONE REAL<br>RADIO FEED.</h2><p class="lead">This is a true synchronized station—not a separate browser playlist. Everybody connects to the same heavy dubstep transmission and hears the same track at the same moment.</p></div><div class="catalog-panel"><b>HOW THE STATION RUNS</b><ol><li><strong>Heavy dubstep</strong> broadcasts continuously, 24 hours a day.</li><li>Ebmarah and Eyewitnis host live shows and takeovers.</li><li>Every listener stays synchronized to one shared transmission.</li><li>Nonstop music continues automatically when a live set ends.</li></ol></div></section>
 </main>
 <footer class="wrap"><a class="brand" href="./"><span class="sigil"><b>140</b></span><span><strong>ALLTHINGS140</strong><small>RADIO</small></span></a><div class="foot-status" id="footerStatus">SYSTEM STATUS: CONNECTING</div></footer>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
-<script src="app.js?v=0.4.14"></script>
+<script src="app.js?v=0.4.15"></script>
 </body></html>
