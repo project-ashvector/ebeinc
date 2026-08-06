@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07040d">
 <meta name="description" content="AllThings140Radio — a synchronized 24/7 dubstep, riddim and 140 BPM radio transmission hosted by Ebmarah and Eyewitnis.">
 <title>AllThings140Radio // Live Transmission</title>
-<link rel="stylesheet" href="styles.css?v=0.4.13">
+<link rel="stylesheet" href="styles.css?v=0.4.14">
 </head>
 <body>
 <div class="bg"></div><div class="grid"></div><div class="noise"></div><div class="scan"></div><div class="orbs"></div>
@@ -22,11 +22,7 @@
       <p class="kicker">SYNCHRONIZED BASS TRANSMISSION</p>
       <h1>HEAVY<br>MUSIC.<span>ALWAYS ON.</span></h1>
       <p class="lead">A real 24/7 station powered by the Ebmarah catalog, with live DJ takeovers from Ebmarah and Eyewitnis. The server controls one shared playlist, so every listener hears the same song at the same time.</p>
-      <div class="hero-tags">
-        <span>24/7 CATALOG FEED</span>
-        <span>LIVE DJ TAKEOVERS</span>
-        <span>FUTURISTIC VISUALS</span>
-      </div>
+      <div class="hero-tags"><span>24/7 CATALOG FEED</span><span>LIVE DJ TAKEOVERS</span><span>FUTURISTIC VISUALS</span></div>
       <div class="hero-actions"><button class="btn primary" id="heroPlay">▶ CONNECT TO FEED</button><a class="btn" href="#catalog">VIEW THE SYSTEM</a></div>
     </div>
     <div class="subgrid">
@@ -46,7 +42,7 @@
     <small class="track-label">NOW TRANSMITTING</small><h2 class="track-title" id="trackTitle">Connecting to the 24/7 feed</h2><p class="track-artist" id="trackArtist">AllThings140Radio</p>
     <div class="timeline"><span id="timeline"></span></div><div class="time-row"><span id="elapsed">0:00</span><span id="duration">0:00</span></div>
     <div class="controls"><button class="play" id="play" aria-label="Play radio">▶</button><input class="volume" id="volume" type="range" min="0" max="1" step=".01" value=".78" aria-label="Volume"><button class="share" id="share" title="Copy station link">↗</button></div>
-    <p class="message" id="message">Connecting directly to the live audio feed…</p>
+    <p class="message" id="message">Connecting to the direct public MP3 feed…</p>
     <div class="next-up"><small>NEXT IN ROTATION</small><b id="nextTrack">—</b></div>
     <audio id="audio" preload="none"></audio>
   </section>
@@ -56,7 +52,5 @@
 <section class="section wrap catalog" id="catalog"><div><p class="kicker">CATALOG UPLINK</p><h2>ONE REAL<br>RADIO FEED.</h2><p class="lead">The always-on Linux server streams approved master files—not separate browser playlists. Skip, Previous, Restart and Play Now commands change the transmission for everybody listening.</p></div><div class="catalog-panel"><b>SERVER PLAYBACK SEQUENCE</b><ol><li><strong>Ebmarah masters</strong> are uploaded to the rights-cleared catalog.</li><li>The server loops the catalog continuously through AutoDJ.</li><li>A live DJ temporarily overrides AutoDJ without dead air.</li><li>When the host disconnects, the catalog automatically returns.</li></ol></div></section>
 </main>
 <footer class="wrap"><a class="brand" href="./"><span class="sigil"><b>140</b></span><span><strong>ALLTHINGS140</strong><small>RADIO</small></span></a><div class="foot-status" id="footerStatus">SYSTEM STATUS: CONNECTING</div></footer>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
-<script src="funnel-route.js?v=0.4.13"></script>
-<script src="app.js?v=0.4.13"></script>
+<script src="app.js?v=0.4.14"></script>
 </body></html>
