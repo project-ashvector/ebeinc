@@ -1,0 +1,17 @@
+{
+  "name": "allthings140-live-chat",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit",
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "types": "wrangler types"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260804.0",
+    "typescript": "^5.9.2",
+    "wrangler": "^4.28.1"
+  }
+}
