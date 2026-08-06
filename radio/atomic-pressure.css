@@ -1,31 +1,33 @@
 @font-face {
   font-family: "Atomic Pressure";
-  src: url("assets/atomic-pressure.woff2") format("woff2");
+  src: url("assets/atomic-pressure.woff2?v=0.4.24") format("woff2");
   font-style: normal;
   font-weight: 400;
   font-display: swap;
 }
 
-/* Display typography: the decorative face is used where it stays readable.
-   Paragraphs and long-form copy keep the existing UI sans-serif. */
-.brand strong,
-.brand small,
-.nav a,
+/* Use Atomic Pressure throughout the station interface. */
+html,
+body,
+button,
+a,
+input,
+.brand,
+.nav,
 .status-chip,
 .kicker,
 h1,
-.section h2,
-.host h3,
+h2,
+h3,
 .btn,
-.hero-tags span,
+.hero-tags,
 .subcard small,
 .mode,
 .listeners,
 .track-label,
 .track-title,
-.next-up small,
-.telemetry b,
-.telemetry span,
+.next-up,
+.telemetry,
 .host small,
 .catalog-panel > b,
 .visual-hud,
@@ -34,17 +36,30 @@ h1,
   font-weight: 400;
 }
 
+/* Keep longer copy clean and readable. */
+.lead,
+.track-artist,
+.message,
+.time-row,
+.subcard b,
+.section-head > p,
+.host p,
+.catalog-panel ol,
+.catalog-panel li {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
 h1,
 .section h2 {
   letter-spacing: .01em;
 }
 
 .brand strong {
-  letter-spacing: .06em;
+  letter-spacing: .055em;
 }
 
 .brand small {
-  letter-spacing: .2em;
+  letter-spacing: .17em;
 }
 
 .nav a,
@@ -61,11 +76,11 @@ h1,
 .catalog-panel > b,
 .visual-hud,
 .foot-status {
-  letter-spacing: .08em;
+  letter-spacing: .065em;
 }
 
 .track-title {
-  letter-spacing: .025em;
+  letter-spacing: .02em;
 }
 
 @media (max-width: 680px) {
