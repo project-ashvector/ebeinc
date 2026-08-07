@@ -452,3 +452,5 @@ button,.button,.text-link{max-width:100%}
   .project-filters{grid-template-columns:1fr 1fr}
   .console-foot{flex-direction:column;gap:2px}
 }
+/* Cross-site navigation keeps the three EBE properties one connected network. */
+.site-nav .nav-external{display:inline-flex;align-items:center;text-decoration:none}
