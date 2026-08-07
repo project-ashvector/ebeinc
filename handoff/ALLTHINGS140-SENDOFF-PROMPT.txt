@@ -1,0 +1,39 @@
+You are continuing work on the AllThings140Radio project for Ebmarah.
+
+PROJECTS
+- Website source: ebeinc-cloudflare-migration/radio/ (the live radio site) and the repository root (the EBE INC hub).
+- Production radio URL: https://ebeinc.online/liveradio/
+- Visuals URL: https://ebeinc.online/liveradio/visuals/
+- Cloudflare Pages project: ebeinc. Deploy with: npx wrangler pages deploy . --project-name ebeinc --branch main --commit-dirty=true
+- DJ/server app source: allthings140-icon-update/ (Python desktop app sources, desktop launchers, and icons).
+- Packaged app releases: Desktop/apps/aradio/ contains AllThings140Radio-DJ and AllThings140Radio-Server .deb files.
+
+WHAT IS ALREADY IMPLEMENTED
+- The main radio page has a synchronized public feed, now-playing metadata, listener chat, reactions, requests, schedule/history, PWA support, responsive mobile layout, and live DJ takeover support.
+- The main page uses a full-screen animated radio background and has Listen, Chat, Schedule, Hosts, and Visuals navigation.
+- The Visuals page is intentionally visual-first: it loops radio/assets/radiovisualtab.mp4 full-screen and has a small translucent MAIN PAGE link at the top.
+- The Visuals page also has a LISTEN LIVE button. It resolves the current stream URL from https://status.ebeinc.online/api/public/status and lets visitors play/pause the shared live feed. Audio requires a user click because browser autoplay rules require interaction.
+- The Visuals video is the optimized web version of Downloads/0806.mp4: 1280x720, 30 FPS, silent, about 24.5 MB, with fast-start metadata.
+- The main feed connect button now visibly changes to CONNECTING…, disables duplicate clicks, pulses while connecting, and reports connection failures.
+- radio/sw.js cache version is v8. Bump it whenever changing cached shell files.
+- The current latest site commit includes the feed-button loading state. The latest visuals/audio deployment should be verified against the production domain after deployment propagation.
+
+SAFE WORKFLOW
+1. Inspect the current source and git status before editing. Preserve unrelated user changes.
+2. Use apply_patch for text edits. Run node --check radio/app.js for JavaScript changes and git diff --check before committing.
+3. Test locally when practical with python3 -m http.server from the repository root.
+4. Deploy only the existing ebeinc Pages project. Verify both the unique pages.dev deployment URL and https://ebeinc.online/liveradio/ after deployment.
+5. Do not expose secrets, host keys, private stream credentials, or machine-specific tokens in public files or handoff notes.
+
+GOOD NEXT IMPROVEMENTS
+- Add a small connection-quality/latency indicator to the live player, based on stream events and status freshness.
+- Add an explicit “audio is muted until you press play” hint on Visuals for first-time visitors.
+- Improve the DJ app catalog editor with a clear unsaved-changes state, keyboard navigation, and a duplicate-safe queue preview.
+- Keep the 24/7 queue deduplicated and use a persistent shuffle-bag so every approved track plays once before repeats.
+- Add a host-only live-session link flow for Traktor/OBS guests, with expiring tokens and clear revoke controls.
+- Keep video assets under Cloudflare Pages file limits; optimize new videos before deployment.
+
+KNOWN LIMITATIONS
+- GitHub push authentication is not configured in this environment; direct Wrangler Pages deployment is the reliable publish path.
+- The public stream URL is discovered from the status API and can change. Do not hard-code it into new pages unless there is a deliberate fallback.
+- Browser autoplay policy means no page can guarantee sound without a user gesture.
