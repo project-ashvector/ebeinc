@@ -12,6 +12,7 @@
 <link rel="preload" href="assets/allthings140-background.webp" as="image" type="image/webp">
 <link rel="preload" href="assets/atomic-pressure.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="styles.css?v=0.5.1">
+<link rel="stylesheet" href="engagement.css?v=1.0.0">
 <link rel="stylesheet" href="atomic-pressure.css?v=0.4.23">
 </head>
 <body>
@@ -41,6 +42,7 @@
         <small class="track-label">NOW TRANSMITTING</small><h2 class="track-title" id="trackTitle">Awaiting station uplink</h2><p class="track-artist" id="trackArtist">AllThings140Radio</p>
         <div class="timeline"><span id="timeline"></span></div><div class="time-row"><span id="elapsed">0:00</span><span id="duration">0:00</span></div>
         <p class="message" id="message">Establishing connection to the station server…</p>
+        <div class="track-reactions" id="trackReactions" aria-label="React to the current track"><span>REACT</span><button data-reaction="fire">🔥 <b>0</b></button><button data-reaction="skull">💀 <b>0</b></button><button data-reaction="vortex">🌀 <b>0</b></button></div>
         <div class="next-up"><small>NEXT IN ROTATION</small><b id="nextTrack">—</b></div>
       </section>
       <audio id="audio" preload="none"></audio>
@@ -56,7 +58,8 @@
   <div class="section-head"><div><p class="kicker">TRANSMISSION LOG</p><h2>ON AIR<br>+ NEXT.</h2></div><p>Follow the current rotation, recently transmitted tracks, and upcoming live host takeovers.</p></div>
   <div class="schedule-grid">
     <article class="schedule-card"><small>UPCOMING BROADCAST</small><h3 id="scheduleTitle">24/7 HEAVY ROTATION</h3><p id="scheduleDetail">The synchronized station is broadcasting now.</p><b class="countdown" id="scheduleCountdown">ALWAYS ON</b></article>
-    <article class="history-card"><div><small>RECENTLY TRANSMITTED</small><button id="clearHistory" type="button">CLEAR LOCAL HISTORY</button></div><ol id="trackHistory"><li><span>Waiting for the next track update…</span></li></ol></article>
+    <article class="history-card"><div><small>RECENTLY TRANSMITTED</small><span>SHARED HISTORY</span></div><ol id="trackHistory"><li><span>Waiting for the next track update…</span></li></ol></article>
+    <article class="request-card"><small>REQUEST A TRACK</small><p>Send a suggestion to the hosts. Requests enter a private moderation queue.</p><form id="requestForm"><input id="requestTitle" maxlength="100" required placeholder="Track title"><input id="requestArtist" maxlength="80" placeholder="Artist"><button>SUBMIT REQUEST</button></form><p id="requestFeedback"></p></article>
   </div>
 </section>
 <div class="chat-backdrop" id="chatBackdrop" hidden></div>
@@ -91,6 +94,6 @@
 <div class="mini-player" id="miniPlayer" hidden><button id="miniPlay" type="button" aria-label="Play station">▶</button><img src="assets/allthings140-logo-64.png?v=0.4.22" alt=""><div><small>NOW TRANSMITTING</small><b id="miniTitle">ALLTHINGS140RADIO</b><span id="miniArtist">CONNECTING…</span></div><span class="mini-listeners"><b id="miniListeners">0</b> LIVE</span><button id="miniChat" type="button" data-open-chat>CHAT</button></div>
 <footer class="wrap"><a class="brand" href="./"><span class="sigil"><img src="assets/allthings140-logo-64.png?v=0.4.22" alt=""></span><span><strong>ALLTHINGS140</strong><small>RADIO</small></span></a><div class="foot-status" id="footerStatus">SYSTEM STATUS: CONNECTING</div></footer>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
-<script src="app.js?v=0.5.2"></script>
-<script src="chat.js?v=1.2.0"></script>
+<script src="app.js?v=0.6.0"></script>
+<script src="chat.js?v=1.3.0"></script>
 </body></html>
