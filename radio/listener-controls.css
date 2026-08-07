@@ -1,0 +1,9 @@
+/* Compact controls that preserve the visual-first layout. */
+.listener-controls{display:grid;grid-template-columns:auto minmax(90px,1fr) auto auto auto;align-items:center;gap:8px;margin-top:11px;padding-top:10px;border-top:1px solid #a654dc2c}
+.listener-controls label{color:#776b80;font-size:.58rem;letter-spacing:.1em}
+.listener-controls input{accent-color:#a53ee6;min-width:0}
+.listener-controls button,.listener-controls select{height:30px;border:1px solid #a654dc55;background:#09040e;color:#d9cde1;font-size:.6rem;font-weight:900;padding:0 9px}
+.listener-controls span{grid-column:1/-1;color:#63eaff;font-size:.58rem;letter-spacing:.09em;min-height:.7em}
+.mini-player{max-width:820px;grid-template-columns:48px 42px 1fr auto auto auto}
+@media(max-width:800px){.mini-player{grid-template-columns:42px 36px 1fr 42px 42px}.mini-player #miniMute{font-size:.48rem}.mini-player .mini-listeners{display:none}}
+@media(max-width:680px){.listener-controls{grid-template-columns:auto 1fr auto}.listener-controls label[for=sleepTimer]{grid-column:1}.listener-controls select{grid-column:2/-1}}
