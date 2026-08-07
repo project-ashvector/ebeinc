@@ -1,4 +1,4 @@
-const CACHE="allthings140-radio-v6";
+const CACHE="allthings140-radio-v7";
 const SHELL=["./","index.html","styles.css","engagement.css","listener-controls.css","atomic-pressure.css","app.js","chat.js","manifest.webmanifest","assets/allthings140-logo-64.png","assets/allthings140-logo-512.png","assets/allthings140-background.webp","assets/atomic-pressure.woff2"];
 self.addEventListener("install",event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting())));
 self.addEventListener("activate",event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
