@@ -15,6 +15,8 @@ WHAT IS ALREADY IMPLEMENTED
 - The Visuals page also has a LISTEN LIVE button. It resolves the current stream URL from https://status.ebeinc.online/api/public/status and lets visitors play/pause the shared live feed. Audio requires a user click because browser autoplay rules require interaction.
 - The Visuals video is the optimized web version of Downloads/0806.mp4: 1280x720, 30 FPS, silent, about 24.5 MB, with fast-start metadata.
 - The main feed connect button now visibly changes to CONNECTING…, disables duplicate clicks, pulses while connecting, and reports connection failures.
+- The DJ/server app (latest local package 0.4.24) now shows playable rotation counts separately from total catalog entries. It includes ERASE SELECTED and ERASE CANCELLED / NOT APPROVED actions with confirmation; erased audio is moved to server trash for recovery, and the active on-air track is protected until it leaves the air.
+- AutoDJ uses a persistent shuffle bag for approved playable tracks: every track in the current approved set is transmitted once before the bag reshuffles. If the approved set changes, the bag rebuilds safely from the new set.
 - radio/sw.js cache version is v8. Bump it whenever changing cached shell files.
 - The current latest site commit includes the feed-button loading state. The latest visuals/audio deployment should be verified against the production domain after deployment propagation.
 
