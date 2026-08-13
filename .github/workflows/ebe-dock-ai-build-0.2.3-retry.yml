@@ -1,0 +1,85 @@
+name: Build EBE Dock AI 0.2.3 Retry
+
+on:
+  push:
+    branches:
+      - ebe-dock-ai-build-0.2.3
+
+jobs:
+  build-deb:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Checkout build branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential curl pkg-config libssl-dev \
+            libgtk-3-dev libwebkit2gtk-4.1-dev librsvg2-dev \
+            libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+            desktop-file-utils appstream unzip p7zip-full
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Recover source archive
+        shell: bash
+        run: |
+          set -euxo pipefail
+          ARCHIVE=ci/ebe-dock-ai/ebe023-build-min2.tar.xz
+          test -f "$ARCHIVE"
+          ls -lh "$ARCHIVE"
+          file "$ARCHIVE"
+          rm -rf ci/ebe-dock-ai/work
+          mkdir -p ci/ebe-dock-ai/work
+          if unzip -t "$ARCHIVE"; then
+            unzip -q "$ARCHIVE" -d ci/ebe-dock-ai/work
+          else
+            echo 'Normal unzip test failed; attempting 7z recovery.'
+            7z x -y -oci/ebe-dock-ai/work "$ARCHIVE" || true
+          fi
+          find ci/ebe-dock-ai/work -maxdepth 3 -type f | sort | head -100
+          test -f ci/ebe-dock-ai/work/src/Cargo.toml
+          test -f ci/ebe-dock-ai/work/src/apps/ebe-dock-ui/src/main.tsx
+          test -f ci/ebe-dock-ai/work/src/crates/ebe-dock-desktop/src/main.rs
+          test -f ci/ebe-dock-ai/work/src/crates/ebe-dock-desktop/src/workstation.rs
+          test -f ci/ebe-dock-ai/work/src/packaging/build-deb.sh
+
+      - name: Build, test, and package
+        working-directory: ci/ebe-dock-ai/work/src
+        run: |
+          chmod +x build-ebe-dock-ai-deb.sh packaging/build-deb.sh packaging/smoke-test-installed.sh
+          ./build-ebe-dock-ai-deb.sh
+
+      - name: Validate Debian package
+        working-directory: ci/ebe-dock-ai/work/src
+        run: |
+          set -euxo pipefail
+          PACKAGE=dist/ebe-dock-ai_0.2.3_amd64.deb
+          test -f "$PACKAGE"
+          dpkg-deb --info "$PACKAGE"
+          dpkg-deb --contents "$PACKAGE" | tee /tmp/ebe-dock-ai-contents.txt
+          grep -q './usr/bin/ebe-dock-ai' /tmp/ebe-dock-ai-contents.txt
+          grep -q './usr/share/applications/com.ebe.EBEDockAI.desktop' /tmp/ebe-dock-ai-contents.txt
+          grep -q './usr/share/metainfo/com.ebe.EBEDockAI.metainfo.xml' /tmp/ebe-dock-ai-contents.txt
+          desktop-file-validate packaging/com.ebe.EBEDockAI.desktop
+          appstreamcli validate --no-net packaging/com.ebe.EBEDockAI.metainfo.xml
+          sha256sum "$PACKAGE" | tee dist/ebe-dock-ai_0.2.3_amd64.deb.sha256
+
+      - name: Upload installable package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ebe-dock-ai-0.2.3-amd64
+          path: |
+            ci/ebe-dock-ai/work/src/dist/ebe-dock-ai_0.2.3_amd64.deb
+            ci/ebe-dock-ai/work/src/dist/ebe-dock-ai_0.2.3_amd64.deb.sha256
+          if-no-files-found: error
+          retention-days: 7
