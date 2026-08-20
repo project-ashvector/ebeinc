@@ -2207,6 +2207,23 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "authorized hosted Green publish only; never run in normal tests"]
+    fn phase4_publish_current_cycle_to_green_only() {
+        assert_eq!(env::var("AT140_PHASE4_GREEN_PUBLISH").as_deref(), Ok("YES"));
+        let mut state = load_state().expect("current workstation state must load");
+        state["previewMode"] = json!(false);
+        state["environment"] = json!("green-staging");
+        let result = publish_layout_fast_blocking(json!({
+            "state": state,
+            "jobId": format!("phase4-hosted-{}", std::process::id())
+        })).expect("Green-only publish must complete");
+        assert_eq!(result["ok"], true);
+        assert_eq!(result["previewMode"], false);
+        assert_eq!(result["realtimeHttpStatus"], 200);
+        println!("PHASE4_GREEN_PUBLISH_RESULT={}", result);
+    }
+
+    #[test]
     fn frame_for_layer_fallback() {
         let preset = json!({
             "name": "Test",

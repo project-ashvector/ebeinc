@@ -4,6 +4,13 @@
     "height": 1080,
     "width": 1920
   },
+  "cycle": {
+    "avoidImmediateRepeat": true,
+    "interval": "media-ended",
+    "mode": "ordered",
+    "skipFailed": true
+  },
+  "environment": "green-staging",
   "fallback": {
     "fit": "cover",
     "id": "known-good-fallback",
@@ -103,12 +110,12 @@
       "id": "stage-content",
       "kind": "media",
       "media": {
-        "assetId": "source-029299275754ee14",
-        "contentType": "video/webm",
-        "fingerprint": "source-029299275754ee14",
-        "id": "source-029299275754ee14",
-        "name": "alpha2-transparent-screen.webm",
-        "url": "https://visuals-media-staging.allthings140radio.online/stage/source-029299275754ee14.webm"
+        "assetId": "2270668f7b6b69a3",
+        "contentType": "video/mp4",
+        "fingerprint": "2270668f7b6b69a3",
+        "id": "2270668f7b6b69a3",
+        "name": "alpha2.mov",
+        "url": "https://visuals-media-staging.allthings140radio.online/stage/2270668f7b6b69a3.mp4"
       },
       "name": "Stage Content",
       "opacity": 1,
@@ -128,12 +135,12 @@
       "id": "visual-content",
       "kind": "media",
       "media": {
-        "assetId": "source-4166f1e1cd7a7cc5",
+        "assetId": "source-4b018670f9f4473c",
         "contentType": "video/mp4",
-        "fingerprint": "source-4166f1e1cd7a7cc5",
-        "id": "source-4166f1e1cd7a7cc5",
-        "name": "Alien_fortress_floating_above_pl…_202608140214 (4).mp4",
-        "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-4166f1e1cd7a7cc5.mp4"
+        "fingerprint": "source-4b018670f9f4473c",
+        "id": "source-4b018670f9f4473c",
+        "name": "Alien_machine_around_black_hole_202608102133 (1).mp4",
+        "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-4b018670f9f4473c.mp4"
       },
       "name": "Visual Content",
       "opacity": 1,
@@ -146,21 +153,776 @@
       "z": 10
     }
   ],
-  "layoutHash": "e3ee2353f5fec569f3d7bfbfd85d7a686b26e08e595036a83ba9fd6a734b7c56",
-  "layoutId": "layout-20260819T081225227Z",
-  "layoutRevision": "20260819T081225227Z",
+  "layoutHash": "5851384ec981213999deb9578c2787af7b10001bd47e31d281137339880fb6d7",
+  "layoutId": "layout-20260820T203758929Z",
+  "layoutRevision": "20260820T203758929Z",
   "mediaBaseUrl": "https://visuals-media-staging.allthings140radio.online",
-  "playlist": [],
-  "previewMode": true,
-  "previewVisual": {
-    "assetId": "source-4166f1e1cd7a7cc5",
-    "fingerprint": "source-4166f1e1cd7a7cc5",
-    "fit": "cover",
-    "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-4166f1e1cd7a7cc5.mp4"
-  },
+  "playlist": [
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-a9201d5dac6bd065",
+      "name": "87.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-a9201d5dac6bd065.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-03704c9ed7c45d92",
+      "name": "Alien_fortress_floating_above_pl…_202608140213 (1).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-03704c9ed7c45d92.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-9d74f680e4b35d0a",
+      "name": "Alien_fortress_floating_above_pl…_202608140213 (2).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-9d74f680e4b35d0a.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-911d7a63c4810a86",
+      "name": "Alien_fortress_floating_above_pl…_202608140213.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-911d7a63c4810a86.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-f9e8d51d883413fb",
+      "name": "Alien_fortress_floating_above_pl…_202608140214 (1).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-f9e8d51d883413fb.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-5da1753d30ec413a",
+      "name": "Alien_fortress_floating_above_pl…_202608140214 (2).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-5da1753d30ec413a.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-5d689e50d971670b",
+      "name": "Alien_fortress_floating_above_pl…_202608140214 (3).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-5d689e50d971670b.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-4166f1e1cd7a7cc5",
+      "name": "Alien_fortress_floating_above_pl…_202608140214 (4).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-4166f1e1cd7a7cc5.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-ea8ee2c1e38a04ba",
+      "name": "Alien_fortress_floating_above_pl…_202608140214.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-ea8ee2c1e38a04ba.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-4b018670f9f4473c",
+      "name": "Alien_machine_around_black_hole_202608102133 (1).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-4b018670f9f4473c.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-8e0533b7ac92fb52",
+      "name": "Alien_machine_around_black_hole_202608102133.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-8e0533b7ac92fb52.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-458b2719555558dc",
+      "name": "Alien_machine_destroying_ruined_…_202608140220.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-458b2719555558dc.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-c0bf3e17f1add2c6",
+      "name": "Alien_machine_hovering_over_planet_202608140220 (1).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-c0bf3e17f1add2c6.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-63c7bed440c8303f",
+      "name": "Alien_machine_hovering_over_planet_202608140220.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-63c7bed440c8303f.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-24b9a050929ae1d0",
+      "name": "Alien_machine_orbiting_black_hole_202608102133.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-24b9a050929ae1d0.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-2287028e59d73b70",
+      "name": "Alien_machine_orbiting_ruined_pl…_202608140220.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-2287028e59d73b70.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-dce49d5d8fcb8fd2",
+      "name": "Alien_machine_surrounding_black_…_202608102133.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-dce49d5d8fcb8fd2.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-81043dab402dc844",
+      "name": "Alien_machines_forming_robotic_c…_202608102138.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-81043dab402dc844.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-7a41975983401b2f",
+      "name": "Alien_mechanical_serpent_wrappin…_1080p_202608102144.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-7a41975983401b2f.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-bc017862ee83f807",
+      "name": "Alien_megacity_beneath_energy_dome_202608102123.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-bc017862ee83f807.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-eb41964dc22f39aa",
+      "name": "Alien_megacity_beneath_energy_dome_202608102124.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-eb41964dc22f39aa.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-7b0ef71b33bd908d",
+      "name": "Alien_megacity_under_energy_dome_202608102123 (1).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-7b0ef71b33bd908d.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-dbf27f2cb12adda4",
+      "name": "Alien_megacity_under_energy_dome_202608102123.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-dbf27f2cb12adda4.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-0467472ee53651b9",
+      "name": "Alien_mining_colony_operating_1080p_202608102145 (1).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-0467472ee53651b9.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-4ea773d339b8adea",
+      "name": "Alien_mining_colony_operating_1080p_202608102145.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-4ea773d339b8adea.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-3f2617d5d244faec",
+      "name": "Alien_mining_colony_operating_1080p_202608102146.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-3f2617d5d244faec.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-7a105efcc1884298",
+      "name": "Alien_mining_colony_operating_in…_202608102146.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-7a105efcc1884298.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-d105d7289f166a74",
+      "name": "Alien_mothership_hovering_over_city_202608100259 (1).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-d105d7289f166a74.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-51bbb157daf70e38",
+      "name": "Alien_mothership_hovering_over_city_202608100259.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-51bbb157daf70e38.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-91613c73df1e8a39",
+      "name": "Alien_organism_consuming_moon_1080p_202608102127.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-91613c73df1e8a39.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-1e05cc0d00725123",
+      "name": "Alien_organism_consuming_moon_1080p_202608102128 (1).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-1e05cc0d00725123.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-0eff09fd941da83e",
+      "name": "Alien_organism_consuming_moon_1080p_202608102128.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-0eff09fd941da83e.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-28bbbe5d6692b561",
+      "name": "Alien_prison_floating_in_void_202608102130.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-28bbbe5d6692b561.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-b6ce8d59ad9d4047",
+      "name": "Alien_prison_floating_in_void_202608102131 (1).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-b6ce8d59ad9d4047.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-324afa698dc76cca",
+      "name": "Alien_prison_floating_in_void_202608102131 (2).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-324afa698dc76cca.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-106d2204cc1fe6d3",
+      "name": "Alien_prison_floating_in_void_202608102131.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-106d2204cc1fe6d3.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-be7ce3f5256fdcaf",
+      "name": "Alien_prison_floating_in_void_202608102135 (1).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-be7ce3f5256fdcaf.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-fa9621260709dff2",
+      "name": "Alien_prison_floating_in_void_202608102135 (2).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-fa9621260709dff2.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-3344dff331f6c3fa",
+      "name": "Alien_prison_floating_in_void_202608102135.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-3344dff331f6c3fa.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-681e792756c889c3",
+      "name": "Alien_prison_floating_in_void_202608102136.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-681e792756c889c3.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-4d180e75c9744812",
+      "name": "Alien_prison_floating_in_void_202608140219 (1).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-4d180e75c9744812.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-1da2ade6d60c096e",
+      "name": "Alien_prison_floating_in_void_202608140219 (2).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-1da2ade6d60c096e.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-a775fd611a011c59",
+      "name": "Alien_prison_floating_in_void_202608140219.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-a775fd611a011c59.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-414cbe1b240f3b2d",
+      "name": "Alien_prison_floating_in_void_202608140220 (1).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-414cbe1b240f3b2d.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-de1173b4a0b65c38",
+      "name": "Alien_prison_floating_in_void_202608140220 (2).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-de1173b4a0b65c38.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-d0914dc1d27b9f83",
+      "name": "Alien_prison_floating_in_void_202608140220 (3).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-d0914dc1d27b9f83.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-cb94e851c8fcb572",
+      "name": "Alien_prison_floating_in_void_202608140220 (4).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-cb94e851c8fcb572.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-b694cd89a9d2b748",
+      "name": "Alien_prison_floating_in_void_202608140220.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-b694cd89a9d2b748.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-8556661c28e4e155",
+      "name": "Alien_serpent_coils_around_skysc…_202608102143.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-8556661c28e4e155.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-475f6a5b7016e34c",
+      "name": "Extraterrestrial_harvesting_mach…_1080p_202608102145 (1).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-475f6a5b7016e34c.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-038a0b3e114468cc",
+      "name": "Extraterrestrial_harvesting_mach…_1080p_202608102145.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-038a0b3e114468cc.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-921529561b27cc04",
+      "name": "Extraterrestrial_machine_god_act…_1080p_202608140159.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-921529561b27cc04.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-8b3108dde2764073",
+      "name": "Extraterrestrial_machine_god_awa…_1080p_202608140159.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-8b3108dde2764073.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-33d69d8886cadde1",
+      "name": "Giant_machines_rule_alien_desert_202608100240.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-33d69d8886cadde1.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-86e97badf5822414",
+      "name": "Giant_mech_powering_up_arena_202608102138.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-86e97badf5822414.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-271809839d4bb586",
+      "name": "Machine_army_parade_in_city_202608150254.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-271809839d4bb586.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-62e13b4a144026bb",
+      "name": "Machine_empire_in_frozen_city_202608100240.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-62e13b4a144026bb.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-4e9c900c0c483384",
+      "name": "Machine_empire_in_frozen_city_202608100241.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-4e9c900c0c483384.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-a2a1586270fdfb67",
+      "name": "Machine_empire_in_icy_city_202608100241.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-a2a1586270fdfb67.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-7c78c2e3d8fa7ff9",
+      "name": "Machine_empire_parade_in_city_202608150254.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-7c78c2e3d8fa7ff9.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-3410f2a8b05da02f",
+      "name": "Machine_empire_victory_parade_1080p_202608150254 (1).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-3410f2a8b05da02f.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-c16970c1ceba4c11",
+      "name": "Machine_empire_victory_parade_1080p_202608150254 (2).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-c16970c1ceba4c11.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-e5457fbb571c5a95",
+      "name": "Machine_empire_victory_parade_1080p_202608150254.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-e5457fbb571c5a95.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-2aa5ffbd2ceca46e",
+      "name": "Machine_parade_in_futuristic_city_202608150254.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-2aa5ffbd2ceca46e.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-27c0d07eef5220ce",
+      "name": "Machines_forming_robotic_creature_1080p_202608102138.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-27c0d07eef5220ce.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-c2ce71be78d912ad",
+      "name": "Machines_rule_alien_desert_waste…_202608100240 (1).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-c2ce71be78d912ad.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-c4982deda8f0592b",
+      "name": "Machines_rule_alien_desert_waste…_202608100240.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-c4982deda8f0592b.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-3b20dc22fa51dead",
+      "name": "Mech_citadel_in_alien_desert_202608100240.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-3b20dc22fa51dead.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-71856cbcbaf86a83",
+      "name": "Mecha_army_marching_across_battl…_202608140235.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-71856cbcbaf86a83.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-28b4b76ce769c1e8",
+      "name": "Mecha_army_marching_on_battlefield_202608140235 (1).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-28b4b76ce769c1e8.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-60d83d586f4746bf",
+      "name": "Mecha_army_marching_on_battlefield_202608140235 (2).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-60d83d586f4746bf.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-4590b740b63fe9eb",
+      "name": "Mecha_army_marching_on_battlefield_202608140235 (3).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-4590b740b63fe9eb.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-4f6259292830e5c5",
+      "name": "Mecha_army_marching_on_battlefield_202608140235 (4).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-4f6259292830e5c5.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-e1ffcb4689b8a438",
+      "name": "Mecha_army_marching_on_battlefield_202608140235 (5).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-e1ffcb4689b8a438.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-0c08908285934ac7",
+      "name": "Mecha_army_marching_on_battlefield_202608140235.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-0c08908285934ac7.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-0e062fbea41d4801",
+      "name": "Mecha_army_marching_on_battlefield_202608140236.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-0e062fbea41d4801.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-c8eee68bdbe3551b",
+      "name": "Mechanical_serpent_wraps_futuris…_1080p_202608102144.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-c8eee68bdbe3551b.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-9e829f82356232b5",
+      "name": "Mechs_marching_in_victory_parade_202608150254 (1).mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-9e829f82356232b5.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-12a84a5ac5a6a2d9",
+      "name": "Mechs_marching_in_victory_parade_202608150254.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-12a84a5ac5a6a2d9.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-cd602702ea8958d5",
+      "name": "Orbital_space_station_broadcasti…_1080p_202608100250.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-cd602702ea8958d5.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-2dd9810916726097",
+      "name": "Orbital_space_station_rotating_a…_202608100249.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-2dd9810916726097.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-4207078c4fb6657b",
+      "name": "Robot_hive_in_underground_city_202608100245.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-4207078c4fb6657b.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-b50999e3b1672151",
+      "name": "Robot_hive_looping_underground_v…_202608100247.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-b50999e3b1672151.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-d74a722c0167bf59",
+      "name": "Robot_hive_operating_underground_1080p_202608100242.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-d74a722c0167bf59.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-834fe02a89480720",
+      "name": "Robot_hive_underground_video_loop_202608100247.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-834fe02a89480720.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-c6abbf131c736211",
+      "name": "Robot_powering_up_in_arena_202608102139.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-c6abbf131c736211.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-d4088c49e30f1421",
+      "name": "Robot_powers_up_in_arena_202608102139.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-d4088c49e30f1421.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-0a4f7fc4a0c2e8fe",
+      "name": "Robot_throne_in_frozen_city_202608100241.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-0a4f7fc4a0c2e8fe.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-6a6f6f1e280f7de4",
+      "name": "Robotic_jungle_with_giant_shrine_202608100250.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-6a6f6f1e280f7de4.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-0b56fb0b06a0d8d4",
+      "name": "Robotic_jungle_with_giant_shrine_202608100251.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-0b56fb0b06a0d8d4.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-1fb2e1526edaa8a0",
+      "name": "Robotic_jungle_with_glowing_shrine_202608100249.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-1fb2e1526edaa8a0.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-98b9385f77f9e4f1",
+      "name": "Robotic_jungle_with_glowing_shrine_202608100250.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-98b9385f77f9e4f1.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-12b98d654321a5e9",
+      "name": "Space_station_orbiting_ruined_pl…_202608100249.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-12b98d654321a5e9.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-242cef783f80a8a8",
+      "name": "Space_station_orbiting_ruined_pl…_202608100250.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-242cef783f80a8a8.mp4"
+    },
+    {
+      "duration": "8.000000",
+      "enabled": true,
+      "fit": "cover",
+      "id": "source-5e89c0a2bb2a2313",
+      "name": "jfjf.mp4",
+      "url": "https://visuals-media-staging.allthings140radio.online/visuals/source-5e89c0a2bb2a2313.mp4"
+    }
+  ],
+  "previewMode": false,
   "productionLocked": true,
-  "publishedAt": "2026-08-19T08:12:25.612573491+00:00",
-  "revision": "20260819T081225227Z",
+  "publishedAt": "2026-08-20T20:41:40.756763658+00:00",
+  "revision": "20260820T203758929Z",
   "safePlaybackMode": true,
   "schemaVersion": 2,
   "screenOpening": {

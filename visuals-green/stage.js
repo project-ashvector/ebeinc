@@ -1069,7 +1069,8 @@ Track: ${currentStationStatus?.current_title || 'LIVE RADIO'} (Seq: ${currentSta
     if (takeoverPollInFlight) return;
     takeoverPollInFlight = true;
     try {
-      const res = await fetchWithTimeout(`${C.realtimeStateUrl}?t=${Date.now()}`, { cache: 'no-store' }, 5000);
+      const separator = C.realtimeStateUrl.includes('?') ? '&' : '?';
+      const res = await fetchWithTimeout(`${C.realtimeStateUrl}${separator}t=${Date.now()}`, { cache: 'no-store' }, 5000);
       if (!res.ok) return;
       const d = await res.json();
       const takeover = d.takeover || null;
