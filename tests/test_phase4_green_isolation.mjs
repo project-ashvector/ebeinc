@@ -30,6 +30,7 @@ check(green.includes("mode === 'random'") && green.includes('(current+1)%playlis
 check(green.includes('getPreviousPlaylistItem') && green.includes('AT140_VISUAL_TRANSPORT'),'Previous/Next/Random transport semantics are explicit');
 check(green.includes("setTimeout(() => playNextVisual(), 800)"),'failed media advances with a bounded delay');
 check(green.includes('failedVisualIds.has(failedId)') && green.includes('playlist = playlist.filter(candidate'),'failed media is quarantined once per layout and skipped by the ordered cycle');
+check(green.includes("e?.name === 'AbortError'") && green.includes("log('play_cancelled'"),'expected buffer cancellation does not quarantine valid media');
 check(green===live,'Green and public Room retain one byte-identical renderer engine');
 check(green.includes('waitForDecodedFrame(video, timeoutMs = 15000)'),'hosted first-frame wait stays bounded while accommodating cold immutable MP4 sources');
 check(rust.includes('"environment": "green-staging"') && rust.includes('X-AT140-Environment: green-staging'),'workstation Green publish carries explicit environment in payload and header');

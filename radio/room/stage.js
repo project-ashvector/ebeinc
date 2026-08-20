@@ -632,6 +632,13 @@ Track: ${currentStationStatus?.current_title || 'LIVE RADIO'} (Seq: ${currentSta
       await targetVideo.play();
       await waitForDecodedFrame(targetVideo);
     } catch (e) {
+      const message = String(e?.message || e || '');
+      if (e?.name === 'AbortError' || /play\(\) request was interrupted/i.test(message)) {
+        // A newer serialized transport action retired this buffer. This is an
+        // expected cancellation, not evidence that the immutable media failed.
+        log('play_cancelled', { id: item.id || item.assetId });
+        return;
+      }
       log('play_error', { error: e.message, id: item.id || item.assetId });
       handleVisualFailure(item, 'first_frame_failed');
       return;
