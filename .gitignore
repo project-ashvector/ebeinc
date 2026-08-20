@@ -66,6 +66,7 @@ backups/
 # Large source/master media is preserved outside Git. Referenced web derivatives
 # below 25 MiB remain eligible for explicit staging.
 radio/assets/visuals-desktop-master/
+radio/assets/visuals-desktop-v8/
 radio/assets/visuals-66-hq.mp4
 radio/assets/visuals-66.mp4
 radio/assets/visuals-home-desktop-hq.mp4
