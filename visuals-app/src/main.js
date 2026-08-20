@@ -79,7 +79,7 @@ async function refreshLiveRoutingAndHealth() {
       liveHealth.realtime = health.realtime?.status === 'ok' ? 'ONLINE' : 'OFFLINE';
       const rAck = health.renderer?.ack || {};
       const envs = health.renderer?.environments || rAck.environments || {};
-      const chatAck = envs['live-chat'] || (rAck.environment === 'live-chat' ? rAck : null);
+      const chatAck = envs.live || (rAck.environment === 'live' ? rAck : null);
       if (chatAck) {
         const isFresh = (Date.now() - (chatAck.lastSeen || chatAck.renderAppliedAt || 0)) < 35000;
         liveHealth.chatRenderer = isFresh ? 'ONLINE' : 'OFFLINE';
@@ -740,7 +740,7 @@ function liveOutput() {
           </div>
           <div class="telemetry-item">
             <small>RENDERER ENVIRONMENT</small>
-            <b>live-chat</b>
+            <b>live</b>
             <span>Independent from green-staging</span>
           </div>
           <div class="telemetry-item">
@@ -2606,7 +2606,7 @@ async function testVisualOnGreenWithProgress() {
 
     if (!ack) {
       // Gateway storage is not renderer proof. Preserve that distinction.
-      const lState = await fetch(`https://visuals-realtime-staging.allthings140radio.online/layout-state?t=${Date.now()}`, { cache: 'no-store' })
+      const lState = await fetch(`https://visuals-realtime-staging.allthings140radio.online/layout-state?environment=green-staging&t=${Date.now()}`, { cache: 'no-store' })
         .then(r => r.json()).catch(() => null);
       const gatewayStored = Boolean(lState && lState.layoutHash === pubRes.layoutHash);
       throw new Error(gatewayStored

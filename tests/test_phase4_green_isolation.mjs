@@ -1,0 +1,35 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import assert from 'node:assert/strict';
+import { fileURLToPath } from 'node:url';
+
+const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const read=rel=>fs.readFileSync(path.join(ROOT,rel),'utf8');
+let passed=0;
+const check=(condition,message)=>{assert.ok(condition,message);passed++;console.log(`✓ ${message}`)};
+const rt=read('visuals-realtime/app.py');
+const greenCfg=read('visuals-green/config.js');
+const liveCfg=read('radio/room/config.js');
+const green=read('visuals-green/stage.js');
+const live=read('radio/room/stage.js');
+const rust=read('visuals-app/src-tauri/src/lib.rs');
+
+check(rt.includes('ENVIRONMENTS=frozenset({"green-staging","live"})'),'backend accepts only explicit Green and Live environment identities');
+check(rt.includes('active_layout:{environment}') && !rt.includes("VALUES('active_layout', ?)"),'active layouts are keyed by environment');
+check(rt.includes('idx_schedules_environment_time') && rt.includes('WHERE environment=? AND enabled=1'),'schedule storage and lookup are environment scoped');
+check(rt.includes('state.get("environment")==environment'),'broadcast fanout is filtered server-side by environment');
+check(rt.includes('valid_environment_required'),'missing and invalid environments fail closed');
+check(rt.includes('GREEN_ADMIN_TOKEN') && rt.includes('LIVE_ADMIN_TOKEN'),'Green and Live publish credentials are separate');
+check(rt.includes('Green and Live admin credentials must be different'),'startup rejects shared Green/Live credentials');
+check(rt.includes('if not origins:raise RuntimeError'),'empty origin configuration fails closed');
+check(rt.includes('stored_layout_invalid'),'malformed stored layout is contained without replacing another environment');
+check(greenCfg.includes('ws?environment=green-staging') && greenCfg.includes('layout-state?environment=green-staging'),'dedicated Green registers and reads Green explicitly');
+check(liveCfg.includes('environment:"live"') && liveCfg.includes('ws?environment=live'),'public Room source registers Live explicitly');
+check(green.includes("d.environment === C.environment") && green.includes('environment_mismatch'),'renderer rejects cross-environment welcome/update data');
+check(green.includes("mode === 'random'") && green.includes('(current+1)%playlist.length'),'renderer distinguishes random from ordered advancement');
+check(green.includes('getPreviousPlaylistItem') && green.includes('AT140_VISUAL_TRANSPORT'),'Previous/Next/Random transport semantics are explicit');
+check(green.includes("setTimeout(() => playNextVisual(), 800)"),'failed media advances with a bounded delay');
+check(green===live,'Green and public Room retain one byte-identical renderer engine');
+check(rust.includes('"environment": "green-staging"') && rust.includes('X-AT140-Environment: green-staging'),'workstation Green publish carries explicit environment in payload and header');
+check(rust.includes('admin/layout?environment=green-staging'),'workstation endpoint is Green-scoped and cannot target Live implicitly');
+console.log(`${passed}/${passed} Phase 4 Green isolation checks passed`);

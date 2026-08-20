@@ -55,7 +55,7 @@ check(roomHtml.includes('<title>ALLTHINGS140 // GREEN ROOM</title>'), 'public ro
 check(roomHtml.includes('id="legacyFallback"'), 'Green Room contains a whole-room legacy visual fallback');
 check(roomHtml.includes('id="homeLink"'), 'Green Room includes a direct HOME escape path');
 check(!roomHtml.includes('stage-0001.mp4'), 'public room does not boot against a stale hard-coded Stage MP4');
-check(/environment:"live-chat"/.test(roomCfg), 'public Green Room ACK/heartbeat environment is live-chat');
+check(/environment:"live"/.test(roomCfg), 'public Green Room ACK/heartbeat environment is live');
 check(/environment:"green-staging"/.test(greenCfg), 'Green staging ACK/heartbeat environment is green-staging');
 check(roomCfg.includes('assets/visuals-home-desktop-hq.mp4'), 'room fallback uses the exact legacy desktop homepage visual');
 check(roomCfg.includes('assets/visuals-mainpage-2026-08-11-v2.mp4'), 'room fallback uses the exact legacy mobile homepage visual');
@@ -104,7 +104,7 @@ check(!main.includes('btnSimulateFailure'), 'non-functional v0.1.39 failure-simu
 
 const rust = read('visuals-app/src-tauri/src/lib.rs');
 check(rust.includes('ALLTHINGS140-Workstation/0.1.43'), 'routing requests identify the current workstation version');
-check(rust.includes('renderer-state?environment=live-chat'), 'workstation health reads live-chat renderer state directly');
+check(rust.includes('renderer-state?environment=live'), 'workstation health reads live renderer state directly');
 const routingFn = rust.slice(rust.indexOf('fn set_visual_routing'), rust.indexOf('fn get_visual_health'));
 check(routingFn.includes('routing-headers-'), 'workstation stages routing authorization in a protected temporary header file');
 check(!routingFn.includes('&format!("Authorization: Bearer {token}")'), 'routing credential is not exposed in curl process arguments');

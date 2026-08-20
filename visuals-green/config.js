@@ -1,8 +1,8 @@
 window.AT140_GREEN_CONFIG={
   environment:"green-staging",
-  realtimeUrl:"wss://visuals-realtime-staging.allthings140radio.online/ws",
-  realtimeStateUrl:"https://visuals-realtime-staging.allthings140radio.online/visuals-state",
-  realtimeLayoutUrl:"https://visuals-realtime-staging.allthings140radio.online/layout-state",
+  realtimeUrl:"wss://visuals-realtime-staging.allthings140radio.online/ws?environment=green-staging",
+  realtimeStateUrl:"https://visuals-realtime-staging.allthings140radio.online/visuals-state?environment=green-staging",
+  realtimeLayoutUrl:"https://visuals-realtime-staging.allthings140radio.online/layout-state?environment=green-staging",
   rendererAckUrl:"https://visuals-realtime-staging.allthings140radio.online/renderer-ack",
   radioStatusUrl:"https://status.ebeinc.online/api/public/status",
   playlistUrl:"./playlist.json",

@@ -287,7 +287,7 @@ fn get_visual_health() -> Result<Value, String> {
     let rt_ok = rt_health.as_ref().map(|o| o.status.success()).unwrap_or(false);
 
     let rt_ack = Command::new("curl")
-        .args(["-fsS", "-m", "4", "https://visuals-realtime-staging.allthings140radio.online/renderer-state?environment=live-chat"])
+        .args(["-fsS", "-m", "4", "https://visuals-realtime-staging.allthings140radio.online/renderer-state?environment=live"])
         .output();
     let ack_val: Value = rt_ack
         .ok()
@@ -1818,6 +1818,7 @@ fn publish_layout_fast_blocking(payload: Value) -> Result<Value, String> {
     let playlist_contract = if is_preview { json!([]) } else { compact_playlist_for_green(state, &media_origin)? };
     let mut canonical = json!({
         "schemaVersion": 2,
+        "environment": "green-staging",
         "revision": revision,
         "layoutId": format!("layout-{revision}"),
         "publishedAt": Utc::now().to_rfc3339(),
@@ -1867,12 +1868,12 @@ fn publish_layout_fast_blocking(payload: Value) -> Result<Value, String> {
     fs::write(&payload_path, payload_str.as_bytes()).map_err(|e| format!("Could not stage realtime payload: {e}"))?;
     fs::write(
         &header_path,
-        format!("Content-Type: application/json\nAuthorization: Bearer {admin_token}\n").as_bytes(),
+        format!("Content-Type: application/json\nAuthorization: Bearer {admin_token}\nX-AT140-Environment: green-staging\n").as_bytes(),
     ).map_err(|e| format!("Could not stage realtime auth header: {e}"))?;
     #[cfg(unix)]
     let _ = fs::set_permissions(&header_path, fs::Permissions::from_mode(0o600));
 
-    let realtime_url = "https://visuals-realtime-staging.allthings140radio.online/admin/layout";
+    let realtime_url = "https://visuals-realtime-staging.allthings140radio.online/admin/layout?environment=green-staging";
     let mut post_cmd = Command::new("curl");
     post_cmd.args([
         "-sS",
@@ -1969,7 +1970,7 @@ fn schedule_takeover_blocking(schedule: Value) -> Result<Value, String> {
     if !key.exists() {
         return Err("Dedicated Visuals server SSH key is unavailable".into());
     }
-    let remote = "set -a; . /etc/allthings140-visuals/realtime.env; set +a; curl -fsS -X POST -H \"Authorization: Bearer $ADMIN_TOKEN\" -H 'Content-Type: application/json' --data-binary @- http://127.0.0.1:8765/admin/schedule";
+    let remote = "set -a; . /etc/allthings140-visuals/realtime.env; set +a; curl -fsS -X POST -H \"Authorization: Bearer $GREEN_ADMIN_TOKEN\" -H 'X-AT140-Environment: green-staging' -H 'Content-Type: application/json' --data-binary @- 'http://127.0.0.1:14140/admin/schedule?environment=green-staging'";
     let payload_path = data_dir()?.join(format!("schedule-{}.json", Utc::now().timestamp_millis()));
     atomic_write(&payload_path, &serde_json::to_vec(&schedule).map_err(|e| e.to_string())?)?;
     let input = fs::File::open(&payload_path).map_err(|e| e.to_string())?;

@@ -39,8 +39,6 @@
   let activeIndex = 0;
   let playlist = [];
   let playlistIndex = 0;
-  let recentPlayed = [];
-  const RECENT_HISTORY_SIZE = 5;
   let consecutiveFailures = 0;
   let layout = null;
   let ws = null;
@@ -268,6 +266,10 @@
       return;
     }
     layout = data;
+    if (Array.isArray(data.playlist)) {
+      playlist = data.playlist.filter(item => item && item.url && item.enabled !== false);
+      playlistIndex = 0;
+    }
     if (incomingHash) lastAppliedLayoutHash = incomingHash;
     fitCompositionCanvas();
     if (layout.safePlaybackMode === true) resetAudioReactiveFx();
@@ -533,7 +535,12 @@ Track: ${currentStationStatus?.current_title || 'LIVE RADIO'} (Seq: ${currentSta
     await playNextVisual();
   }
 
-  function getNextPlaylistItem() {
+  function currentPlaylistPosition() {
+    const id = videos[activeIndex]?.dataset.id;
+    return playlist.findIndex(item => (item.id || item.assetId) === id);
+  }
+
+  function getNextPlaylistItem(mode = layout?.cycle?.mode || 'ordered') {
     if (!playlist.length) return null;
     if (activeTakeover && activeTakeover.visual_url) {
       // Mixed Takeover Mode: Weight selection between takeover visuals and station playlist
@@ -548,18 +555,26 @@ Track: ${currentStationStatus?.current_title || 'LIVE RADIO'} (Seq: ${currentSta
       }
     }
 
-    // Anti-repeat selection from station playlist
-    const available = playlist.filter(item => !recentPlayed.includes(item.id));
-    const pool = available.length ? available : playlist;
-    const item = pool[Math.floor(Math.random() * pool.length)] || pool[0];
-
-    if (item && item.id) {
-      recentPlayed.push(item.id);
-      if (recentPlayed.length > RECENT_HISTORY_SIZE) {
-        recentPlayed.shift();
-      }
+    if (mode === 'random') {
+      const current=currentPlaylistPosition();
+      const candidates=playlist.map((item,index)=>({item,index})).filter(x=>playlist.length<2 || x.index!==current);
+      const choice=candidates[Math.floor(Math.random()*candidates.length)] || candidates[0];
+      if (!choice) return null;
+      playlistIndex=(choice.index+1)%playlist.length;
+      return choice.item;
     }
-    return item;
+    const current=currentPlaylistPosition();
+    const index=current>=0 ? (current+1)%playlist.length : playlistIndex%playlist.length;
+    playlistIndex=(index+1)%playlist.length;
+    return playlist[index];
+  }
+
+  function getPreviousPlaylistItem() {
+    if (!playlist.length) return null;
+    const current=currentPlaylistPosition();
+    const index=((current>=0?current:playlistIndex)-1+playlist.length)%playlist.length;
+    playlistIndex=(index+1)%playlist.length;
+    return playlist[index];
   }
 
   function waitForDecodedFrame(video, timeoutMs = 4000) {
@@ -791,6 +806,13 @@ Track: ${currentStationStatus?.current_title || 'LIVE RADIO'} (Seq: ${currentSta
     setTimeout(() => playNextVisual(), 800);
   }
 
+  window.AT140_VISUAL_TRANSPORT = Object.freeze({
+    next: () => playNextVisual(getNextPlaylistItem('ordered')),
+    previous: () => playNextVisual(getPreviousPlaylistItem()),
+    random: () => playNextVisual(getNextPlaylistItem('random')),
+    state: () => ({ playlistCount: playlist.length, currentIndex: currentPlaylistPosition(), nextIndex: playlistIndex })
+  });
+
   // --- Audio-Reactive Visual Effects (Scoped strictly to .screens) ---
 
   function resetAudioReactiveFx() {
@@ -838,7 +860,8 @@ Track: ${currentStationStatus?.current_title || 'LIVE RADIO'} (Seq: ${currentSta
       ws.send(JSON.stringify({
         type: 'join',
         ...profile,
-        audience: (C.environment || 'green-staging') === 'live-chat',
+        environment: C.environment,
+        audience: C.environment === 'live',
         event_id: crypto.randomUUID()
       }));
       updateDebugOverlay();
@@ -875,6 +898,11 @@ Track: ${currentStationStatus?.current_title || 'LIVE RADIO'} (Seq: ${currentSta
     if (d.server_time != null) realtimeTelemetry.serverTime = d.server_time;
 
     if (d.type === 'welcome') {
+      if (d.environment !== C.environment) {
+        log('environment_mismatch', { expected: C.environment, received: d.environment });
+        try { ws?.close(1008, 'environment mismatch'); } catch (_) {}
+        return;
+      }
       sessionId = d.session_id;
       if (d.active_layout) applyLayout(d.active_layout);
       // Green staging uses realtime chat. The public Green Room can opt into
@@ -882,11 +910,8 @@ Track: ${currentStationStatus?.current_title || 'LIVE RADIO'} (Seq: ${currentSta
       if (!C.chatUrl) (d.history || []).forEach(addMessage);
       renderPresence(d.profiles || []);
       updateEnergy(d);
-    } else if (d.type === 'layout_update' && d.layout) {
+    } else if (d.type === 'layout_update' && d.layout && d.environment === C.environment) {
       applyLayout(d.layout);
-      if (Array.isArray(d.layout.playlist) && d.layout.playlist.length) {
-        playlist = d.layout.playlist;
-      }
     } else if (d.type === 'room_state') {
       renderPresence(d.profiles || []);
       updateEnergy(d);
@@ -1084,6 +1109,7 @@ Track: ${currentStationStatus?.current_title || 'LIVE RADIO'} (Seq: ${currentSta
       ws.send(JSON.stringify({
         type: 'join',
         ...profile,
+        environment: C.environment,
         event_id: crypto.randomUUID()
       }));
     }

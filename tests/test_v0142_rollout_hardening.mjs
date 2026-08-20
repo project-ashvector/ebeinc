@@ -38,7 +38,7 @@ check(rt.includes('visual_mode == "new"'),'legacy safety heartbeats do not refre
 check(rt.includes('ack.get(\"rendererSessionId\")==sid'),"a different renderer heartbeat cannot refresh another session's ACK");
 check(rt.includes('ack_session_live') && rt.includes('rendererClients'),'renderer-state requires the ACKing session to still be live and exposes audience renderer counts');
 check(rt.includes('if state.get("is_audience")') && rt.includes('observer_cannot_react'),'operator/staging sockets cannot inflate listener presence or public room energy');
-check(main.includes("audience: false") && stage.includes("audience: (C.environment || 'green-staging') === 'live-chat'"),'workstation/Green renderer sockets join as observers while public Room listeners count as audience');
+check(main.includes("audience: false") && stage.includes("audience: C.environment === 'live'"),'workstation/Green renderer sockets join as observers while public Room listeners count as audience');
 check(main.includes('renderer-state?environment=green-staging'),'Test Current Visual waits specifically for Green staging ACK');
 check(headers.includes('wss://chat.ebeinc.online'),'Room CSP allows the existing moderated chat WebSocket');
 check(app.includes("navigator.serviceWorker.register('/sw.js'"),'public site explicitly registers the corrected service worker');
