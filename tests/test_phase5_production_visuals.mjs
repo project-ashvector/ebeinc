@@ -22,6 +22,7 @@ check(worker.includes('isPublicHost ? state.visuals : "new"'),'Cloudflare previe
 check(cfg.includes('environment:"live"') && cfg.includes('ws?environment=live'),'public Visuals registers explicitly as Live');
 check(cfg.includes('routingUrl:"/api/visuals-routing"'),'public Visuals reads only its same-origin routing selector');
 check(live.includes('../room/stage.js?v=2.5.0'),'public Visuals uses the shared reviewed renderer engine');
+check(live.includes('@media(max-width:680px)') && live.includes('.energy{min-width:0') && live.includes('.avatar small{display:none}'),'mobile viewer bounds fixed-size overlays inside the canonical canvas');
 check(roomEngine===greenEngine,'Green and public renderers remain byte-identical');
 check(legacy.includes('assets/visuals-desktop-v8/index.m3u8'),'legacy fallback preserves the Phase 2 desktop HLS');
 check(legacy.includes('phone-visuals-authoritative-v1.mp4'),'legacy fallback preserves the separate mobile Visuals asset');
