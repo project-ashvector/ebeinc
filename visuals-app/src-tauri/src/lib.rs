@@ -1970,7 +1970,7 @@ fn schedule_takeover_blocking(schedule: Value) -> Result<Value, String> {
     if !key.exists() {
         return Err("Dedicated Visuals server SSH key is unavailable".into());
     }
-    let remote = "set -a; . /etc/allthings140-visuals/realtime.env; set +a; curl -fsS -X POST -H \"Authorization: Bearer $GREEN_ADMIN_TOKEN\" -H 'X-AT140-Environment: green-staging' -H 'Content-Type: application/json' --data-binary @- 'http://127.0.0.1:14140/admin/schedule?environment=green-staging'";
+    let remote = "set -a; . /etc/allthings140-visuals/realtime.env; set +a; curl -fsS -X POST -H \"Authorization: Bearer $GREEN_ADMIN_TOKEN\" -H 'X-AT140-Environment: green-staging' -H 'Content-Type: application/json' --data-binary @- \"http://127.0.0.1:${REALTIME_PORT:-8765}/admin/schedule?environment=green-staging\"";
     let payload_path = data_dir()?.join(format!("schedule-{}.json", Utc::now().timestamp_millis()));
     atomic_write(&payload_path, &serde_json::to_vec(&schedule).map_err(|e| e.to_string())?)?;
     let input = fs::File::open(&payload_path).map_err(|e| e.to_string())?;
