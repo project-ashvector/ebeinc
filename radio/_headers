@@ -13,6 +13,9 @@
 /visuals/index.html
   Cache-Control: no-store, no-cache, must-revalidate
 
+/visuals/legacy.html
+  Cache-Control: no-store, no-cache, must-revalidate
+
 /visuals/live.html
   Cache-Control: no-store, no-cache, must-revalidate
   X-Content-Type-Options: nosniff

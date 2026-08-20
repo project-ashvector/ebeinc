@@ -224,7 +224,9 @@ async function handlePublicVisualsRoutingGet(request, env) {
 
 async function servePublicVisuals(request, env) {
   const state = await readRoutingState(env);
-  const target = state.visuals === "new" ? "/visuals/live.html" : "/visuals/index.html";
+  // Do not internally fetch an index.html asset here: Pages canonicalizes it
+  // back to /visuals/, which would recurse through this routing decision.
+  const target = state.visuals === "new" ? "/visuals/live.html" : "/visuals/legacy.html";
   const assetUrl = new URL(request.url);
   assetUrl.pathname = target;
   const response = await env.ASSETS.fetch(new Request(assetUrl, request));
