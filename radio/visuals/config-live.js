@@ -9,7 +9,7 @@ window.AT140_GREEN_CONFIG={
   layoutUrl:"../room/layout.json",
   mediaBaseUrl:"https://visuals-media-staging.allthings140radio.online",
   mediaVersion:"20260816-2",
-  routingUrl:"https://allthings140radio.online/api/visuals-routing",
+  routingUrl:"/api/visuals-routing",
   legacyFallbackEnabled:true,
   legacyFallbackDesktop:"https://allthings140radio.online/assets/visuals-desktop.mp4?v=7.0.0",
   legacyFallbackMobile:"https://allthings140radio.online/assets/phone-visuals-authoritative-v1.mp4?v=1.0.0",

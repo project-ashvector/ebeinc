@@ -206,15 +206,18 @@ async function handleVisualRoutingGet(request, env) {
   return Response.json({ ...state, persistent: Boolean(env.VISUALS_ROUTING_KV) }, { status: 200, headers: { "Cache-Control": "no-store" } });
 }
 
-async function handlePublicVisualsRoutingGet(env) {
+async function handlePublicVisualsRoutingGet(request, env) {
   const state = await readRoutingState(env);
+  const host = new URL(request.url).hostname.toLowerCase();
+  const isPublicHost = host === "allthings140radio.online" || host === "www.allthings140radio.online";
+  const selected = isPublicHost ? state.visuals : "new";
   // The shared, burn-in-tested compositor consumes the historical `chat`
   // selector. Expose a read-only adapter for the independent public Visuals
   // selector so the renderer engine remains byte-identical across Green,
   // Room and /visuals/.
   return Response.json({
-    chat: state.visuals,
-    visuals: state.visuals,
+    chat: selected,
+    visuals: selected,
     persistent: Boolean(env.VISUALS_ROUTING_KV),
   }, { status: 200, headers: { "Cache-Control": "no-store" } });
 }
@@ -366,7 +369,7 @@ export default {
       return handleVisualRoutingGet(request, env);
     }
     if (url.pathname === "/api/visuals-routing" && request.method === "GET") {
-      return handlePublicVisualsRoutingGet(env);
+      return handlePublicVisualsRoutingGet(request, env);
     }
     if (url.pathname === "/api/visual-routing" && request.method === "POST") {
       return handleVisualRoutingPost(request, env, ctx);
