@@ -1,0 +1,14 @@
+[Unit]
+Description=Create a consistent AllThings140Radio database backup
+RequiresMountsFor=/srv/allthings140radio
+
+[Service]
+Type=oneshot
+User=allthings140radio
+Group=allthings140radio
+ExecStart=/usr/local/sbin/allthings140radio-backup
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/srv/allthings140radio /var/lib/allthings140radio

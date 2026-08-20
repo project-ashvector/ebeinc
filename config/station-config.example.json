@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "station_name": "AllThings140Radio",
+  "website_url": "https://allthings140radio.online/",
+  "public_status_url": "https://status.ebeinc.online/api/public/status",
+  "public_stream_url": "https://stream.ebeinc.online/live.mp3",
+  "control_url": "http://allthings140radio-server:14080",
+  "projects_root": "~/Projects",
+  "secret_configuration": "Configure credentials separately on every machine; never add them here."
+}

@@ -2,8 +2,8 @@ You are continuing work on the AllThings140Radio project for Ebmarah.
 
 PROJECTS
 - Website source: ebeinc-cloudflare-migration/radio/ (the live radio site) and the repository root (the EBE INC hub).
-- Production radio URL: https://ebeinc.online/liveradio/
-- Visuals URL: https://ebeinc.online/liveradio/visuals/
+- Production radio URL: https://allthings140radio.online/
+- Visuals URL: https://allthings140radio.online/visuals/
 - Cloudflare Pages project: ebeinc. Deploy with: npx wrangler pages deploy . --project-name ebeinc --branch main --commit-dirty=true
 - DJ/server app source: allthings140-icon-update/ (Python desktop app sources, desktop launchers, and icons).
 - Packaged app releases: Desktop/apps/aradio/ contains AllThings140Radio-DJ and AllThings140Radio-Server .deb files.
@@ -26,7 +26,7 @@ SAFE WORKFLOW
 1. Inspect the current source and git status before editing. Preserve unrelated user changes.
 2. Use apply_patch for text edits. Run node --check radio/app.js for JavaScript changes and git diff --check before committing.
 3. Test locally when practical with python3 -m http.server from the repository root.
-4. Deploy only the existing ebeinc Pages project. Verify both the unique pages.dev deployment URL and https://ebeinc.online/liveradio/ after deployment.
+4. Deploy only the existing ebeinc Pages project. Verify both the unique pages.dev deployment URL and https://allthings140radio.online/ after the custom domain is attached.
 5. Do not expose secrets, host keys, private stream credentials, or machine-specific tokens in public files or handoff notes.
 
 GOOD NEXT IMPROVEMENTS

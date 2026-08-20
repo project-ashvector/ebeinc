@@ -1,0 +1,54 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "ALLTHINGS140Radio Visuals",
+  "version": "0.1.42",
+  "identifier": "online.allthings140radio.visuals",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://127.0.0.1:14340",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "ALLTHINGS140Radio Visuals \u2014 STAGING WORKSTATION",
+        "width": 1600,
+        "height": 980,
+        "minWidth": 1000,
+        "minHeight": 650,
+        "center": true
+      }
+    ],
+    "security": {
+      "assetProtocol": {
+        "enable": true,
+        "scope": [
+          "/home/ebmarah/Videos/at140radio/desktop visuals/**",
+          "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/**"
+        ]
+      },
+      "csp": "default-src 'self'; connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:* https://allthings140-visuals-green.pages.dev https://visuals-realtime-staging.allthings140radio.online wss://visuals-realtime-staging.allthings140radio.online https://status.ebeinc.online https://allthings140radio.online; media-src 'self' asset: http://asset.localhost https://asset.localhost http://127.0.0.1:* https://allthings140radio.online blob:; img-src 'self' asset: http://asset.localhost data: blob: https://allthings140radio.online; style-src 'self' 'unsafe-inline'; script-src 'self'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "deb"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.png"
+    ],
+    "category": "Video",
+    "shortDescription": "Professional Visuals show-control workstation",
+    "longDescription": "Configure, validate, preview and publish ALLTHINGS140Radio Visuals to the locked green staging room.",
+    "linux": {
+      "deb": {
+        "depends": []
+      }
+    }
+  }
+}

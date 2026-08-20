@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily encrypted off-host AllThings140Radio backup
+
+[Timer]
+OnCalendar=*-*-* 04:17:00 UTC
+RandomizedDelaySec=20m
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,17 @@
+[Unit]
+Description=AllThings140Radio Google Drive music mount
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=allthings140radio
+Group=allthings140radio
+ExecStart=/usr/bin/rclone mount at140drive: /mnt/allthings140radio-drive --config=/etc/allthings140radio/rclone.conf --buffer-size=32M --dir-cache-time=5m --poll-interval=1m --vfs-cache-mode=off --umask=0077 --log-level=INFO
+ExecStop=/usr/bin/fusermount3 -uz /mnt/allthings140radio-drive
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+
+[Install]
+WantedBy=multi-user.target

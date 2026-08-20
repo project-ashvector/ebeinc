@@ -1,0 +1,17 @@
+[Unit]
+Description=Encrypted off-host AllThings140Radio state backup
+After=network-online.target allthings140radio-drive.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=allthings140radio
+Group=allthings140radio
+ExecStart=/usr/bin/python3 /opt/allthings140radio-server/offhost_backup.py
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/var/lib/allthings140radio /srv/allthings140radio/backups
+ReadOnlyPaths=/etc/allthings140radio
+

@@ -1,0 +1,4 @@
+<resources>
+    <dimen name="content_padding_horizontal">16dp</dimen>
+    <dimen name="visualizer_height">250dp</dimen>
+</resources>

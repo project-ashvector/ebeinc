@@ -1,0 +1,71 @@
+I am uploading the ALLTHINGS140 Radio Android phone app v1.3.0 release-candidate source.
+
+Please independently review the ENTIRE project before suggesting or making changes. Do not assume the prior audit is correct just because APP_AUDIT_REPORT.txt says an item was fixed.
+
+Context:
+- Package: online.ebeinc.allthings140radio
+- Version: 1.3.0 / versionCode 15
+- minSdk 23
+- compileSdk/targetSdk 36
+- Java 17
+- Media3 1.11.0
+- Main experience was intentionally changed from WebView-first to a native radio UI.
+- RadioService is intended to be the single playback authority for phone UI, background playback, lock screen, Bluetooth/headsets, and Android Auto/media browsing.
+- The main app shows a native branded visualizer, LIVE/playback state, title/artist, listener count, retry state, Settings, external Website button, and an optional in-app Visuals page.
+- The huge old ~57 MB bg_video.mp4 was intentionally removed.
+- Green Room public chat was intentionally removed from the Play release UI because the current public chat creates user-generated-content moderation/report/block/Terms obligations. Do NOT casually re-add it.
+- Settings now shows the dynamic installed version/build, target SDK, update status, privacy, website, and Play Store action. The update checker must never fake success if the release feed is not configured.
+- A native in-app privacy notice exists, but the release still needs a real hosted public privacy-policy URL and accurate Play Data Safety answers.
+- Release signing intentionally does NOT fall back to debug signing.
+
+What I need you to do:
+
+1. Build-safety review
+Deeply inspect Gradle/AGP/Java/Media3/API 36 compatibility, AndroidManifest, resources, ProGuard/R8 rules, adaptive icons, foreground-service declarations, MediaLibraryService/Android Auto discovery, predictive back, Android 16 edge-to-edge behavior, and release signing configuration.
+
+2. Compile-risk review
+Look for API/signature mistakes that a static text review could miss, especially Media3 1.11.0 callbacks/classes, Guava transitive APIs, android.window predictive-back APIs, ExoPlayer wake/audio behavior, notification behavior, and MediaLibrarySession browsing callbacks.
+
+3. Playback reliability
+Review startup, play/pause, stream recovery, audio focus, noisy headset disconnect, screen-off/background playback, task removal, service lifetime, process recreation, controller reconnect races, buffering/error state, duplicate retries, network loss, and whether a stopped app can get stuck in a false "connecting" state.
+
+4. Metadata
+Verify that the main screen displays real song title/artist and listener count when station endpoints respond. Check whether actual song/artist also reaches lock-screen/Bluetooth/Android Auto metadata. If it does not, design the safest Media3-native metadata update that does NOT restart the live stream on every song update.
+
+5. UI/UX quality
+Review every layout on:
+- Galaxy S24 Plus
+- smaller Android phone
+- large font/display scaling
+- landscape
+- Android 16 edge-to-edge/cutouts
+- tablet/foldable / sw600dp
+Look for clipping, oversized/undersized visuals, fixed heights that break accessibility, bad spacing, touch targets, status/nav overlap, long metadata, scroll issues, contrast, and inconsistent brand hierarchy. Keep the dark/purple/orange ALLTHINGS140 identity unless there is a concrete usability reason to alter it.
+
+6. WebView containment
+The only intended embedded web content is the station Visuals section. Verify HTTPS-only host/path restriction, external-navigation escape, mixed-content/file/content/geolocation settings, cookie behavior, Safe Browsing, WebView destruction, predictive back, and that Green Room/payment/third-party content cannot unexpectedly become in-app UGC/commerce flows.
+
+7. Privacy/security
+Search for secrets, dangerous permissions, exported components, unsafe PendingIntents, cleartext traffic, JavaScript interfaces, unrestricted deep links, file access, credential leaks, debug behavior, and third-party SDK data collection. Compare the actual code to the included privacy draft and identify any mismatch.
+
+8. Google Play readiness
+Verify current Play requirements rather than relying on stale knowledge. Check target SDK, AAB/signing, privacy policy/Data Safety, foreground-service declaration, store listing requirements, Android Auto declarations, 16 KB page-size compatibility, content rating/target audience, and any relevant user-generated-content rules.
+
+9. Green Room safety gate
+Do not re-enable the public Green Room merely because it is a popular feature. Only recommend re-enabling after you can verify the service has accepted Terms/community rules before posting, objectionable-content rules, content/user reporting, user blocking, real moderation workflows, and any other current Google Play UGC/child-safety requirements that apply.
+
+10. Tests
+If your environment can build Android projects, run the actual build rather than only reading source. At minimum target:
+./gradlew clean testDebugUnitTest lintDebug assembleDebug bundleRelease
+If a release keystore is not configured, do not invent one; report that signed bundle generation is pending. If an Android device/emulator is available, install the debug build and exercise the DEVICE_TEST_PLAN.md cases.
+
+11. Output
+Give me:
+- exact issues found, prioritized Critical/High/Medium/Low
+- exact file/line references
+- fixes you made (if you make changes)
+- build/lint/test evidence
+- release blockers still requiring me/Play Console
+- a final "GO / NO-GO for Google Play submission" decision with reasons
+
+Preserve working ALLTHINGS140 Radio features. Prefer root-cause fixes over device-specific hacks. Never fabricate successful tests, an update server, a privacy URL, a signing key, Play Console configuration, or UGC moderation features.

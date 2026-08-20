@@ -161,7 +161,7 @@ button.button{cursor:pointer;font-family:inherit}.text-link{appearance:none;back
   .menu-button[aria-expanded="true"] span:not(.sr-only):nth-child(1){transform:translateY(8px) rotate(45deg);background:var(--accent)}
   .menu-button[aria-expanded="true"] span:not(.sr-only):nth-child(2){opacity:0}
   .menu-button[aria-expanded="true"] span:not(.sr-only):nth-child(3){transform:translateY(-8px) rotate(-45deg);background:var(--accent)}
-  .site-nav{position:fixed;top:calc(max(7px,env(safe-area-inset-top)) + 72px);left:10px;right:10px;z-index:101;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:13px;max-height:calc(100dvh - 96px - env(safe-area-inset-bottom));overflow:auto;border:1px solid rgba(193,138,255,.28);border-radius:22px;background:linear-gradient(150deg,rgba(31,16,51,.98),rgba(10,6,18,.985));box-shadow:0 24px 70px rgba(0,0,0,.55);opacity:0;visibility:hidden;transform:translateY(-10px) scale(.985);pointer-events:none;transition:opacity .18s ease,transform .18s ease,visibility .18s ease}
+  .site-nav{position:fixed;top:calc(max(7px,env(safe-area-inset-top)) + 72px);left:10px;right:10px;z-index:101;display:grid!important;grid-template-columns:1fr;gap:9px;padding:13px;max-height:calc(100dvh - 96px - env(safe-area-inset-bottom));overflow:auto;border:1px solid rgba(193,138,255,.28);border-radius:22px;background:linear-gradient(150deg,rgba(31,16,51,.98),rgba(10,6,18,.985));box-shadow:0 24px 70px rgba(0,0,0,.55);opacity:0;visibility:hidden;transform:translateY(-10px) scale(.985);pointer-events:none;transition:opacity .18s ease,transform .18s ease,visibility .18s ease}
   .site-nav.open{opacity:1;visibility:visible;transform:none;pointer-events:auto}
   .site-nav button{min-height:52px;padding:0 13px!important;border:1px solid rgba(193,138,255,.14)!important;border-radius:15px!important;background:rgba(193,138,255,.055)!important;text-align:left!important;font-size:14px!important;display:flex;align-items:center;justify-content:space-between}
   .site-nav button:after{content:"↗";color:var(--line-bright);font-size:12px}
@@ -176,7 +176,7 @@ button.button{cursor:pointer;font-family:inherit}.text-link{appearance:none;back
   .status-dot{width:7px;height:7px;margin-right:7px}
   .hero h1{font-size:clamp(42px,12vw,54px);line-height:.96;letter-spacing:-.052em}
   .hero-lede{font-size:16px;line-height:1.65;margin-top:22px}
-  .hero-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:25px}
+  .hero-actions{display:grid;grid-template-columns:1fr;width:100%;gap:9px;margin-top:25px}
   .hero-actions .button{width:100%;min-height:50px;padding:0 13px;font-size:13px;text-align:center}
   .hero-actions .button:first-child,.hero-actions a[download]{grid-column:1/-1}
   .hero-actions .text-link{min-height:44px;padding:8px 5px;display:flex;align-items:center;justify-content:center;font-size:13px;border:1px solid rgba(193,138,255,.12);border-radius:14px;background:rgba(193,138,255,.035)}
@@ -386,14 +386,14 @@ button,.button,.text-link{max-width:100%}
   .brand-mark{width:42px;height:42px;flex-basis:42px}
   .brand-copy strong{font-size:13px}.brand-copy small{max-width:190px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .menu-button{width:48px;height:48px;flex:0 0 48px;border-radius:14px}
-  .site-nav{top:88px;left:12px;right:12px;max-height:calc(100dvh - 104px);grid-template-columns:1fr 1fr}
+  .site-nav{top:88px;left:12px;right:12px;max-height:calc(100dvh - 96px - env(safe-area-inset-bottom));grid-template-columns:1fr}
 
   .hero{display:grid;grid-template-columns:minmax(0,1fr);width:calc(100% - 32px);padding:54px 0 44px;gap:25px}
   .hero-copy,.hero-console{min-width:0;width:100%;max-width:100%}
   .eyebrow{max-width:100%;font-size:9.5px;line-height:1.55;letter-spacing:.09em}
   .hero h1{max-width:100%;font-size:clamp(43px,12.2vw,56px);line-height:.94;letter-spacing:-.048em;text-wrap:balance}
   .hero-lede{max-width:100%;font-size:15.5px;line-height:1.65;margin-top:20px}
-  .hero-actions{display:grid;grid-template-columns:1fr 1fr;width:100%;gap:9px;margin-top:24px}
+  .hero-actions{display:grid;grid-template-columns:1fr;width:100%;gap:9px;margin-top:24px}
   .hero-actions>.button{grid-column:1/-1;width:100%;min-width:0;min-height:50px;padding:0 14px;font-size:13px;border-radius:15px}
   .hero-actions>.text-link{grid-column:auto;width:100%;min-width:0;min-height:46px;justify-content:center;padding:8px;border:1px solid rgba(193,138,255,.14);border-radius:14px;background:rgba(193,138,255,.035);font-size:12.5px;text-align:center}
   .role-strip{display:flex;flex-wrap:wrap;overflow:visible;width:100%;margin:20px 0 0;padding:0;gap:7px}
@@ -449,8 +449,25 @@ button,.button,.text-link{max-width:100%}
   .hero-actions>.text-link{grid-column:1}
   .site-nav{grid-template-columns:1fr}
   .site-nav .nav-resume{grid-column:1}
+  .chat-launcher{
+    position:fixed;
+    z-index:80;
+    right:20px;
+    bottom:calc(20px + env(safe-area-inset-bottom));
+    border:1px solid rgba(209,108,255,0.6);
+    border-radius:999px;
+    background:linear-gradient(120deg,#8f27d8,#5720ad);
+    color:#fff;
+    padding:12px 18px;
+    font-weight:900;
+    font-size:.78rem;
+    letter-spacing:.08em;
+    box-shadow:0 0 24px rgba(142,40,217,0.4);
+    cursor:pointer;
+  }
   .project-filters{grid-template-columns:1fr 1fr}
   .console-foot{flex-direction:column;gap:2px}
+  body:has(.nav-menu.is-open) .hero-actions .btn{pointer-events:none}
 }
 /* Cross-site navigation keeps the three EBE properties one connected network. */
 .site-nav .nav-external{display:inline-flex;align-items:center;text-decoration:none}

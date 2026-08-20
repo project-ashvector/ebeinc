@@ -1,0 +1,93 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-08-17T09:57:25Z",
+  "sponsors": [],
+  "partners": [],
+  "takeovers": [
+    {
+      "id": "takeover-ebmarah-resident",
+      "artist": "EBMARAH",
+      "logoUrl": "assets/takeover-fallback-logo.webp",
+      "date": "2026-08-16",
+      "time": "22:00 UTC",
+      "status": "archive",
+      "bio": "ALLTHINGS140 Station Founder & Resident DJ. Deep riddim, 140 dubstep, and exclusive unreleased dubplates.",
+      "artistLinks": {
+        "soundcloud": "https://soundcloud.com",
+        "instagram": "https://instagram.com"
+      },
+      "replayUrl": "https://allthings140radio.online",
+      "tracklist": [
+        "EBMARAH - Station Uplink ID",
+        "Drimi - LOST 2.0",
+        "Jarvis - Champain",
+        "Cimm - Blue Sound"
+      ],
+      "featured": true,
+      "ordering": 0
+    },
+    {
+      "id": "takeover-ikki-live",
+      "artist": "IKKI",
+      "logoUrl": "assets/takeover-fallback-logo.webp",
+      "date": "2026-08-17",
+      "time": "00:00 UTC",
+      "status": "completed",
+      "bio": "Heavyweight selector bringing raw underground basslines and fast-paced dub mixing.",
+      "artistLinks": {
+        "soundcloud": "https://soundcloud.com"
+      },
+      "replayUrl": "",
+      "tracklist": [
+        "IKKI - Dub Intro",
+        "Substrada - Heavy Friction",
+        "Distance - Night Vision VIP"
+      ],
+      "featured": true,
+      "ordering": 1
+    }
+  ],
+  "announcements": [
+    {
+      "id": "ann-1080p60-visuals",
+      "title": "New 1080p60 Visual Video Live",
+      "content": "The desktop visual video background has been upgraded to a 15-minute 1080p 60fps master with adaptive HLS streaming.",
+      "type": "broadcast",
+      "date": "2026-08-17",
+      "active": true,
+      "targetPlanes": [
+        "web",
+        "visuals"
+      ]
+    }
+  ],
+  "roadmap": [
+    {
+      "id": "road-1",
+      "title": "ALLTHINGS140 Hub v1.0 & v1.1 Control Plane",
+      "description": "Central operations center, health telemetry, AI agent control, and site CMS.",
+      "quarter": "Q3 2026",
+      "phase": "Phase 1",
+      "status": "completed",
+      "ordering": 0
+    },
+    {
+      "id": "road-2",
+      "title": "Realtime Visuals Staging Cutover",
+      "description": "1-click Green staging sync, 16:9 canvas parity, and WebSocket energy telemetry.",
+      "quarter": "Q3 2026",
+      "phase": "Phase 2",
+      "status": "in-progress",
+      "ordering": 1
+    },
+    {
+      "id": "road-3",
+      "title": "Automated Nightly Backups & DB Replication",
+      "description": "Encrypted remote database replication and automatic failover.",
+      "quarter": "Q4 2026",
+      "phase": "Phase 3",
+      "status": "planned",
+      "ordering": 2
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+<resources>
+    <string name="app_name">ALLTHINGS140 Radio</string>
+    <string name="station_tagline">24/7 HEAVY BASS RADIO</string>
+    <string name="settings">Settings</string>
+    <string name="go_back">Go back</string>
+    <string name="live_on_air">● LIVE ON AIR</string>
+    <string name="live_ready">● LIVE RADIO</string>
+    <string name="now_playing_label">NOW PLAYING</string>
+    <string name="default_track_title">ALLTHINGS140 Radio</string>
+    <string name="default_track_artist">24/7 dubstep • riddim • tearout</string>
+    <string name="play_live">▶  PLAY LIVE RADIO</string>
+    <string name="pause_live">Ⅱ  PAUSE LIVE RADIO</string>
+    <string name="retry_stream">RETRY CONNECTION</string>
+    <string name="playback_connecting">Connecting to the station…</string>
+    <string name="playback_unavailable">Couldn’t connect to audio controls.</string>
+    <string name="playback_reconnecting">Stream interrupted. Reconnecting…</string>
+    <string name="playback_buffering">Buffering live audio…</string>
+    <string name="playback_live">Live audio connected</string>
+    <string name="playback_paused">Live radio paused</string>
+    <string name="playback_ready">Ready to play</string>
+    <string name="station_online">Station online</string>
+    <string name="station_status_unknown">Listener count unavailable</string>
+    <plurals name="listener_count">
+        <item quantity="one">%d listener live now</item>
+        <item quantity="other">%d listeners live now</item>
+    </plurals>
+    <string name="website">WEBSITE</string>
+    <string name="visuals">VISUALS</string>
+    <string name="explore_label">EXPLORE ALLTHINGS140</string>
+    <string name="explore_hint">Audio keeps playing while you explore.</string>
+    <string name="native_features">Lock screen • Bluetooth • Android Auto</string>
+
+    <string name="settings_title">SETTINGS</string>
+    <string name="settings_badge">140</string>
+    <string name="section_app">APPLICATION</string>
+    <string name="section_updates">SOFTWARE UPDATES</string>
+    <string name="section_privacy_links">PRIVACY &amp; LINKS</string>
+    <string name="version_format">Version %1$s  •  Build %2$d</string>
+    <string name="target_sdk_format">Built for Android API %1$d</string>
+    <string name="update_card_title">App updates</string>
+    <string name="update_ready">Check whether a newer ALLTHINGS140 Radio build is available.</string>
+    <string name="update_checking">Checking for updates…</string>
+    <string name="update_unavailable">Unable to check right now.</string>
+    <string name="update_feed_not_configured">Update feed is not configured yet.</string>
+    <string name="update_play_store_delivery">When the Google Play listing is live, Play Store will be the trusted update source. The app will never pretend an update check succeeded when the release feed is unavailable.</string>
+    <string name="update_available">Version %1$s is available</string>
+    <string name="update_versions">Installed: %1$s\nLatest: %2$s</string>
+    <string name="update_current">You’re up to date</string>
+    <string name="update_current_version">Installed version %1$s is the latest version reported by the station.</string>
+    <string name="update_newer_than_feed">This development build is newer than the release feed.</string>
+    <string name="update_feed_invalid">The update service returned an invalid response.</string>
+    <string name="check_updates">CHECK FOR UPDATES</string>
+    <string name="open_google_play">OPEN GOOGLE PLAY</string>
+    <string name="privacy_policy">PRIVACY POLICY</string>
+    <string name="station_website">STATION WEBSITE</string>
+    <string name="privacy_summary">Read what the native app accesses and how station/web requests are handled.</string>
+    <string name="website_summary">Open the public ALLTHINGS140 Radio website in your browser.</string>
+    <string name="unable_to_open_link">No app is available to open that link.</string>
+
+    <string name="privacy_title">PRIVACY POLICY</string>
+    <string name="privacy_last_updated">Last updated August 18, 2026</string>
+    <string name="privacy_policy_body">ALLTHINGS140 Radio — Android App Privacy Notice\n\nThis native Android app is designed to play the ALLTHINGS140 Radio live stream and display public station information. The native app does not require an account and does not request access to your location, contacts, photos, camera, microphone, SMS, call history, or advertising identifier.\n\nThe app connects over HTTPS to ALLTHINGS140 Radio stream, status, and website services. Like normal internet services, those servers and hosting/network providers can receive technical request information such as IP address, request time, and user-agent data needed to deliver content, maintain reliability, and protect the service.\n\nThe native app does not include an advertising SDK or analytics SDK in this release. It does not sell personal data.\n\nThe in-app Visuals page is an optional station web experience and can use normal first-party browser storage needed to render the page. The Website button opens your device browser rather than collecting website form data inside the native app.\n\nData retention and deletion: the native radio player does not create a user profile or account database. Server logs may be retained by station or infrastructure providers for operational/security purposes according to the final published station privacy policy. Information submitted on the external station website is governed by the station website privacy policy and its service providers.\n\nDeveloper/operator: ALLTHINGS140 Radio. Privacy questions or applicable deletion requests can be submitted through the contact methods on allthings140radio.online. This notice applies to the native Android app and its embedded Visuals page; external websites and third-party services have their own policies.</string>
+
+    <string name="web_station">STATION</string>
+    <string name="web_visuals">VISUALS</string>
+    <string name="web_default_title">ALLTHINGS140</string>
+    <string name="web_external_link">Opening external link…</string>
+
+    <!-- Tab navigation -->
+    <string name="tab_radio">RADIO</string>
+    <string name="tab_chat">GREEN ROOM</string>
+
+    <!-- Visual transmission card -->
+    <string name="ready_for_transmission">READY FOR TRANSMISSION</string>
+    <string name="live_transmission">● LIVE TRANSMISSION // ALLTHINGS140</string>
+
+    <!-- Green Room Live Chat -->
+    <string name="chat_title">GREEN ROOM CHAT</string>
+    <string name="chat_badge">CHAT</string>
+    <string name="chat_connecting">● CONNECTING…</string>
+    <string name="chat_connected">● CHAT LIVE</string>
+    <string name="chat_reconnecting">● RECONNECTING…</string>
+    <string name="chat_offline">● OFFLINE</string>
+    <string name="chat_users_count">%d in chat</string>
+    <string name="chat_input_hint">Say something in the Green Room…</string>
+    <string name="chat_send">SEND</string>
+    <string name="chat_profile_btn">PROFILE</string>
+    <string name="chat_rules_btn">RULES</string>
+    <string name="chat_profile_title">Green Room Profile</string>
+    <string name="chat_name_hint">Display Name (e.g. BassHead)</string>
+    <string name="chat_color_label">Choose your glow color:</string>
+    <string name="chat_save_profile">JOIN CHAT</string>
+    <string name="chat_close">CLOSE</string>
+    <string name="chat_rules_title">Community Rules &amp; Moderation</string>
+    <string name="chat_rules_body">Welcome to the ALLTHINGS140 Green Room!\n\n1. Respect fellow listeners, DJs, and artists.\n2. Zero tolerance for hate speech, slurs, harassment, or abuse (automated filters + host moderation active 24/7).\n3. No spamming, flood bots, or unapproved promotional links.\n4. Long-press or tap any message to Report or Block a user.\n\nKeep the vibes heavy and respectful.</string>
+    <string name="chat_report">Report Message</string>
+    <string name="chat_block">Block / Mute User</string>
+    <string name="chat_copy">Copy Text</string>
+    <string name="chat_msg_reported">Message reported. Inappropriate content hidden.</string>
+    <string name="chat_user_blocked">User blocked. Messages from this user are now hidden.</string>
+    <string name="chat_moderation_cleared">Chat was cleared by a moderator.</string>
+</resources>

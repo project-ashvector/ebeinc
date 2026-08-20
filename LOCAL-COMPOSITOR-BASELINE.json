@@ -1,0 +1,2002 @@
+{
+  "activePreset": "Known Good Default",
+  "activeStage": {
+    "codec": "h264",
+    "duration": "48.000000",
+    "height": 1080,
+    "id": "stage-0002",
+    "mediaType": "stage",
+    "name": "alpha2.mov",
+    "path": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/stage/stage-0002.mp4",
+    "publicUrl": "/media/stage/stage-0002.mp4",
+    "reason": "Stage uses the same direct video-layer pipeline as Visual Content; runtime is regenerated directly from the selected Stage source without geometry filters",
+    "runtime": "stage-0002.mp4",
+    "runtimeHeight": 1080,
+    "runtimeWidth": 1920,
+    "source": "alpha2.mov",
+    "sourceCodec": "hevc",
+    "sourceHeight": 1080,
+    "sourcePath": "/home/ebmarah/Videos/at140radio/desktop visuals/stage/alpha2.mov",
+    "sourceWidth": 1920,
+    "status": "READY",
+    "width": 1920
+  },
+  "activity": [
+    {
+      "at": "2026-08-15T10:09:04.510Z",
+      "detail": "layout v201",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-15T10:09:04.502Z",
+      "detail": "Stage Content: z=40",
+      "event": "Layer stacking changed"
+    },
+    {
+      "at": "2026-08-15T10:09:00.414Z",
+      "detail": "layout v200",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-15T10:09:00.396Z",
+      "detail": "Stage Content: z=30",
+      "event": "Layer stacking changed"
+    },
+    {
+      "at": "2026-08-15T10:08:56.607Z",
+      "detail": "layout v199",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-15T10:08:56.595Z",
+      "detail": "Stage Content: z=20",
+      "event": "Layer stacking changed"
+    },
+    {
+      "at": "2026-08-15T10:08:34.233Z",
+      "detail": "layout v198",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-15T10:08:34.222Z",
+      "detail": "Visual Content: z=40",
+      "event": "Layer stacking changed"
+    },
+    {
+      "at": "2026-08-15T10:08:23.972Z",
+      "detail": "layout v197",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-15T10:08:23.950Z",
+      "detail": "Visual Content: z=50",
+      "event": "Layer stacking changed"
+    },
+    {
+      "at": "2026-08-15T10:07:55.987Z",
+      "detail": "Visual Content: 96 videos from /home/ebmarah/Videos/at140radio/desktop visuals/visuals",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-15T10:07:54.029Z",
+      "detail": "Stage Content: 4 videos from /home/ebmarah/Videos/at140radio/desktop visuals/stage",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-15T10:07:53.925Z",
+      "detail": "",
+      "event": "Realtime connected"
+    },
+    {
+      "at": "2026-08-14T19:43:48.063Z",
+      "detail": "Visual Content",
+      "event": "Global layer frame set"
+    },
+    {
+      "at": "2026-08-14T19:43:38.271Z",
+      "detail": "layout v195",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T19:43:38.263Z",
+      "detail": "Stage Content",
+      "event": "Global layer frame set"
+    },
+    {
+      "at": "2026-08-14T19:43:37.035Z",
+      "detail": "layout v194",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T19:43:37.031Z",
+      "detail": "Stage Content",
+      "event": "Global layer frame set"
+    },
+    {
+      "at": "2026-08-14T19:43:13.685Z",
+      "detail": "layout v193",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T19:43:13.673Z",
+      "detail": "Station / Takeover Logo: z=50",
+      "event": "Layer stacking changed"
+    },
+    {
+      "at": "2026-08-14T19:43:10.627Z",
+      "detail": "layout v192",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T19:43:10.615Z",
+      "detail": "Station / Takeover Logo: z=40",
+      "event": "Layer stacking changed"
+    },
+    {
+      "at": "2026-08-14T19:42:59.971Z",
+      "detail": "layout v191",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T19:42:59.959Z",
+      "detail": "Now Playing / Live Alert: z=50",
+      "event": "Layer stacking changed"
+    },
+    {
+      "at": "2026-08-14T19:42:12.644Z",
+      "detail": "layout v190",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T19:42:12.632Z",
+      "detail": "Stage Content: z=40",
+      "event": "Layer stacking changed"
+    },
+    {
+      "at": "2026-08-14T19:41:56.380Z",
+      "detail": "Visual Content: 88 videos from /home/ebmarah/Videos/at140radio/desktop visuals/visuals",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T19:41:49.235Z",
+      "detail": "Stage Content: 4 videos from /home/ebmarah/Videos/at140radio/desktop visuals/stage",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T19:41:48.450Z",
+      "detail": "",
+      "event": "Realtime connected"
+    },
+    {
+      "at": "2026-08-14T19:41:47.876Z",
+      "detail": "v0.1.26: CSS Stage mask disabled; Stage is base layer and Visual Content renders above it",
+      "event": "Compositor repaired"
+    },
+    {
+      "at": "2026-08-14T10:37:45.508Z",
+      "detail": "Stage Content: explicit Stage Overlay role + screen mask enabled",
+      "event": "Stage layer repaired"
+    },
+    {
+      "at": "2026-08-14T10:28:03.720Z",
+      "detail": "Visual Content: z=40",
+      "event": "Layer stacking changed"
+    },
+    {
+      "at": "2026-08-14T10:27:57.525Z",
+      "detail": "layout v188",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T10:27:57.514Z",
+      "detail": "Visual Content: z=30",
+      "event": "Layer stacking changed"
+    },
+    {
+      "at": "2026-08-14T10:27:55.119Z",
+      "detail": "layout v187",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T10:27:55.097Z",
+      "detail": "Visual Content Copy: z=31",
+      "event": "Layer stacking changed"
+    },
+    {
+      "at": "2026-08-14T10:27:48.137Z",
+      "detail": "layout v186",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T10:27:48.121Z",
+      "detail": "Visual Content Copy: z=21",
+      "event": "Layer stacking changed"
+    },
+    {
+      "at": "2026-08-14T10:27:22.101Z",
+      "detail": "layout v185",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T10:27:22.089Z",
+      "detail": "Visual Content: z=20",
+      "event": "Layer stacking changed"
+    },
+    {
+      "at": "2026-08-14T10:27:15.805Z",
+      "detail": "Visual Content Copy: 4 videos from /home/ebmarah/Videos/at140radio/desktop visuals/stage",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T10:27:12.020Z",
+      "detail": "Visual Content: 88 videos from /home/ebmarah/Videos/at140radio/desktop visuals/visuals",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T10:27:04.717Z",
+      "detail": "Visual Content Copy: 4 videos from /home/ebmarah/Videos/at140radio/desktop visuals/stage",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T10:27:04.183Z",
+      "detail": "",
+      "event": "Realtime connected"
+    },
+    {
+      "at": "2026-08-14T10:14:40.199Z",
+      "detail": "Visual Content: 88 videos from /home/ebmarah/Videos/at140radio/desktop visuals/visuals",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T10:14:40.122Z",
+      "detail": "Visual Content: 88 videos from /home/ebmarah/Videos/at140radio/desktop visuals/visuals",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T10:14:26.777Z",
+      "detail": "Visual Content: 88 videos from /home/ebmarah/Videos/at140radio/desktop visuals/visuals",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T10:13:57.584Z",
+      "detail": "Visual Content: 88 videos from /home/ebmarah/Videos/at140radio/desktop visuals/visuals",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T10:13:51.047Z",
+      "detail": "Visual Content: 88 videos from /home/ebmarah/Videos/at140radio/desktop visuals/visuals",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T10:13:50.487Z",
+      "detail": "Visual Content Copy: 4 videos from /home/ebmarah/Videos/at140radio/desktop visuals/stage",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T10:13:42.223Z",
+      "detail": "layout v183",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T10:13:42.201Z",
+      "detail": "Visual Content Copy: 4 videos from /home/ebmarah/Videos/at140radio/desktop visuals/stage",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T10:12:59.560Z",
+      "detail": "",
+      "event": "Realtime connected"
+    },
+    {
+      "at": "2026-08-14T09:28:38.639Z",
+      "detail": "Visual Content: 80 videos from /home/ebmarah/Videos/at140radio/desktop visuals/visuals",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T09:28:25.658Z",
+      "detail": "layout v181",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T09:28:25.577Z",
+      "detail": "Visual Content → Visual Content Copy",
+      "event": "Layer duplicated"
+    },
+    {
+      "at": "2026-08-14T09:28:22.971Z",
+      "detail": "layout v180",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T09:28:22.841Z",
+      "detail": "Stage Content",
+      "event": "Layer deleted"
+    },
+    {
+      "at": "2026-08-14T09:28:15.018Z",
+      "detail": "layout v179",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T09:28:14.995Z",
+      "detail": "Visual Content: 4 videos from /home/ebmarah/Videos/at140radio/desktop visuals/stage",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T09:27:56.230Z",
+      "detail": "Visual Content: 80 videos from /home/ebmarah/Videos/at140radio/desktop visuals/visuals",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T09:26:59.416Z",
+      "detail": "Stage Content: 4 videos from /home/ebmarah/Videos/at140radio/desktop visuals/stage",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T09:26:58.648Z",
+      "detail": "",
+      "event": "Realtime connected"
+    },
+    {
+      "at": "2026-08-14T09:08:49.908Z",
+      "detail": "Visual Content: 60 videos from /home/ebmarah/Videos/at140radio/desktop visuals/visuals",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T09:08:21.883Z",
+      "detail": "",
+      "event": "Realtime connected"
+    },
+    {
+      "at": "2026-08-14T09:08:21.619Z",
+      "detail": "Visual Content: 60 videos from /home/ebmarah/Videos/at140radio/desktop visuals/visuals",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T09:08:04.270Z",
+      "detail": "Visual Content Copy: 4 videos from /home/ebmarah/Videos/at140radio/desktop visuals/stage",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T09:04:22.731Z",
+      "detail": "Visual Content: 60 videos from /home/ebmarah/Videos/at140radio/desktop visuals/visuals",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T09:03:21.682Z",
+      "detail": "layout v176",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T09:03:21.634Z",
+      "detail": "Visual Content → Visual Content Copy",
+      "event": "Layer duplicated"
+    },
+    {
+      "at": "2026-08-14T09:03:16.483Z",
+      "detail": "layout v175",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T09:03:16.403Z",
+      "detail": "Visual Content Copy",
+      "event": "Layer deleted"
+    },
+    {
+      "at": "2026-08-14T09:03:02.512Z",
+      "detail": "layout v174",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T09:03:02.469Z",
+      "detail": "Visual Content: 4 videos from /home/ebmarah/Videos/at140radio/desktop visuals/stage",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T08:57:04.535Z",
+      "detail": "Visual Content Copy: 4 videos from /home/ebmarah/Videos/at140radio/desktop visuals/stage",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T08:56:48.910Z",
+      "detail": "",
+      "event": "Realtime connected"
+    },
+    {
+      "at": "2026-08-14T08:56:48.728Z",
+      "detail": "Visual Content: 58 videos from /home/ebmarah/Videos/at140radio/desktop visuals/visuals",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T08:56:43.960Z",
+      "detail": "Visual Content Copy: 4 videos from /home/ebmarah/Videos/at140radio/desktop visuals/stage",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T08:38:31.750Z",
+      "detail": "Visual Content: 58 videos from /home/ebmarah/Videos/at140radio/desktop visuals/visuals",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T08:37:49.222Z",
+      "detail": "layout v172",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T08:37:49.212Z",
+      "detail": "Visual Content: 4 videos from /home/ebmarah/Videos/at140radio/desktop visuals/stage",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T08:37:35.422Z",
+      "detail": "",
+      "event": "Realtime connected"
+    },
+    {
+      "at": "2026-08-14T08:37:35.319Z",
+      "detail": "Visual Content: 58 videos from /home/ebmarah/Videos/at140radio/desktop visuals/visuals",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T08:37:30.858Z",
+      "detail": "Visual Content Copy: 4 videos from /home/ebmarah/Videos/at140radio/desktop visuals/stage",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T08:13:35.614Z",
+      "detail": "Visual Content Copy: 2 videos from /home/ebmarah/Videos/at140radio/desktop visuals/stage",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T08:11:31.748Z",
+      "detail": "layout v170",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T08:11:31.643Z",
+      "detail": "Stage Content",
+      "event": "Layer deleted"
+    },
+    {
+      "at": "2026-08-14T08:11:25.934Z",
+      "detail": "layout v169",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T08:11:25.827Z",
+      "detail": "Visual Content → Visual Content Copy",
+      "event": "Layer duplicated"
+    },
+    {
+      "at": "2026-08-14T08:11:06.208Z",
+      "detail": "",
+      "event": "Realtime connected"
+    },
+    {
+      "at": "2026-08-14T08:11:06.021Z",
+      "detail": "Visual Content: 58 videos from /home/ebmarah/Videos/at140radio/desktop visuals/visuals",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T08:10:03.683Z",
+      "detail": "Stage Content: 2 videos from /home/ebmarah/Videos/at140radio/desktop visuals/stage",
+      "event": "Layer media refreshed"
+    },
+    {
+      "at": "2026-08-14T08:08:45.649Z",
+      "detail": "v0.1.21: Stage Content recreated as a true Visual Content duplicate pointed at the Stage folder",
+      "event": "Layer system rebuilt"
+    },
+    {
+      "at": "2026-08-14T06:10:54.593Z",
+      "detail": "",
+      "event": "Realtime connected"
+    },
+    {
+      "at": "2026-08-14T05:45:35.800Z",
+      "detail": "layout v164",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:45:25.257Z",
+      "detail": "layout v163",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:45:23.164Z",
+      "detail": "layout v162",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:45:09.021Z",
+      "detail": "",
+      "event": "Realtime connected"
+    },
+    {
+      "at": "2026-08-14T05:41:12.221Z",
+      "detail": "layout v160",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:41:11.220Z",
+      "detail": "layout v159",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:41:09.090Z",
+      "detail": "layout v158",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:41:04.338Z",
+      "detail": "layout v157",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:40:53.820Z",
+      "detail": "",
+      "event": "Realtime connected"
+    },
+    {
+      "at": "2026-08-14T05:29:01.772Z",
+      "detail": "layout v155",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:01.722Z",
+      "detail": "layout v154",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:01.671Z",
+      "detail": "layout v153",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:01.622Z",
+      "detail": "layout v152",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:01.576Z",
+      "detail": "layout v151",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:01.522Z",
+      "detail": "layout v150",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:01.474Z",
+      "detail": "layout v149",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:01.422Z",
+      "detail": "layout v148",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:01.372Z",
+      "detail": "layout v147",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:01.322Z",
+      "detail": "layout v146",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:01.275Z",
+      "detail": "layout v145",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:01.224Z",
+      "detail": "layout v144",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:01.177Z",
+      "detail": "layout v143",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:01.122Z",
+      "detail": "layout v142",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:01.077Z",
+      "detail": "layout v141",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:01.024Z",
+      "detail": "layout v140",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:00.978Z",
+      "detail": "layout v139",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:00.936Z",
+      "detail": "layout v138",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:00.871Z",
+      "detail": "layout v137",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:00.821Z",
+      "detail": "layout v136",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:00.767Z",
+      "detail": "layout v135",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:00.723Z",
+      "detail": "layout v134",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:00.671Z",
+      "detail": "layout v133",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:00.638Z",
+      "detail": "layout v132",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:00.577Z",
+      "detail": "layout v131",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:00.530Z",
+      "detail": "layout v130",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:00.478Z",
+      "detail": "layout v129",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:00.430Z",
+      "detail": "layout v128",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:00.378Z",
+      "detail": "layout v127",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:00.331Z",
+      "detail": "layout v126",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:00.266Z",
+      "detail": "layout v125",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:00.231Z",
+      "detail": "layout v124",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:00.174Z",
+      "detail": "layout v123",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:00.127Z",
+      "detail": "layout v122",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:00.073Z",
+      "detail": "layout v121",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:29:00.035Z",
+      "detail": "layout v120",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:59.968Z",
+      "detail": "layout v119",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:59.933Z",
+      "detail": "layout v118",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:59.863Z",
+      "detail": "layout v117",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:59.834Z",
+      "detail": "layout v116",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:59.770Z",
+      "detail": "layout v115",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:59.711Z",
+      "detail": "layout v114",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:59.657Z",
+      "detail": "layout v113",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:59.607Z",
+      "detail": "layout v112",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:59.558Z",
+      "detail": "layout v111",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:59.510Z",
+      "detail": "layout v110",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:59.461Z",
+      "detail": "layout v109",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:59.413Z",
+      "detail": "layout v108",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:59.359Z",
+      "detail": "layout v107",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:59.315Z",
+      "detail": "layout v106",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:59.279Z",
+      "detail": "layout v105",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:59.216Z",
+      "detail": "layout v104",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:59.158Z",
+      "detail": "layout v103",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:59.108Z",
+      "detail": "layout v102",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:59.068Z",
+      "detail": "layout v101",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:59.027Z",
+      "detail": "layout v100",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:58.962Z",
+      "detail": "layout v99",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:58.912Z",
+      "detail": "layout v98",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:58.863Z",
+      "detail": "layout v97",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:58.812Z",
+      "detail": "layout v96",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:58.763Z",
+      "detail": "layout v95",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:58.704Z",
+      "detail": "layout v94",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:58.669Z",
+      "detail": "layout v93",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:58.611Z",
+      "detail": "layout v92",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:58.562Z",
+      "detail": "layout v91",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:58.509Z",
+      "detail": "layout v90",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:58.459Z",
+      "detail": "layout v89",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:58.408Z",
+      "detail": "layout v88",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:58.363Z",
+      "detail": "layout v87",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:58.314Z",
+      "detail": "layout v86",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:58.256Z",
+      "detail": "layout v85",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:58.203Z",
+      "detail": "layout v84",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:58.154Z",
+      "detail": "layout v83",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:58.105Z",
+      "detail": "layout v82",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:58.061Z",
+      "detail": "layout v81",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:58.010Z",
+      "detail": "layout v80",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:57.956Z",
+      "detail": "layout v79",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:57.932Z",
+      "detail": "layout v78",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:57.862Z",
+      "detail": "layout v77",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:57.824Z",
+      "detail": "layout v76",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:57.759Z",
+      "detail": "layout v75",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:57.710Z",
+      "detail": "layout v74",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:57.664Z",
+      "detail": "layout v73",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:57.612Z",
+      "detail": "layout v72",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:57.565Z",
+      "detail": "layout v71",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:57.514Z",
+      "detail": "layout v70",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:57.464Z",
+      "detail": "layout v69",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:57.411Z",
+      "detail": "layout v68",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:57.365Z",
+      "detail": "layout v67",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:57.313Z",
+      "detail": "layout v66",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:57.262Z",
+      "detail": "layout v65",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:57.207Z",
+      "detail": "layout v64",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:57.165Z",
+      "detail": "layout v63",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:57.110Z",
+      "detail": "layout v62",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:57.073Z",
+      "detail": "layout v61",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:57.013Z",
+      "detail": "layout v60",
+      "event": "Draft saved"
+    },
+    {
+      "at": "2026-08-14T05:28:56.961Z",
+      "detail": "layout v59",
+      "event": "Draft saved"
+    }
+  ],
+  "canonicalComposition": {
+    "height": 1080,
+    "width": 1920
+  },
+  "compositorMigrationVersion": 1,
+  "compositorMode": "stage-base-visual-over",
+  "environment": "staging",
+  "layerIdentityRepairVersion": 1,
+  "layoutVersion": 202,
+  "maskStateMigrationVersion": 1,
+  "mediaRoleMigrationVersion": 1,
+  "playlist": [
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "87.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/87.mp4",
+      "publicUrl": "/media/playlist/visual-001.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-001.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_machine_around_black_hole_202608102133 (1).mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_machine_around_black_hole_202608102133 (1).mp4",
+      "publicUrl": "/media/playlist/visual-002.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-002.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_machine_around_black_hole_202608102133.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_machine_around_black_hole_202608102133.mp4",
+      "publicUrl": "/media/playlist/visual-003.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-003.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_machine_orbiting_black_hole_202608102133.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_machine_orbiting_black_hole_202608102133.mp4",
+      "publicUrl": "/media/playlist/visual-004.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-004.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_machine_surrounding_black_…_202608102133.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_machine_surrounding_black_…_202608102133.mp4",
+      "publicUrl": "/media/playlist/visual-005.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-005.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_machines_forming_robotic_c…_202608102138.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_machines_forming_robotic_c…_202608102138.mp4",
+      "publicUrl": "/media/playlist/visual-006.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-006.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_mechanical_serpent_wrappin…_1080p_202608102144.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_mechanical_serpent_wrappin…_1080p_202608102144.mp4",
+      "publicUrl": "/media/playlist/visual-007.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-007.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_megacity_beneath_energy_dome_202608102123.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_megacity_beneath_energy_dome_202608102123.mp4",
+      "publicUrl": "/media/playlist/visual-008.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-008.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_megacity_beneath_energy_dome_202608102124.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_megacity_beneath_energy_dome_202608102124.mp4",
+      "publicUrl": "/media/playlist/visual-009.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-009.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_megacity_under_energy_dome_202608102123 (1).mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_megacity_under_energy_dome_202608102123 (1).mp4",
+      "publicUrl": "/media/playlist/visual-010.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-010.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_megacity_under_energy_dome_202608102123.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_megacity_under_energy_dome_202608102123.mp4",
+      "publicUrl": "/media/playlist/visual-011.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-011.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_mining_colony_operating_1080p_202608102145 (1).mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_mining_colony_operating_1080p_202608102145 (1).mp4",
+      "publicUrl": "/media/playlist/visual-012.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-012.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_mining_colony_operating_1080p_202608102145.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_mining_colony_operating_1080p_202608102145.mp4",
+      "publicUrl": "/media/playlist/visual-013.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-013.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_mining_colony_operating_1080p_202608102146.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_mining_colony_operating_1080p_202608102146.mp4",
+      "publicUrl": "/media/playlist/visual-014.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-014.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_mining_colony_operating_in…_202608102146.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_mining_colony_operating_in…_202608102146.mp4",
+      "publicUrl": "/media/playlist/visual-015.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-015.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_mothership_hovering_over_city_202608100259 (1).mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_mothership_hovering_over_city_202608100259 (1).mp4",
+      "publicUrl": "/media/playlist/visual-016.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-016.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_mothership_hovering_over_city_202608100259.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_mothership_hovering_over_city_202608100259.mp4",
+      "publicUrl": "/media/playlist/visual-017.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-017.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_organism_consuming_moon_1080p_202608102127.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_organism_consuming_moon_1080p_202608102127.mp4",
+      "publicUrl": "/media/playlist/visual-018.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-018.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_organism_consuming_moon_1080p_202608102128 (1).mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_organism_consuming_moon_1080p_202608102128 (1).mp4",
+      "publicUrl": "/media/playlist/visual-019.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-019.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_organism_consuming_moon_1080p_202608102128.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_organism_consuming_moon_1080p_202608102128.mp4",
+      "publicUrl": "/media/playlist/visual-020.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-020.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_prison_floating_in_void_202608102130.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_prison_floating_in_void_202608102130.mp4",
+      "publicUrl": "/media/playlist/visual-021.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-021.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_prison_floating_in_void_202608102131 (1).mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_prison_floating_in_void_202608102131 (1).mp4",
+      "publicUrl": "/media/playlist/visual-022.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-022.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_prison_floating_in_void_202608102131 (2).mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_prison_floating_in_void_202608102131 (2).mp4",
+      "publicUrl": "/media/playlist/visual-023.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-023.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_prison_floating_in_void_202608102131.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_prison_floating_in_void_202608102131.mp4",
+      "publicUrl": "/media/playlist/visual-024.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-024.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_prison_floating_in_void_202608102135 (1).mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_prison_floating_in_void_202608102135 (1).mp4",
+      "publicUrl": "/media/playlist/visual-025.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-025.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_prison_floating_in_void_202608102135 (2).mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_prison_floating_in_void_202608102135 (2).mp4",
+      "publicUrl": "/media/playlist/visual-026.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-026.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_prison_floating_in_void_202608102135.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_prison_floating_in_void_202608102135.mp4",
+      "publicUrl": "/media/playlist/visual-027.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-027.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_prison_floating_in_void_202608102136.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_prison_floating_in_void_202608102136.mp4",
+      "publicUrl": "/media/playlist/visual-028.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-028.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Alien_serpent_coils_around_skysc…_202608102143.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Alien_serpent_coils_around_skysc…_202608102143.mp4",
+      "publicUrl": "/media/playlist/visual-029.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-029.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Extraterrestrial_harvesting_mach…_1080p_202608102145 (1).mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Extraterrestrial_harvesting_mach…_1080p_202608102145 (1).mp4",
+      "publicUrl": "/media/playlist/visual-030.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-030.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Extraterrestrial_harvesting_mach…_1080p_202608102145.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Extraterrestrial_harvesting_mach…_1080p_202608102145.mp4",
+      "publicUrl": "/media/playlist/visual-031.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-031.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Giant_machines_rule_alien_desert_202608100240.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Giant_machines_rule_alien_desert_202608100240.mp4",
+      "publicUrl": "/media/playlist/visual-032.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-032.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Giant_mech_powering_up_arena_202608102138.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Giant_mech_powering_up_arena_202608102138.mp4",
+      "publicUrl": "/media/playlist/visual-033.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-033.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Machine_empire_in_frozen_city_202608100240.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Machine_empire_in_frozen_city_202608100240.mp4",
+      "publicUrl": "/media/playlist/visual-034.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-034.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Machine_empire_in_frozen_city_202608100241.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Machine_empire_in_frozen_city_202608100241.mp4",
+      "publicUrl": "/media/playlist/visual-035.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-035.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Machine_empire_in_icy_city_202608100241.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Machine_empire_in_icy_city_202608100241.mp4",
+      "publicUrl": "/media/playlist/visual-036.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-036.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Machines_forming_robotic_creature_1080p_202608102138.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Machines_forming_robotic_creature_1080p_202608102138.mp4",
+      "publicUrl": "/media/playlist/visual-037.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-037.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Machines_rule_alien_desert_waste…_202608100240 (1).mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Machines_rule_alien_desert_waste…_202608100240 (1).mp4",
+      "publicUrl": "/media/playlist/visual-038.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-038.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Machines_rule_alien_desert_waste…_202608100240.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Machines_rule_alien_desert_waste…_202608100240.mp4",
+      "publicUrl": "/media/playlist/visual-039.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-039.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Mech_citadel_in_alien_desert_202608100240.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Mech_citadel_in_alien_desert_202608100240.mp4",
+      "publicUrl": "/media/playlist/visual-040.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-040.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Mechanical_serpent_wraps_futuris…_1080p_202608102144.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Mechanical_serpent_wraps_futuris…_1080p_202608102144.mp4",
+      "publicUrl": "/media/playlist/visual-041.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-041.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Orbital_space_station_broadcasti…_1080p_202608100250.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Orbital_space_station_broadcasti…_1080p_202608100250.mp4",
+      "publicUrl": "/media/playlist/visual-042.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-042.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Orbital_space_station_rotating_a…_202608100249.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Orbital_space_station_rotating_a…_202608100249.mp4",
+      "publicUrl": "/media/playlist/visual-043.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-043.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Robot_hive_in_underground_city_202608100245.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Robot_hive_in_underground_city_202608100245.mp4",
+      "publicUrl": "/media/playlist/visual-044.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-044.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Robot_hive_looping_underground_v…_202608100247.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Robot_hive_looping_underground_v…_202608100247.mp4",
+      "publicUrl": "/media/playlist/visual-045.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-045.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Robot_hive_operating_underground_1080p_202608100242.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Robot_hive_operating_underground_1080p_202608100242.mp4",
+      "publicUrl": "/media/playlist/visual-046.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-046.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Robot_hive_underground_video_loop_202608100247.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Robot_hive_underground_video_loop_202608100247.mp4",
+      "publicUrl": "/media/playlist/visual-047.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-047.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Robot_powering_up_in_arena_202608102139.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Robot_powering_up_in_arena_202608102139.mp4",
+      "publicUrl": "/media/playlist/visual-048.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-048.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Robot_powers_up_in_arena_202608102139.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Robot_powers_up_in_arena_202608102139.mp4",
+      "publicUrl": "/media/playlist/visual-049.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-049.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Robot_throne_in_frozen_city_202608100241.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Robot_throne_in_frozen_city_202608100241.mp4",
+      "publicUrl": "/media/playlist/visual-050.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-050.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Robotic_jungle_with_giant_shrine_202608100250.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Robotic_jungle_with_giant_shrine_202608100250.mp4",
+      "publicUrl": "/media/playlist/visual-051.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-051.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Robotic_jungle_with_giant_shrine_202608100251.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Robotic_jungle_with_giant_shrine_202608100251.mp4",
+      "publicUrl": "/media/playlist/visual-052.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-052.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Robotic_jungle_with_glowing_shrine_202608100249.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Robotic_jungle_with_glowing_shrine_202608100249.mp4",
+      "publicUrl": "/media/playlist/visual-053.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-053.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Robotic_jungle_with_glowing_shrine_202608100250.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Robotic_jungle_with_glowing_shrine_202608100250.mp4",
+      "publicUrl": "/media/playlist/visual-054.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-054.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Space_station_orbiting_ruined_pl…_202608100249.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Space_station_orbiting_ruined_pl…_202608100249.mp4",
+      "publicUrl": "/media/playlist/visual-055.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-055.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "Space_station_orbiting_ruined_pl…_202608100250.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/Space_station_orbiting_ruined_pl…_202608100250.mp4",
+      "publicUrl": "/media/playlist/visual-056.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-056.mp4",
+      "width": 1920
+    },
+    {
+      "codec": "h264",
+      "duration": "8.000000",
+      "enabled": true,
+      "height": 1080,
+      "name": "jfjf.mp4",
+      "path": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals/jfjf.mp4",
+      "publicUrl": "/media/playlist/visual-057.mp4",
+      "reason": "Validated source and browser-optimized staging copy",
+      "status": "READY",
+      "url": "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/playlist/visual-057.mp4",
+      "width": 1920
+    }
+  ],
+  "presets": [
+    {
+      "content": {
+        "fit": "cover",
+        "flipX": false,
+        "flipY": false,
+        "height": 50.164138950540504,
+        "opacity": 1,
+        "scale": 1,
+        "visible": true,
+        "width": 54.072549297578114,
+        "x": 22.19550216763006,
+        "y": 33.439948619139365
+      },
+      "layerFrames": {
+        "media-328e2025": {
+          "fit": "cover",
+          "flipX": false,
+          "flipY": false,
+          "height": 99.32598866152316,
+          "opacity": 1,
+          "scale": 1,
+          "visible": true,
+          "width": 99.63116562705788,
+          "x": 0,
+          "y": 0
+        },
+        "now-playing": {
+          "fit": "contain",
+          "height": 12,
+          "opacity": 1,
+          "scale": 1,
+          "visible": true,
+          "width": 38,
+          "x": 31.06096459537572,
+          "y": 85.48587026332692
+        },
+        "presence-bubbles": {
+          "fit": "contain",
+          "flipX": false,
+          "flipY": false,
+          "height": 8,
+          "opacity": 1,
+          "scale": 1,
+          "visible": true,
+          "width": 28,
+          "x": 4,
+          "y": 86
+        },
+        "reactions": {
+          "fit": "contain",
+          "flipX": false,
+          "flipY": false,
+          "height": 8,
+          "opacity": 1,
+          "scale": 1,
+          "visible": true,
+          "width": 17,
+          "x": 79,
+          "y": 88
+        },
+        "room-energy": {
+          "fit": "contain",
+          "flipX": false,
+          "flipY": false,
+          "height": 10,
+          "opacity": 1,
+          "scale": 1,
+          "visible": true,
+          "width": 13,
+          "x": 83,
+          "y": 7
+        },
+        "station-logo": {
+          "fit": "contain",
+          "height": 9,
+          "opacity": 1,
+          "scale": 1,
+          "visible": true,
+          "width": 8.5,
+          "x": 45.389360549132945,
+          "y": 1.6652215799614538
+        },
+        "visual-content": {
+          "fit": "cover",
+          "flipX": false,
+          "flipY": false,
+          "height": 50.164138950540504,
+          "opacity": 1,
+          "scale": 1,
+          "visible": true,
+          "width": 54.072549297578114,
+          "x": 22.19550216763006,
+          "y": 33.439948619139365
+        }
+      },
+      "logo": {
+        "fit": "contain",
+        "height": 9,
+        "opacity": 1,
+        "scale": 1,
+        "visible": true,
+        "width": 8.5,
+        "x": 45.389360549132945,
+        "y": 1.6652215799614538
+      },
+      "name": "Known Good Default",
+      "now": {
+        "fit": "contain",
+        "height": 12,
+        "opacity": 1,
+        "scale": 1,
+        "visible": true,
+        "width": 38,
+        "x": 31.06096459537572,
+        "y": 85.48587026332692
+      },
+      "safeArea": false,
+      "stage": {
+        "fit": "cover",
+        "flipX": false,
+        "flipY": false,
+        "height": 99.32598866152316,
+        "opacity": 1,
+        "scale": 1,
+        "visible": true,
+        "width": 99.63116562705788,
+        "x": 0,
+        "y": 0
+      },
+      "version": 202,
+      "viewport": "desktop-16-9"
+    }
+  ],
+  "previewStageIndex": 1,
+  "previewVisualIndex": 45,
+  "publishedVersion": 0,
+  "schema": 1,
+  "stageContentRebuiltFromVisualContentV021": true,
+  "stageContentRebuiltV019": true,
+  "takeovers": [],
+  "workspaceLayerSystemVersion": 21,
+  "workspaceLayers": [
+    {
+      "globalFrame": {
+        "fit": "cover",
+        "flipX": false,
+        "flipY": false,
+        "height": 99.32598866152316,
+        "opacity": 1,
+        "scale": 1,
+        "visible": true,
+        "width": 99.63116562705788,
+        "x": 0,
+        "y": 0
+      },
+      "id": "media-328e2025",
+      "kind": "media",
+      "mask": "none",
+      "maskExplicit": true,
+      "mediaIndex": 0,
+      "name": "Stage Content",
+      "role": "stage",
+      "scanStatus": "READY",
+      "sourceFolder": "/home/ebmarah/Videos/at140radio/desktop visuals/stage",
+      "z": 30
+    },
+    {
+      "globalFrame": {
+        "fit": "cover",
+        "flipX": false,
+        "flipY": false,
+        "height": 50.164138950540504,
+        "opacity": 1,
+        "scale": 1,
+        "visible": true,
+        "width": 54.072549297578114,
+        "x": 22.19550216763006,
+        "y": 33.439948619139365
+      },
+      "id": "visual-content",
+      "kind": "media",
+      "mask": "none",
+      "maskExplicit": true,
+      "mediaIndex": 4,
+      "name": "Visual Content",
+      "role": "visual",
+      "scanStatus": "READY",
+      "sourceFolder": "/home/ebmarah/Videos/at140radio/desktop visuals/visuals",
+      "z": 40
+    },
+    {
+      "id": "station-logo",
+      "kind": "logo",
+      "name": "Station / Takeover Logo",
+      "z": 50
+    },
+    {
+      "id": "now-playing",
+      "kind": "alert",
+      "name": "Now Playing / Live Alert",
+      "z": 50
+    },
+    {
+      "id": "presence-bubbles",
+      "kind": "presence",
+      "name": "Presence Bubbles",
+      "z": 50
+    },
+    {
+      "id": "reactions",
+      "kind": "reactions",
+      "name": "Reactions",
+      "z": 60
+    },
+    {
+      "id": "room-energy",
+      "kind": "energy",
+      "name": "Room Energy",
+      "z": 70
+    }
+  ]
+}

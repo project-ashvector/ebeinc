@@ -1,0 +1,24 @@
+[Unit]
+Description=AllThings140Radio predictive hot-cache manager
+After=network-online.target allthings140radio-drive.service
+Wants=network-online.target allthings140radio-drive.service
+RequiresMountsFor=/srv/allthings140radio
+
+[Service]
+Type=simple
+User=allthings140radio
+Group=allthings140radio
+ExecStart=/usr/bin/python3 /opt/allthings140radio-server/cache_manager.py run
+Restart=on-failure
+RestartSec=15
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/srv/allthings140radio /var/lib/allthings140radio
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+
+[Install]
+WantedBy=multi-user.target

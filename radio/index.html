@@ -2,100 +2,449 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<base href="/">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07040d">
-<meta name="description" content="AllThings140Radio — a synchronized 24/7 dubstep, riddim and 140 BPM radio transmission hosted by Ebmarah and Eyewitnis.">
+<meta name="theme-color" content="#050309">
+<meta name="description" content="AllThings140Radio — 24/7 heavy dubstep, riddim and 140 BPM synchronized bass transmission hosted by Ebmarah and Eyewitnis.">
+<link rel="canonical" href="https://allthings140radio.online/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://allthings140radio.online/">
+<meta property="og:title" content="AllThings140Radio // Live Transmission">
+<meta property="og:description" content="24/7 heavy dubstep, riddim and live DJ takeovers from AllThings140Radio.">
+<meta property="og:image" content="https://allthings140radio.online/assets/allthings140-logo-512.png">
+<meta name="twitter:card" content="summary_large_image">
 <title>AllThings140Radio // Live Transmission</title>
 <link rel="icon" href="assets/allthings140-logo-64.png?v=0.4.22" sizes="64x64" type="image/png">
 <link rel="apple-touch-icon" href="assets/allthings140-logo-512.png?v=0.4.21">
 <link rel="manifest" href="manifest.webmanifest?v=0.4.21">
-<link rel="preload" href="assets/allthings140-background.webp?v=0.9.0" as="image" type="image/webp">
-<link rel="preload" href="assets/atomic-pressure.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="styles.css?v=0.5.1">
-<link rel="stylesheet" href="engagement.css?v=1.0.0">
-<link rel="stylesheet" href="listener-controls.css?v=0.8.0">
-<link rel="stylesheet" href="atomic-pressure.css?v=0.4.23">
+<link rel="preload" href="assets/allthings140-background.webp?v=1.1.0" as="image" type="image/webp">
+<link rel="stylesheet" href="styles.css?v=2.1.0">
+<link rel="stylesheet" href="support.css?v=1.1.0">
 </head>
 <body>
-<div class="live-takeover" id="liveTakeover" hidden><b>● NOW LIVE: EBMARAH</b><span id="liveHostName"></span></div>
-<div class="bg-media" aria-hidden="true"><video id="backgroundVideo" autoplay muted loop playsinline webkit-playsinline preload="metadata" poster="assets/allthings140-background.webp?v=0.9.0"><source src="assets/allthings140-background-mobile.mp4?v=0.9.0" type="video/mp4" media="(max-width: 680px)"><source src="assets/allthings140-background.mp4?v=0.9.0" type="video/mp4"></video></div>
-<div class="bg"></div><div class="grid"></div><div class="noise"></div><div class="scan"></div><div class="orbs"></div>
+<div class="native-alert-layer" id="nativeAlertLayer" aria-live="assertive" aria-atomic="true">
+  <article class="native-alert" id="nativeAlert" hidden>
+    <img id="nativeAlertImage" alt="" hidden>
+    <div>
+      <small id="nativeAlertSource">ALLTHINGS140 RADIO</small>
+      <strong id="nativeAlertTitle"></strong>
+      <p id="nativeAlertMessage"></p>
+    </div>
+  </article>
+</div>
+
+<div class="live-takeover" id="liveTakeover" hidden>
+  <b>● NOW LIVE: <span id="liveHostName">GUEST DJ</span></b>
+</div>
+
+<div class="bg-media" aria-hidden="true">
+  <video id="backgroundVideo" autoplay muted loop playsinline webkit-playsinline preload="auto" poster="assets/allthings140-background.webp?v=1.1.0">
+    <source media="(max-width: 680px)" src="assets/visuals-mainpage-2026-08-11-v2.mp4?v=1.1.0" type="video/mp4">
+    <source src="assets/visuals-home-desktop-hq.mp4?v=2.0.0" type="video/mp4">
+  </video>
+</div>
+<div class="bg-overlay" aria-hidden="true"></div>
+
 <header class="topbar wrap">
-  <a class="brand" href="./"><span class="sigil"><img src="assets/allthings140-logo-64.png?v=0.4.22" alt=""></span><span><strong>ALLTHINGS140</strong><small>RADIO</small></span></a>
-  <nav class="nav"><a href="#listen">LISTEN</a><button type="button" data-open-chat>CHAT</button><a href="#schedule">SCHEDULE</a><a href="#hosts">HOSTS</a><a href="visuals/">VISUALS</a><a href="https://ebeinc.online/">EBE INC</a><a href="https://ebedesigns.online/">SHOP</a><button type="button" id="installApp" hidden>INSTALL APP</button></nav>
+  <a class="brand" href="./">
+    <span class="sigil"><img src="assets/allthings140-logo-64.png?v=0.4.22" alt="AllThings140 Logo"></span>
+    <span><strong>ALLTHINGS140</strong><small>RADIO</small></span>
+  </a>
+  <div class="nav-menu">
+    <button class="nav-toggle" id="navToggle" type="button" aria-controls="siteNav" aria-expanded="false">
+      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 20v-6m16 6v-6M7 13a7 7 0 0 1 10 0M9.8 15.8a3.1 3.1 0 0 1 4.4 0M12 19v1M4.2 9.8a11 11 0 0 1 15.6 0"/></svg>
+      <span>MENU</span>
+    </button>
+    <nav class="nav" id="siteNav" aria-label="Main navigation" hidden>
+      <a class="nav-entry is-current" href="./"><span class="nav-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m3 11 9-8 9 8v10h-6v-6H9v6H3Z"/></svg></span><span>HOME</span></a>
+      <a class="nav-entry" href="visuals/"><span class="nav-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m12 2 10 19H2Z"/><path d="m12 7 5 10H7Z"/></svg></span><span>VISUALS TAB</span></a>
+      <a class="nav-entry" href="roadmap/"><span class="nav-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 6h16v15H4Zm0 5h16M8 3v6m8-6v6"/></svg></span><span>ROADMAP</span></a>
+      <a class="nav-entry" href="#schedule"><span class="nav-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 6h16v15H4Zm0 5h16M8 3v6m8-6v6"/><path d="M8 15h2m4 0h2m-8 3h2m4 0h2"/></svg></span><span>SCHEDULE</span></a>
+      <a class="nav-entry" href="#submit"><span class="nav-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m3 11 18-8-8 18-2-8Z"/><path d="m11 13 5-5"/></svg></span><span>SUBMISSIONS</span></a>
+      <a class="nav-entry" href="#about"><span class="nav-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 14v-2a8 8 0 0 1 16 0v2M4 14H2v6h4v-6Zm16 0h2v6h-4v-6Z"/></svg></span><span>STATION & HOSTS</span></a>
+      <a class="nav-entry" href="#archive"><span class="nav-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 7h18v14H3Zm2-4h6l2 3H5Z"/></svg></span><span>ARCHIVE</span></a>
+      <a class="nav-entry" href="#sponsors"><span class="nav-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></span><span>SPONSORS</span></a>
+      <a class="nav-entry" href="room/"><span class="nav-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 4h16v12H9l-5 4Z"/><path d="M8 8h8m-8 4h5"/></svg></span><span>GREEN ROOM</span></a>
+      <button class="nav-entry" type="button" data-open-support><span class="nav-icon" aria-hidden="true">💜</span><span>SUPPORT</span></button>
+      <a class="nav-entry" href="https://ebedesigns.online" target="_blank" rel="noopener"><span class="nav-icon" aria-hidden="true">🛒</span><span>SHOP MERCH ↗</span></a>
+      <button class="nav-entry" type="button" id="installApp" hidden><span class="nav-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M4 20h16"/></svg></span><span>INSTALL APP</span></button>
+    </nav>
+  </div>
   <span class="status-chip" id="headerStatus" data-state="offline"><i></i>CONNECTING</span>
 </header>
+
 <main>
 <section class="hero wrap" id="listen">
   <div class="hero-copy">
-    <div class="hero-stack">
-      <p class="kicker">SYNCHRONIZED BASS TRANSMISSION</p>
-      <h1>HEAVY<br>MUSIC.<span>ALWAYS ON.</span></h1>
-      <p class="lead">A 24/7 heavy dubstep radio station hosted by Ebmarah and Eyewitnis. One synchronized live feed delivers nonstop bass music, underground selections, and live DJ takeovers to every listener.</p>
-      <div class="hero-tags">
-        <span>24/7 HEAVY DUBSTEP</span>
-        <span>LIVE DJ TAKEOVERS</span>
-        <span>FUTURISTIC VISUALS</span>
+    <p class="kicker">SYNCHRONIZED BASS TRANSMISSION</p>
+    <h1>HEAVY MUSIC.<span>ALWAYS ON.</span></h1>
+    <p class="lead">A synchronized 24/7 heavy dubstep and bass radio station hosted by Ebmarah and Eyewitnis. Nonstop underground selections, heavy drops, and live DJ takeovers broadcast to all listeners simultaneously.</p>
+    
+    <div class="hero-tags">
+      <span>24/7 HEAVY DUBSTEP</span>
+      <span>LIVE DJ TAKEOVERS</span>
+      <span>140 BPM CORE</span>
+      <span>SYNCHRONIZED FEED</span>
+    </div>
+
+    <div class="hero-actions">
+      <button class="btn primary" id="heroPlay" type="button">▶ CONNECT TO FEED</button>
+      <button class="btn" type="button" data-open-support>💜 SUPPORT THE STATION</button>
+      <a class="btn" href="visuals/">◉ VISUALS TAB</a>
+      <a class="btn" href="roadmap/">🗺 ROADMAP</a>
+      <button class="btn" id="shareStation" type="button">↗ SHARE STATION</button>
+      <button class="btn" id="motionToggle" type="button" aria-pressed="false" title="Toggle background video">◉ MOTION</button>
+    </div>
+
+    <section class="now-playing" aria-live="polite">
+      <div class="now-playing-head">
+        <span class="mode" id="mode" data-state="offline"><i></i>SCANNING</span>
+        <span class="listeners"><b id="listeners">0</b> CONNECTED</span>
       </div>
-      <div class="hero-actions"><button class="btn primary" id="heroPlay">▶ CONNECT TO FEED</button><button class="btn" id="shareStation">↗ SHARE STATION</button><button class="btn icon-btn" id="motionToggle" aria-pressed="false" title="Pause background visuals">◉ VISUALS</button></div>
-      <section class="now-playing" aria-live="polite">
-        <div class="now-playing-head"><span class="mode" id="mode" data-state="offline"><i></i>SCANNING</span><span class="listeners"><b id="listeners">0</b> CONNECTED</span></div>
-        <small class="track-label">NOW TRANSMITTING</small><h2 class="track-title" id="trackTitle">Awaiting station uplink</h2><p class="track-artist" id="trackArtist">AllThings140Radio</p>
-        <div class="timeline"><span id="timeline"></span></div><div class="time-row"><span id="elapsed">0:00</span><span id="duration">0:00</span></div>
-        <p class="message" id="message">Establishing connection to the station server…</p>
-        <div class="track-reactions" id="trackReactions" aria-label="React to the current track"><span>REACT</span><button data-reaction="fire">🔥 <b>0</b></button><button data-reaction="skull">💀 <b>0</b></button><button data-reaction="vortex">🌀 <b>0</b></button></div>
-        <div class="listener-controls" aria-label="Listener controls"><label for="volumeControl">VOLUME</label><input id="volumeControl" type="range" min="0" max="100" value="78" aria-label="Station volume"><button id="muteControl" type="button">MUTE</button><label for="sleepTimer">SLEEP</label><select id="sleepTimer" aria-label="Sleep timer"><option value="0">OFF</option><option value="30">30 MIN</option><option value="60">60 MIN</option><option value="90">90 MIN</option></select><span id="sleepStatus" aria-live="polite"></span></div>
-        <div class="next-up"><small>NEXT IN ROTATION</small><b id="nextTrack">—</b></div>
-      </section>
-      <audio id="audio" preload="none"></audio>
-    </div>
+      <small class="track-label">NOW TRANSMITTING</small>
+      <h2 class="track-title" id="trackTitle">Awaiting station uplink</h2>
+      <p class="track-artist" id="trackArtist">AllThings140Radio</p>
+      
+      <div class="timeline"><span id="timeline"></span></div>
+      <div class="time-row"><span id="elapsed">0:00</span><span id="duration">0:00</span></div>
+      
+      <p class="message" id="message">Establishing connection to the station server…</p>
+      
+      <div class="track-reactions" id="trackReactions" aria-label="React to the current track">
+        <span>REACT</span>
+        <button data-reaction="fire" type="button">🔥 <b id="reactFire">0</b></button>
+        <button data-reaction="skull" type="button">💀 <b id="reactSkull">0</b></button>
+        <button data-reaction="vortex" type="button">🌀 <b id="reactVortex">0</b></button>
+      </div>
+
+      <div class="listener-controls" aria-label="Listener controls">
+        <label for="volumeControl">VOL</label>
+        <input id="volumeControl" type="range" min="0" max="100" value="78" aria-label="Station volume">
+        <button id="muteControl" type="button">MUTE</button>
+        <label for="sleepTimer">SLEEP</label>
+        <select id="sleepTimer" aria-label="Sleep timer">
+          <option value="0">OFF</option>
+          <option value="30">30 MIN</option>
+          <option value="60">60 MIN</option>
+          <option value="90">90 MIN</option>
+        </select>
+        <span id="sleepStatus" aria-live="polite"></span>
+      </div>
+
+      <div class="next-up">
+        <small>NEXT IN ROTATION</small>
+        <b id="nextTrack">—</b>
+      </div>
+    </section>
+
+    <aside class="home-takeover-logo" id="homeTakeoverLogo" hidden>
+      <small>LIVE ARTIST TAKEOVER</small>
+      <img id="homeTakeoverImage" src="assets/takeover-fallback-logo.webp" alt="Live takeover artist logo">
+      <b id="homeTakeoverArtist">GUEST DJ</b>
+    </aside>
+
     <div class="subgrid">
-      <article class="subcard"><small>REAL STATION FLOW</small><b>Nonstop heavy dubstep, live host takeovers, and seamless transitions without dead air.</b></article>
-      <article class="subcard"><small>ONE SHARED LISTEN</small><b>Skip, next, restart and play-now commands change the same feed for everybody.</b></article>
+      <article class="subcard">
+        <small>ONE SYNCHRONIZED STREAM</small>
+        <b>Every listener connects to the same broadcast feed with zero local desync.</b>
+      </article>
+      <article class="subcard">
+        <small>24/7 BROADCAST AUTHORITY</small>
+        <b>Continuous playback flow with live mic & DJ takeover capabilities.</b>
+      </article>
     </div>
   </div>
 </section>
-<section class="telemetry wrap-shell"><div><b>24/7</b><span>NONSTOP HEAVY DUBSTEP</span></div><div><b>140</b><span>BPM AT THE CORE</span></div><div><b>SYNC</b><span>ONE FEED FOR EVERY LISTENER</span></div><div><b>LIVE</b><span>DJ TAKEOVERS + MIC</span></div></section>
-<section class="section schedule-section wrap" id="schedule">
-  <div class="section-head"><div><p class="kicker">TRANSMISSION LOG</p><h2>ON AIR<br>+ NEXT.</h2></div><p>Follow the current rotation, recently transmitted tracks, and upcoming live host takeovers.</p></div>
+
+<section class="telemetry wrap-shell">
+  <div><b>24/7</b><span>NONSTOP HEAVY DUBSTEP</span></div>
+  <div><b>140</b><span>BPM AT THE CORE</span></div>
+  <div><b>SYNC</b><span>ONE FEED FOR EVERY LISTENER</span></div>
+  <div><b>LIVE</b><span>DJ TAKEOVERS + MIC</span></div>
+</section>
+
+<!-- Schedule, History & Track Requests -->
+<section class="section wrap" id="schedule">
+  <div class="section-head">
+    <div>
+      <p class="kicker">TRANSMISSION LOG</p>
+      <h2>ON AIR<br>+ NEXT.</h2>
+    </div>
+    <p>Follow the continuous rotation, recently transmitted tracks, and upcoming guest DJ takeovers.</p>
+  </div>
   <div class="schedule-grid">
-    <article class="schedule-card"><small>UPCOMING BROADCAST</small><h3 id="scheduleTitle">24/7 HEAVY ROTATION</h3><p id="scheduleDetail">The synchronized station is broadcasting now.</p><b class="countdown" id="scheduleCountdown">ALWAYS ON</b></article>
-    <article class="history-card"><div><small>RECENTLY TRANSMITTED</small><span>SHARED HISTORY</span></div><ol id="trackHistory"><li><span>Waiting for the next track update…</span></li></ol></article>
-    <article class="request-card"><small>REQUEST A TRACK</small><p>Send a suggestion to the hosts. Requests enter a private moderation queue.</p><form id="requestForm"><input id="requestTitle" maxlength="100" required placeholder="Track title"><input id="requestArtist" maxlength="80" placeholder="Artist"><button>SUBMIT REQUEST</button></form><p id="requestFeedback"></p></article>
+    <article class="schedule-card">
+      <small>SCHEDULED TAKEOVERS</small>
+      <div id="takeoverSchedule">
+        <div class="takeover-empty">
+          <h3>24/7 HEAVY ROTATION</h3>
+          <p>The synchronized station is broadcasting now.</p>
+          <b class="countdown">ALWAYS ON</b>
+        </div>
+      </div>
+    </article>
+
+    <article class="history-card">
+      <small>RECENTLY TRANSMITTED</small>
+      <ol id="trackHistory">
+        <li><span>Waiting for the next track update…</span></li>
+      </ol>
+    </article>
   </div>
 </section>
-<div class="chat-backdrop" id="chatBackdrop" hidden></div>
-<aside class="chat-drawer" id="chat" aria-hidden="true" aria-label="Listener chat"><div class="chat-column">
-  <div class="chat-intro">
-    <p class="kicker">LISTENER CHANNEL</p>
-    <button class="chat-close" id="chatClose" type="button" aria-label="Close chat">×</button>
-    <h2>LIVE CHAT.</h2>
-    <p>Talk with everyone tuned in. No account required.</p>
-    <p class="chat-rules">Keep it respectful. No flooding, repeated messages, or link spam.</p>
+
+<!-- Submissions Section -->
+<section class="section wrap" id="submit">
+  <div class="section-head">
+    <div>
+      <p class="kicker">GET ON THE STATION</p>
+      <h2>SUBMIT<br>YOUR AUDIO.</h2>
+    </div>
+    <p>Send a released track or a prerecorded DJ mix for review. Approved audio is added directly to the station rotation.</p>
   </div>
-  <div class="chat-panel">
-    <div class="chat-head"><span class="chat-state" id="chatState" data-state="connecting"><i></i><b>CONNECTING</b></span><span><b id="chatCount">0</b> IN CHAT</span></div>
-    <ol class="chat-messages" id="chatMessages" aria-live="polite" aria-label="Live chat messages"><li class="chat-notice">Connecting to listener chat…</li></ol>
-    <form class="chat-name-form" id="chatNameForm">
-      <label for="chatName">DISPLAY NAME</label>
-      <div class="identity-row"><input id="chatName" name="name" maxlength="24" autocomplete="nickname" placeholder="Listener name" required><select id="chatColor" aria-label="Avatar color"><option value="purple">PURPLE</option><option value="cyan">CYAN</option><option value="pink">PINK</option><option value="green">GREEN</option></select><button type="submit">JOIN</button></div>
-    </form>
-    <form class="chat-compose" id="chatCompose" hidden>
-      <label class="sr-only" for="chatText">Message</label>
-      <input id="chatText" name="message" maxlength="280" autocomplete="off" placeholder="Send a message…" required>
-      <button type="submit">SEND</button>
-    </form>
-    <p class="chat-feedback" id="chatFeedback" role="status"></p>
-    <details class="host-tools" id="hostTools"><summary>HOST CONTROLS</summary><form id="hostLogin"><input id="hostKey" type="password" autocomplete="current-password" placeholder="Host key"><button>UNLOCK</button></form><div id="hostActions" hidden><button id="pinAnnouncement" type="button">POST ANNOUNCEMENT</button><button id="clearChat" type="button">CLEAR CHAT</button></div></details>
+  <div class="submit-grid">
+    <article class="submit-card">
+      <small>STEP 1 · SUBMIT FOR REVIEW</small>
+      <h3 id="submissionHeading">SEND YOUR TRACK FOR REVIEW</h3>
+      <form id="submissionForm" class="submission-form">
+        <input class="sr-only" id="submissionWebsite" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <label>SUBMISSION TYPE
+          <select id="submissionType">
+            <option value="track">Released track</option>
+            <option value="recorded_mix">Prerecorded DJ mix</option>
+          </select>
+        </label>
+        <label>ARTIST / DJ NAME
+          <input id="submissionArtist" maxlength="180" required placeholder="Artist or DJ name">
+        </label>
+        <label><span id="submissionTitleLabel">TRACK TITLE</span>
+          <input id="submissionTitle" maxlength="180" required placeholder="Track title">
+        </label>
+        <label><span id="submissionLinkLabel">TRACK DOWNLOAD LINK</span>
+          <input id="submissionTrackUrl" type="url" maxlength="1000" required placeholder="https://…">
+        </label>
+        <div id="recordedMixFields" class="submission-extra" hidden>
+          <label>MIX LENGTH (MINUTES)
+            <input id="submissionDuration" type="number" min="1" max="720" inputmode="numeric" placeholder="60">
+          </label>
+          <label>GENRE(S)
+            <input id="submissionGenres" maxlength="240" placeholder="Dubstep, 140, grime…">
+          </label>
+          <label>TRACKLIST (OPTIONAL)
+            <textarea id="submissionTracklist" maxlength="5000" rows="4" placeholder="Artist – Track title"></textarea>
+          </label>
+          <label class="submission-consent">
+            <input id="submissionRights" type="checkbox"> I own or have permission to broadcast this recording.
+          </label>
+        </div>
+        <label>EMAIL
+          <input id="submissionEmail" type="email" maxlength="240" required placeholder="you@example.com">
+        </label>
+        <label>NOTES (OPTIONAL)
+          <textarea id="submissionNotes" maxlength="1000" rows="3" placeholder="Anything the station team should know"></textarea>
+        </label>
+        <button class="btn primary" type="submit">SEND SUBMISSION</button>
+        <p id="submissionFeedback" role="status"></p>
+      </form>
+    </article>
+
+    <article class="request-card">
+      <small>TRACK REQUESTS</small>
+      <h3>REQUEST A SONG ON AIR</h3>
+      <p>Want to hear a specific bass track? Send your suggestion to the station hosts.</p>
+      <form id="requestForm">
+        <label>TRACK TITLE
+          <input id="requestTitle" maxlength="100" required placeholder="Song name">
+        </label>
+        <label>ARTIST NAME
+          <input id="requestArtist" maxlength="80" placeholder="Artist">
+        </label>
+        <button class="btn primary" type="submit">SUBMIT REQUEST</button>
+        <p id="requestFeedback" role="status"></p>
+      </form>
+    </article>
+    <article class="submit-card payment-card">
+      <small>STEP 2 · PAYMENT AFTER APPROVAL</small>
+      <h3>GET YOUR AUDIO ON ALLTHINGS140</h3>
+      <p class="payment-note">If your submission is approved, we will contact you with next steps. Audio is added to the station rotation only after rights and playback quality are confirmed.</p>
+      <div class="product-preview">
+        <img class="product-thumb" src="assets/allthings140-track-placement-free.webp" alt="AllThings140 Radio Track Placement" loading="lazy" width="1200" height="900">
+      </div>
+      <a class="btn" href="https://ebedesigns-shop.fourthwall.com/products/get-your-track-on-allthings140-radio" target="_blank" rel="noopener">OPEN PAYMENT PAGE ↗</a>
+    </article>
   </div>
-</div></aside>
-<button class="chat-launcher" type="button" data-open-chat><span>CHAT</span><b id="chatLauncherCount">0</b></button>
-<section class="section wrap" id="hosts"><div class="section-head"><div><p class="kicker">TRANSMISSION OPERATORS</p><h2>LIVE FROM<br>THE UNDERGROUND.</h2></div><p>AllThings140Radio broadcasts heavy dubstep around the clock. Ebmarah and Eyewitnis can take over the shared stream live, bring their own selections, speak on mic, and keep the bass moving without dead air.</p></div><div class="hosts"><article class="host"><small>DJ // ADMIN</small><h3>EBMARAH</h3><p>Heavy selections, station control, live mixes, and underground bass transmissions.</p></article><article class="host"><small>DJ // HOST</small><h3>EYEWITNIS</h3><p>Live takeovers, guest selections, new discoveries, and high-energy dubstep sessions.</p></article></div></section>
-<section class="section wrap catalog" id="station"><div><p class="kicker">STATION UPLINK</p><h2>ONE REAL<br>RADIO FEED.</h2><p class="lead">This is a true synchronized station—not a separate browser playlist. Everybody connects to the same heavy dubstep transmission and hears the same track at the same moment.</p></div><div class="catalog-panel"><b>HOW THE STATION RUNS</b><ol><li><strong>Heavy dubstep</strong> broadcasts continuously, 24 hours a day.</li><li>Ebmarah and Eyewitnis host live shows and takeovers.</li><li>Every listener stays synchronized to one shared transmission.</li><li>Nonstop music continues automatically when a live set ends.</li></ol></div></section>
+</section>
+
+<!-- Station Info & Resident DJs -->
+<section class="section wrap" id="about">
+  <div class="section-head">
+    <div>
+      <p class="kicker">TRANSMISSION OPERATORS</p>
+      <h2>LIVE FROM<br>THE UNDERGROUND.</h2>
+    </div>
+    <p>ALLTHINGS140 Radio is an independent 24/7 station for dubstep, riddim, and heavy 140 bass culture.</p>
+  </div>
+  <div class="hosts">
+    <article class="host">
+      <small>DJ // ADMIN</small>
+      <h3>EBMARAH</h3>
+      <p>Heavy selections, station authority, live mixes, and deep underground dubstep transmissions.</p>
+    </article>
+    <article class="host">
+      <small>DJ // HOST</small>
+      <h3>EYEWITNIS</h3>
+      <p>Live takeovers, heavyweight guest curation, and nonstop high-energy bass sessions.</p>
+    </article>
+  </div>
+</section>
+
+<!-- Transmission Archive -->
+<section class="section wrap" id="archive">
+  <div class="section-head">
+    <div><p class="kicker">TRANSMISSION ARCHIVE</p><h2>ARTISTS WHO TOOK<br>CONTROL OF 140.</h2></div>
+    <p>Every resident set, guest takeover, and heavyweight live session is recorded and cataloged in the station archive.</p>
+  </div>
+  <div class="takeover-archive-grid" id="takeoverArchiveGrid">
+    <article class="takeover-archive-card">
+      <div class="tac-header"><img src="assets/takeover-fallback-logo.webp" alt="EBMARAH logo" class="tac-logo"><div><small class="tac-date">2026-08-16 · 22:00 UTC</small><h3>EBMARAH</h3><span class="tac-status">STATION RESIDENT</span></div></div>
+      <p class="tac-bio">ALLTHINGS140 Station Founder & Resident DJ. Deep riddim, 140 dubstep, and exclusive unreleased dubplates.</p>
+      <div class="tac-tracklist"><small>FEATURED SELECTIONS:</small><p>Drimi - LOST 2.0 • Jarvis - Champain • Cimm - Blue Sound</p></div>
+    </article>
+    <article class="takeover-archive-card">
+      <div class="tac-header"><img src="assets/takeover-fallback-logo.webp" alt="IKKI logo" class="tac-logo"><div><small class="tac-date">2026-08-17 · 00:00 UTC</small><h3>IKKI</h3><span class="tac-status">GUEST TAKEOVER</span></div></div>
+      <p class="tac-bio">Heavyweight selector bringing raw underground basslines and fast-paced dub mixing.</p>
+      <div class="tac-tracklist"><small>FEATURED SELECTIONS:</small><p>IKKI - Dub Intro • Substrada - Heavy Friction • Distance - Night Vision VIP</p></div>
+    </article>
+  </div>
+</section>
+
+<!-- Sponsors & Ecosystem Partners -->
+<section class="section wrap scale-section" id="sponsors">
+  <div class="section-head">
+    <div><p class="kicker">POWERING THE UNDERGROUND</p><h2>SPONSORS +<br>PARTNERS.</h2></div>
+    <p>Independent sound systems, hardware manufacturers, record labels, and underground collectives backing 24/7 bass culture.</p>
+  </div>
+  <div class="sponsors-partners-container">
+    <div class="brand-group">
+      <small class="brand-group-title">⚡ OFFICIAL SPONSORS</small>
+      <div class="brand-grid" id="sponsorsGrid">
+        <div class="brand-empty-state"><p>Official sponsor opportunities are opening. To feature your sound system or brand, submit a sponsor inquiry below.</p></div>
+      </div>
+    </div>
+    <div class="brand-group">
+      <small class="brand-group-title">🤝 ECOSYSTEM PARTNERS</small>
+      <div class="brand-grid" id="partnersGrid">
+        <div class="brand-empty-state"><p>Partnering with independent record labels, visual artists, and underground bass collectives.</p></div>
+      </div>
+    </div>
+  </div>
+  <div class="sponsor-card" style="margin-top: 24px;">
+    <div><p class="kicker">ADVERTISE / SPONSOR</p><h2>BACK THE<br>BASS.</h2><p>ALLTHINGS140 is preparing limited audio and visual sponsorship for brands, labels, events, and creators that genuinely fit underground bass culture.</p></div>
+    <div><h3>START A CONVERSATION</h3><p>Tell us what you want to promote, your campaign dates, and your goals. Every partnership is reviewed before broadcast.</p><a class="btn primary" href="mailto:ebmarahofficial@gmail.com?subject=ALLTHINGS140%20Sponsor%20Inquiry">SPONSOR INQUIRY ↗</a></div>
+  </div>
+</section>
+
+<!-- Community & Discord -->
+<section class="section wrap" id="discord">
+  <div class="discord-card">
+    <img src="assets/allthings140-logo-192.webp" width="140" height="140" loading="lazy" alt="AllThings140 Logo">
+    <div>
+      <small>COMMUNITY UPLINK</small>
+      <h3>JOIN THE DISCORD TRANSMISSION</h3>
+      <p>Connect with listeners, get live takeover alerts, share unreleased dubplates, and chat with the station team.</p>
+      <a class="btn primary" href="https://discord.gg/3vVzvuXP" target="_blank" rel="noopener">JOIN THE DISCORD ↗</a>
+    </div>
+  </div>
+</section>
 </main>
-<div class="mini-player" id="miniPlayer" hidden><button id="miniPlay" type="button" aria-label="Play station">▶</button><img src="assets/allthings140-logo-64.png?v=0.4.22" alt=""><div><small>NOW TRANSMITTING</small><b id="miniTitle">ALLTHINGS140RADIO</b><span id="miniArtist">CONNECTING…</span></div><span class="mini-listeners"><b id="miniListeners">0</b> LIVE</span><button id="miniMute" type="button" aria-label="Mute station">VOL</button><button id="miniChat" type="button" data-open-chat>CHAT</button></div>
-<footer class="wrap"><a class="brand" href="./"><span class="sigil"><img src="assets/allthings140-logo-64.png?v=0.4.22" alt=""></span><span><strong>ALLTHINGS140</strong><small>RADIO</small></span></a><div class="foot-status" id="footerStatus">SYSTEM STATUS: CONNECTING</div></footer>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
-<script src="app.js?v=1.0.0"></script>
-<script src="chat.js?v=1.3.0"></script>
-</body></html>
+
+<audio id="audio" preload="none"></audio>
+
+<!-- Support Station Modal Dialog -->
+<dialog class="support-dialog" id="supportDialog" aria-labelledby="supportDialogTitle">
+  <button class="support-close" id="supportClose" type="button" aria-label="Close modal">×</button>
+  <div id="supportCheckoutView">
+    <p class="kicker">FUEL THE BASS</p>
+    <h2 id="supportDialogTitle">SUPPORT ALLTHINGS140 RADIO</h2>
+    <p>Keeping underground bass music blasting 24/7 isn't free. Throw something in the tip jar to support bandwidth and server costs.</p>
+    
+    <div class="support-goal" id="supportGoal" style="margin-bottom: 20px;">
+      <small id="supportGoalTitle">KEEP 140 ONLINE</small>
+      <p id="supportGoalDescription">Help power the station and keep underground bass music broadcasting 24/7.</p>
+      <strong><span id="supportGoalTotal">$0</span> / <span id="supportGoalTarget">$150</span></strong>
+      <div class="support-progress" role="progressbar" aria-label="Station support goal" aria-valuemin="0" aria-valuemax="150" aria-valuenow="0">
+        <i id="supportGoalBar"></i>
+      </div>
+    </div>
+
+    <form id="supportForm">
+      <fieldset style="border:0;padding:0;margin:0">
+        <legend style="color:#dba5ff;font-size:.72rem;font-weight:900;letter-spacing:.12em;">CHOOSE AN AMOUNT</legend>
+        <div class="support-amounts">
+          <button type="button" data-support-cents="500"><b>$5</b><span>Bandwidth</span></button>
+          <button type="button" data-support-cents="1000"><b>$10</b><span>Keep It Loud</span></button>
+          <button type="button" data-support-cents="2000"><b>$20</b><span>140 Supporter</span></button>
+          <button type="button" data-support-cents="5000"><b>$50</b><span>Legend Tier</span></button>
+        </div>
+        <label style="display:block;margin-top:10px;font-size:.72rem;font-weight:800;color:#c0a9cf;">
+          CUSTOM AMOUNT ($)
+          <input id="supportAmount" type="number" inputmode="decimal" min="1" max="1000" step="0.01" value="10.00" required style="width:100%;padding:10px;border-radius:6px;border:1px solid rgba(184,92,255,0.4);background:rgba(8,4,14,0.9);color:#fff;margin-top:4px;">
+        </label>
+      </fieldset>
+      <label style="display:block;margin-top:12px;font-size:.72rem;font-weight:800;color:#c0a9cf;">
+        DISPLAY NAME (OPTIONAL)
+        <input id="supportName" maxlength="40" placeholder="Your name" style="width:100%;padding:10px;border-radius:6px;border:1px solid rgba(184,92,255,0.4);background:rgba(8,4,14,0.9);color:#fff;margin-top:4px;">
+      </label>
+      <label style="display:block;margin-top:12px;font-size:.72rem;font-weight:800;color:#c0a9cf;">
+        MESSAGE (OPTIONAL)
+        <textarea id="supportMessage" maxlength="180" rows="2" placeholder="Keep 140 alive 🔥" style="width:100%;padding:10px;border-radius:6px;border:1px solid rgba(184,92,255,0.4);background:rgba(8,4,14,0.9);color:#fff;margin-top:4px;"></textarea>
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:.76rem;color:#c0a9cf;">
+        <input id="supportPublic" type="checkbox" checked> Show my support in the public feed
+      </label>
+      <button class="btn primary" id="supportCheckout" type="submit" style="width:100%;margin-top:18px;min-height:48px;">CONTINUE TO SECURE STRIPE CHECKOUT</button>
+      <p id="supportFeedback" role="status" style="margin-top:8px;font-size:.78rem;color:#ff8eae;"></p>
+    </form>
+  </div>
+  <div class="support-success" id="supportSuccessView" hidden style="text-align:center;padding:20px;">
+    <span style="font-size:2.5rem;">💜</span>
+    <h2>THANK YOU FOR SUPPORTING 140</h2>
+    <p id="supportSuccessMessage">You just helped keep the bass alive.</p>
+    <button class="btn primary" id="supportReturn" type="button" style="margin-top:14px;">RETURN TO THE RADIO</button>
+  </div>
+</dialog>
+
+<!-- Green Room launcher — dedicated standalone chat + visuals experience -->
+<a class="chat-launcher green-room-launcher" href="room/"><span>GREEN ROOM</span> <b>LIVE</b></a>
+
+<!-- Mini Floating Player -->
+<div class="mini-player" id="miniPlayer" hidden>
+  <button id="miniPlay" type="button" aria-label="Play station">▶</button>
+  <img src="assets/allthings140-logo-64.png?v=0.4.22" alt="Station Icon">
+  <div>
+    <small>NOW TRANSMITTING</small>
+    <b id="miniTitle">ALLTHINGS140RADIO</b>
+    <span id="miniArtist">CONNECTING…</span>
+  </div>
+  <span class="mini-listeners"><b id="miniListeners">0</b> LIVE</span>
+  <button id="miniMute" type="button" aria-label="Mute station">VOL</button>
+  <a id="miniChat" class="mini-room-link" href="room/">GREEN ROOM</a>
+</div>
+
+<!-- Footer -->
+<footer class="wrap">
+  <a class="brand" href="./">
+    <span class="sigil"><img src="assets/allthings140-logo-64.png?v=0.4.22" alt="AllThings140 Logo"></span>
+    <span><strong>ALLTHINGS140</strong><small>RADIO</small></span>
+  </a>
+  <button class="footer-support" type="button" data-open-support>💜 SUPPORT THE STATION</button>
+  <a class="footer-merch" href="visuals/">◉ VISUALS TAB</a>
+  <a class="footer-merch" href="roadmap/">🗺 ROADMAP</a>
+  <a class="footer-merch" href="https://ebedesigns.online" target="_blank" rel="noopener">SHOP MERCH ↗</a>
+  <div class="foot-status" id="footerStatus">SYSTEM STATUS: CONNECTING</div>
+</footer>
+
+<script src="app.js?v=2.0.1"></script>
+<script src="support.js?v=1.1.0"></script>
+</body>
+</html>

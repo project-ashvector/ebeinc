@@ -1,0 +1,12 @@
+builds/
+backups/
+dist/
+visuals-app/
+android/
+discord-bot/node_modules/
+chat-worker/node_modules/
+.wrangler/
+node_modules/
+*.apk
+*.zip
+*.tar.gz

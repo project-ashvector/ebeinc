@@ -1,0 +1,21 @@
+[Unit]
+Description=AllThings140Radio public HTTPS tunnel
+After=network-online.target allthings140radio-server.service
+Wants=network-online.target allthings140radio-server.service
+
+[Service]
+Type=simple
+User=allthings140radio
+Group=allthings140radio
+ExecStart=/usr/local/bin/cloudflared --config /etc/cloudflared/allthings140radio.yml tunnel run
+Restart=always
+RestartSec=5
+TimeoutStopSec=20
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/etc/cloudflared
+
+[Install]
+WantedBy=multi-user.target

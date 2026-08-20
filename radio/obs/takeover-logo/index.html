@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AllThings140Radio — OBS Takeover Logos</title>
+<style>
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent}.logo-box{position:absolute;top:73%;width:8.5vw;height:9vw;max-width:164px;max-height:164px;min-width:76px;min-height:76px;display:grid;place-items:center;background:transparent;filter:drop-shadow(0 0 16px rgba(157,43,255,.68));opacity:0;transform:scale(.88);transition:opacity .4s,transform .4s}.logo-box.visible{opacity:1;transform:scale(1)}.logo-box.left{left:10.5%}.logo-box.right{right:10.5%}.logo-box img{display:block;width:100%;height:100%;object-fit:contain}.left-only .right,.right-only .left{display:none}.large .logo-box{width:11vw;height:11vw;max-width:210px;max-height:210px}.small .logo-box{width:6.5vw;height:7vw;max-width:126px;max-height:126px}
+</style>
+</head>
+<body>
+<aside class="logo-box left" data-logo><img alt="Live takeover artist logo"></aside>
+<aside class="logo-box right" data-logo><img alt="Live takeover artist logo"></aside>
+<script>
+const params=new URLSearchParams(location.search),preview=params.get("preview")==="1",position=params.get("position")||"both",size=params.get("size")||"normal",fallback="/assets/takeover-fallback-logo.webp",endpoints=["/api/public/status","https://status.ebeinc.online/api/public/status"];
+if(position==="left")document.body.classList.add("left-only");if(position==="right")document.body.classList.add("right-only");if(["small","large"].includes(size))document.body.classList.add(size);
+function show(takeover){document.querySelectorAll("[data-logo]").forEach(box=>{const img=box.querySelector("img");img.src=takeover?.logo_url||fallback;img.alt=`${String(takeover?.artist||"AllThings140Radio").trim()} logo`;box.classList.add("visible")})}
+async function update(){for(const endpoint of endpoints){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),4500);try{const response=await fetch(`${endpoint}?obs-logo=${Date.now()}`,{cache:"no-store",signal:controller.signal});if(!response.ok)throw Error("status");const data=await response.json();show(data.active_takeover||null);return}catch{}finally{clearTimeout(timer)}}show(null)}
+show(null);update();setInterval(update,3000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)update()});
+</script>
+</body>
+</html>

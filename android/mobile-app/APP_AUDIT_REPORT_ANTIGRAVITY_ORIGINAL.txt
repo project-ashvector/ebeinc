@@ -1,0 +1,169 @@
+================================================================================
+ALLTHINGS140 RADIO — ANDROID PHONE APP AUDIT & REPAIR REPORT
+================================================================================
+Date: 2026-08-18
+Auditor: Antigravity (Advanced Agentic Assistant)
+Target: ALLTHINGS140 Radio Android Phone Application
+
+--------------------------------------------------------------------------------
+1. PROJECT IDENTIFIED
+--------------------------------------------------------------------------------
+* Authoritative Source Path: /home/ebmarah/Projects/AllThings140Radio/android/mobile-app/
+* Application / Package ID: online.ebeinc.allthings140radio
+* Original Version: 1.1.0 (versionCode: 13)
+* Reviewed / Updated Version: 1.2.0 (versionCode: 14)
+* Target SDK: Android 15 (API 35) / Minimum SDK: Android 6.0 Marshmallow (API 23)
+* Java Language Level: Java 11
+* Core Audio Engine: AndroidX Media3 ExoPlayer 1.7.1 & MediaLibrarySession
+
+--------------------------------------------------------------------------------
+2. HOW LATEST VERSION WAS DETERMINED
+--------------------------------------------------------------------------------
+A full system-wide search of the entire laptop filesystem was conducted across /home/ebmarah,
+/home/ebmarah/Projects, /home/ebmarah/Downloads, /home/ebmarah/Desktop, /home/ebmarah/Backups,
+and /opt.
+
+Project Copies Discovered & Evaluated:
+1. /home/ebmarah/Projects/AllThings140Radio/android/mobile-app/ (SELECTED AS AUTHORITATIVE LATEST)
+   - Status: Active development root, complete resource sets including res/raw/bg_video.mp4,
+     Media3 ExoPlayer dependencies, property-driven release signing with debug fallback,
+     referenced as active artifact across AGENTS.md, APPLICATIONS.md, and CURRENT_STATUS.md.
+2. /home/ebmarah/ALLTHINGS140-GREEN-ROOM-v0.1.40-SOURCE/android/mobile-app/
+   - Status: Exported snapshot of Green Room codebase; identical code but missing res/raw/bg_video.mp4.
+3. /home/ebmarah/Backups/ALLTHINGS140/repair-backups/repair-pass-20260815T201841Z/android/mobile-app/
+   - Status: Historical snapshot from August 15 repair pass.
+4. /home/ebmarah/Backups/ALLTHINGS140/repair-backups/pre-repair-20260815T194605Z/android/mobile-app/
+   - Status: Pre-repair backup from August 15.
+5. /home/ebmarah/Projects/AllThings140Radio/dist/ALLTHINGS140/Migration/allthings140radio-backup-migration/android/mobile-app/
+   - Status: Older migration backup with legacy signing configurations.
+6. /home/ebmarah/Downloads/watch app radio/
+   - Status: Galaxy Watch WearOS application (deliberately excluded per user instruction).
+
+Pre-audit baseline backup preserved at:
+/home/ebmarah/Projects/AllThings140Radio/ALLTHINGS140-RADIO-ANDROID-PRE-AUDIT-BACKUP.zip
+
+--------------------------------------------------------------------------------
+3. PROBLEMS FOUND & CATEGORIZATION
+--------------------------------------------------------------------------------
+
+[CRITICAL]
+1. Missing In-App Settings & Dynamic Version Display: The phone app had no native Settings section,
+   no way to check for station software updates, and no dynamic package versioning visible to the user.
+2. Hardcoded User Agent String: MainActivity hardcoded 'AllThings140RadioAndroid/1.0.10' in its user-agent
+   header, failing to reflect the actual installed package version (1.1.0/1.2.0).
+
+[HIGH]
+3. Edge-to-Edge & System Insets Clipping (Galaxy S24 Plus & Modern Android 14/15 Devices):
+   The web shell did not handle WindowInsets, causing top header elements to clip behind the camera
+   cutout/status bar, and bottom player controls to clip behind the system navigation/gesture bar.
+4. Unhandled Offline/Network Disconnect States: When network connection dropped, WebView dumped the raw
+   Android browser net::ERR_INTERNET_DISCONNECTED error screen rather than providing a native cyber-styled
+   uplink reconnection UI.
+5. Media3 Enum Deprecation/Type Mismatch: In RadioService.java, LibraryResult.RESULT_ERROR_BAD_VALUE
+   caused lint compilation failure; expected SessionError.ERROR_BAD_VALUE in Media3 1.7.x.
+
+[MEDIUM]
+6. Raw Pixel Sizing in UI Components: RadioSiteActivity and RadioVisualizerView used hardcoded raw pixels
+   (e.g., setPadding(20, 12, 20, 12), textPaint.setTextSize(11)) instead of density-independent pixels
+   (DP) and scalable pixels (SP), causing layout distortion on high-DPI screens (such as Galaxy S24 Plus).
+7. Missing Android Auto Voice Search Intent Filter: Missing MEDIA_PLAY_FROM_SEARCH intent filter required
+   for Android Auto media compliance.
+8. Sub-48dp Touch Targets: Top bar icons and action buttons lacked 48x48dp minimum accessible touch targets.
+
+[LOW / COSMETIC]
+9. Visualizer Fixed-Character String Truncation: RadioVisualizerView used track.substring(0, 36) which
+   failed on narrow viewports; updated to TextUtils.ellipsize with dynamic Canvas measureText.
+10. Unspecified String Locale: RadioVisualizerView used toUpperCase() without explicit Locale.ROOT.
+11. Missing Gradle Wrapper in Repository: android/mobile-app lacked gradlew and gradle/wrapper distribution files.
+
+--------------------------------------------------------------------------------
+4. DETAILED AUDIT FINDINGS BY DOMAIN
+--------------------------------------------------------------------------------
+
+A. UI & Responsive Design:
+- Galaxy S24 Plus (3120x1440 QHD+, 19.5:9 aspect ratio, punch-hole camera) requires dynamic status bar and
+  navigation bar inset handling via View.setOnApplyWindowInsetsListener.
+- Top navigation bar has been built with responsive minimum 52dp height, 44-48dp icon touch targets, and
+  consistent cyber neon typography.
+- Offline error view provides a centered, high-contrast, cyber-dubstep aesthetic with a dedicated 'RETRY UPLINK' action.
+
+B. Functional & Playback Architecture:
+- RadioService is powered by Media3 ExoPlayer 1.7.1 consuming the continuous stream:
+  https://stream.ebeinc.online/live.mp3
+- Configured with C.WAKE_MODE_NETWORK, handleAudioBecomingNoisy(true), AudioAttributes.USAGE_MEDIA, and
+  bounded 5-second automatic recovery timers.
+- Registered with MediaLibraryService and Android Auto automotive descriptors.
+
+C. Settings & Update System:
+- Created SettingsActivity and activity_settings.xml with:
+  * Dynamic installed version display: reads BuildConfig.VERSION_NAME and BuildConfig.VERSION_CODE directly.
+  * Package & target SDK inspection: online.ebeinc.allthings140radio on Android 15 (API 35).
+  * Check for Updates engine: Asynchronously queries https://status.ebeinc.online/api/public/status and
+    https://allthings140radio.online/api/public/status.
+  * Status handling: Checking…, App is up to date, Update available (with release notes and download action),
+    and Unable to check for updates.
+  * Station Infrastructure diagnostic cards displaying stream and status endpoints.
+  * One-touch 'CLEAR APP CACHE & RELOAD' action.
+
+D. Security & Privacy:
+- usesCleartextTraffic is strictly set to false in AndroidManifest.xml (HTTPS enforced).
+- WebView settings explicitly disable setAllowFileAccess(false), setAllowContentAccess(false), and
+  setGeolocationEnabled(false).
+- No hardcoded API keys, tokens, or private secrets exist in the codebase.
+
+--------------------------------------------------------------------------------
+5. CHANGES IMPLEMENTED
+--------------------------------------------------------------------------------
+1. app/build.gradle:
+   - Incremented versionName to '1.2.0' and versionCode to 14.
+   - Enabled buildFeatures { buildConfig true }.
+   - Added androidx.annotation:annotation:1.9.1.
+2. app/src/main/AndroidManifest.xml:
+   - Registered SettingsActivity.
+   - Added android.media.action.MEDIA_PLAY_FROM_SEARCH intent filter for Android Auto compliance.
+3. app/src/main/java/online/ebeinc/allthings140radio/MainActivity.java:
+   - Added cyber-themed top navigation bar with Station Title, Reload button, and Settings button.
+   - Implemented dynamic WindowInsets handling for notch/status bar and gesture navigation bar.
+   - Implemented dynamic User-Agent: 'AllThings140RadioAndroid/' + BuildConfig.VERSION_NAME.
+   - Implemented offline error overlay with 'RETRY UPLINK' recovery button.
+   - Hardened WebView security settings.
+4. app/src/main/java/online/ebeinc/allthings140radio/SettingsActivity.java (NEW):
+   - Comprehensive Settings screen with dynamic versioning, update check engine, endpoint diagnostics,
+     and cache-clearing functionality.
+5. app/src/main/res/layout/activity_settings.xml (NEW):
+   - Responsive dark cyber layout with ScrollView, cards, progress indicator, and accessible touch targets.
+6. app/src/main/res/values/colors.xml & strings.xml:
+   - Added dark background, neon purple, neon green, and cyber card colors.
+   - Added localized string resources.
+7. app/src/main/res/drawable/:
+   - Added card_background.xml, button_cyber.xml, button_orange.xml, ic_settings.xml, ic_refresh.xml, ic_back.xml.
+8. app/src/main/java/online/ebeinc/allthings140radio/RadioSiteActivity.java:
+   - Converted raw pixels to DP/SP and added WindowInsets.
+9. app/src/main/java/online/ebeinc/allthings140radio/RadioVisualizerView.java:
+   - Applied density and scaledDensity to paints/drawables; updated to TextUtils.ellipsize; specified Locale.ROOT.
+10. app/src/main/java/online/ebeinc/allthings140radio/RadioService.java:
+    - Fixed Media3 SessionError.ERROR_BAD_VALUE return constant.
+11. gradlew & gradle/wrapper/:
+    - Added self-contained Gradle 8.9 wrapper distribution.
+
+--------------------------------------------------------------------------------
+6. BUILD & TEST VERIFICATION
+--------------------------------------------------------------------------------
+* Gradle Clean: SUCCESS
+* Gradle assembleDebug: SUCCESS (0 errors, generates app-debug.apk)
+* Gradle assembleRelease: SUCCESS (debug signing fallback verified)
+* Android Lint (lintDebug): SUCCESS (0 errors, HTML & text reports generated)
+* Unit Tests (testDebugUnitTest): SUCCESS
+* Java Compilation: SUCCESS (0 warnings)
+
+--------------------------------------------------------------------------------
+7. RECOMMENDED NEXT STEPS FOR PRODUCTION RELEASE
+--------------------------------------------------------------------------------
+1. Google Play Release Keystore: Provide production keystore via environment variables
+   (KEYSTORE_FILE, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD) to produce a release-signed AAB.
+2. Server-Side Update Manifest: In status.ebeinc.online or allthings140radio.online/api/public/status,
+   optionally expose "android_app_version", "android_app_download_url", and "android_app_notes"
+   when a new APK is published to automate in-app update prompts.
+3. Android Auto DHU / Physical Head Unit Validation: Perform vehicle test on Android Automotive /
+   Android Auto hardware to verify steering wheel playback triggers.
+================================================================================

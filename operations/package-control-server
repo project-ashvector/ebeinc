@@ -1,0 +1,9 @@
+Package: allthings140radio-server
+Version: 0.8.0
+Section: sound
+Priority: optional
+Architecture: all
+Depends: python3, ffmpeg
+Maintainer: AllThings140 Radio
+Description: AllThings140 Radio server and AutoDJ
+ Catalog-integrity-aware radio control server with safe asset recovery.

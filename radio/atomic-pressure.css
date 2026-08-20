@@ -3,7 +3,7 @@
   src: url("assets/atomic-pressure.woff2?v=0.4.24") format("woff2");
   font-style: normal;
   font-weight: 400;
-  font-display: swap;
+  font-display: optional;
 }
 
 /* Use Atomic Pressure throughout the station interface. */

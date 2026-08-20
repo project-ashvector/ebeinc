@@ -1,0 +1,18 @@
+[Unit]
+Description=Cloudflare Tunnel for ALLTHINGS140 Visuals Realtime Staging
+After=network-online.target allthings140-visuals-realtime.service
+Wants=network-online.target
+Wants=allthings140-visuals-realtime.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/cloudflared tunnel --config /etc/cloudflared/config.yml run
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

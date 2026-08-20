@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /opt/allthings140radio-tts/bin/python -m piper "$@"

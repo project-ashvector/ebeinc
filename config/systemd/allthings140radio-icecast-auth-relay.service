@@ -1,0 +1,26 @@
+[Unit]
+Description=AllThings140Radio loopback Icecast authentication relay
+After=network.target allthings140radio-icecast.service
+Requires=allthings140radio-icecast.service
+
+[Service]
+Type=simple
+User=allthings140radio
+Group=allthings140radio
+ExecStart=/usr/bin/python3 /opt/allthings140radio-server/icecast_auth_relay.py
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadOnlyPaths=/etc/allthings140radio/icecast-source.secret
+
+[Install]
+WantedBy=multi-user.target

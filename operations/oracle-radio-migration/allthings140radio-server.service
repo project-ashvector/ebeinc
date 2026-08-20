@@ -1,0 +1,28 @@
+[Unit]
+Description=AllThings140Radio control server and 24/7 AutoDJ
+After=network-online.target allthings140radio-icecast-auth-relay.service
+Wants=network-online.target allthings140radio-icecast-auth-relay.service
+RequiresMountsFor=/srv/allthings140radio
+
+[Service]
+Type=simple
+User=allthings140radio
+Group=allthings140radio
+WorkingDirectory=/var/lib/allthings140radio
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONPYCACHEPREFIX=/var/lib/allthings140radio/.pycache
+Environment=ALLTHINGS140_AD_DIR=/var/lib/allthings140radio/ads
+Environment=ALLTHINGS140_HOST=127.0.0.1
+ExecStart=/usr/bin/python3 /opt/allthings140radio-server/server.py
+Restart=always
+RestartSec=3
+TimeoutStopSec=20
+KillMode=control-group
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/etc/allthings140radio /var/lib/allthings140radio /srv/allthings140radio
+
+[Install]
+WantedBy=multi-user.target

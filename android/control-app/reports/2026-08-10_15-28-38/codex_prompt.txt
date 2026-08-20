@@ -1,0 +1,108 @@
+You are repairing the existing ALLTHINGS140 Radio system.
+
+Read the attached report before editing. Preserve playlist order and 24/7 rotation logic. Make the smallest safe repair, test it, and verify stream, metadata, website, and next-track behavior.
+
+{
+  "version": "0.1.0",
+  "created_at": "2026-08-10_15-28-38",
+  "status": {
+    "ok": true,
+    "name": "AllThings140Radio",
+    "version": "0.6.0",
+    "autodj": {
+      "running": true,
+      "pid": 796606,
+      "mode": "catalog rotation",
+      "last_error": "",
+      "tracks": 444,
+      "current_track_id": 547,
+      "current_title": "Artix & Monsuo - Doppelgagner [Free Download]",
+      "current_artist": "",
+      "started_at": 1786400762,
+      "position_seconds": 156.78819060325623,
+      "duration_seconds": 219.794286,
+      "next_track_id": 627,
+      "next_title": "Subfiltronik - Blockz (Batikz Bootleg) [Riddim Dubstep Exclusive - Free Download]",
+      "next_artist": "",
+      "transition_reason": "automatic",
+      "ad_playing": false,
+      "ad_name": "",
+      "progress": 0.7133406125182719
+    },
+    "icecast": {
+      "online": true,
+      "listeners": 2,
+      "live_source": true,
+      "sources": [
+        {
+          "genre": "various",
+          "listener_peak": 2,
+          "listeners": 2,
+          "listenurl": "http://localhost:14000/live.mp3",
+          "server_description": "140 BPM and bass music, live around the clock.",
+          "server_name": "AllThings140Radio",
+          "server_type": "audio/mpeg",
+          "stream_start": "Mon, 10 Aug 2026 15:17:15 -0700",
+          "stream_start_iso8601": "2026-08-10T15:17:15-0700",
+          "dummy": null
+        }
+      ]
+    },
+    "disk": {
+      "path": "/var/lib/allthings140radio",
+      "free_bytes": 529100816384,
+      "total_bytes": 1006450962432,
+      "free_percent": 52.6,
+      "state": "healthy"
+    },
+    "watchdog": {
+      "state": "healthy",
+      "last_check_at": 1786400914,
+      "last_recovery_at": 0,
+      "recovery_count": 0,
+      "last_failure": ""
+    },
+    "silence": {
+      "state": "healthy",
+      "silent": false,
+      "silent_seconds": 0.0,
+      "last_audio_at": 1786342149,
+      "error": ""
+    },
+    "recording": {
+      "recording": false,
+      "archive_id": "",
+      "started_at": 0,
+      "storage": "r2"
+    },
+    "storage": {
+      "provider": "r2",
+      "remote_available": true
+    },
+    "ads": {
+      "playing": false,
+      "name": ""
+    }
+  },
+  "tailscale": {
+    "connected": false,
+    "detail": "Tailscale returned invalid status"
+  },
+  "services": {
+    "allthings140radio-tunnel.service": {
+      "returncode": 0,
+      "stdout": "active\n",
+      "stderr": ""
+    }
+  },
+  "disk": {
+    "returncode": 0,
+    "stdout": "Filesystem      Size  Used Avail Use% Mounted on\n/dev/nvme0n1p2  938G  397G  493G  45% /\n",
+    "stderr": ""
+  },
+  "processes": {
+    "returncode": 0,
+    "stdout": "0 kworker/1:1-kac [kworker/1:1-kacpi_notify]\n 803881 codex           codex resume 019fe848-a101-7fc1-9cba-11f4f4b4d18d\n 804238 MainThread      node ./mcp/server.mjs\n 805474 kworker/2:1-cgr [kworker/2:1-cgroup_release]\n 806727 kworker/0:2-mm_ [kworker/0:2-mm_percpu_wq]\n 806765 kworker/u49:0+i [kworker/u49:0+i915_flip]\n 807039 bash            bash\n 807338 codex           codex resume 019febb0-ce05-7111-8be6-888ea04fe8bb\n 807728 MainThread      node ./mcp/server.mjs\n 808807 codex-code-mode /home/ebmarah/.codex/packages/standalone/releases/0.147.0-x86_64-unknown-linux-musl/bin/codex-code-mode-host\n 808843 codex-code-mode /home/ebmarah/.codex/packages/standalone/releases/0.147.0-x86_64-unknown-linux-musl/bin/codex-code-mode-host\n 808866 kworker/4:2-cgr [kworker/4:2-cgroup_release]\n 809075 kworker/9:0-eve [kworker/9:0-events]\n 809081 kworker/u48:0-f [kworker/u48:0-flush-259:0]\n 809355 bash            bash\n 809650 codex           codex\n 810041 MainThread      node ./mcp/server.mjs\n 811086 ffmpeg          ffmpeg -hide_banner -loglevel error -re -i /var/lib/allthings140radio/music/Artix _ Monsuo - Doppelgagner [Free Download].mp3 -vn -f s16le -ar 44100 -ac 2 pipe:1\n 811565 brave           /opt/brave.com/brave/brave --type=renderer --crashpad-handler-pid=15094 --enable-crash-reporter=072372ea-c690-460f-b8b5-82d7c007662f, --enable-distillability-service --origin-trial-public-key=bYUKPJoPnCxeNvu72j4EmPuK7tr1PAC7SHh8ld9Mw3E=,fMS4mpO6buLQ/QMd+zJmxzty/VQ6B1EUZqoCU04zoRU= --change-stack-guard-on-fork=enable --ozone-platform=wayland --lang=en-US --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=551 --time-ticks-at-unix-epoch=-1786304717060665 --launch-time-ticks=96075808822 --shared-files=v8_context_snapshot_data:100 --metrics-shmem-handle=4,i,14037162519092261328,8953076771400598625,2097152 --field-trial-handle=3,i,3053036917935423699,7030829045916260737,262144 --disable-features=EyeDropper --variations-seed-version=main@2a5c6d95eaa55897e8d8e9a05fd5e5a77cd67328 --pseudonymization-salt-handle=7,i,1536932984083100493,10606302578899260955,4 --trace-process-track-uuid=3190709502621930293\n 811652 kworker/6:1-cgr [kworker/6:1-cgroup_release]\n 811691 kworker/7:1-mm_ [kworker/7:1-mm_percpu_wq]\n 811883 kworker/11:0-mm [kworker/11:0-mm_percpu_wq]\n 811960 kworker/8:1-i91 [kworker/8:1-i915-unordered]\n 812009 kworker/u48:1-e [kworker/u48:1-events_unbound]\n 812092 kworker/10:2    [kworker/10:2]\n 812131 bash            /bin/bash -lc curl -fsS http://127.0.0.1:11434/api/tags | head -c 1000; printf '\\n'; python3 - <<'PY' import json, urllib.request p=json.dumps({'model':'llama3.2:3b','stream':False,'messages':[{'role':'user','content':'Say hello in five words.'}]}).encode() r=urllib.request.urlopen(urllib.request.Request('http://127.0.0.1:11434/api/chat',data=p,headers={'Content-Type':'application/json'}),timeout=30) print(r.status); print(r.read().decode()[:1500]) PY\n 812141 python3         python3 -\n 812160 ollama          /usr/local/bin/ollama runner --model /usr/share/ollama/.ollama/models/blobs/sha256-dde5aa3fc5ffc17176b5e8bdc82f587b24b2678c6c66101bf7da77af9f7ccdff --port 44951\n 812175 kworker/u48:3-f [kworker/u48:3-flush-259:0]\n 812176 kworker/u48:4   [kworker/u48:4]\n 812177 kworker/u48:6-e [kworker/u48:6-ext4-rsv-conversion]\n 812210 bash            /bin/bash -c set -e; python3 /home/ebmarah/Documents/apps/at140radiocs/desktop/daemon.py >/tmp/at140radiocs-daemon.log 2>&1 & PID=$!; sleep 1; TOKEN=$(cat /home/ebmarah/at140radiocs/daemon.token); curl -fsS -H \"Authorization: Bearer $TOKEN\" http://127.0.0.1:14200/api/status; echo; curl -fsS -X POST -H \"Authorization: Bearer $TOKEN\" http://127.0.0.1:14200/api/diagnostics/run; echo; kill $PID\n 812211 python3         python3 /home/ebmarah/Documents/apps/at140radiocs/desktop/daemon.py\n 812235 curl            curl -fsS -X POST -H Authorization: Bearer 8374-17wyDQQOaFStqsquX5zR8Ay7PWe8Wc94GnZwpc http://127.0.0.1:14200/api/diagnostics/run\n 812247 ps              ps -eo pid,comm,args\n",
+    "stderr": ""
+  }
+}

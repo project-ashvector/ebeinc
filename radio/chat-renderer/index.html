@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050309">
+<meta name="description" content="AllThings140Radio — LIVE CHAT CANARY PREVIEW (live-chat environment)">
+<title>AllThings140Radio // Chat Canary</title>
+<link rel="icon" href="../assets/allthings140-logo-64.png" sizes="64x64" type="image/png">
+<link rel="stylesheet" href="../styles.css?v=2.1.0">
+<style>
+/* Compact chat renderer overlay for standalone canary preview */
+#chatVisualRenderer{position:fixed;inset:0;z-index:-1;overflow:hidden;background:#050309;pointer-events:none}
+#chatVisualRenderer[hidden]{display:none}
+.chat-screens{position:absolute;left:0;top:0;width:100%;height:100%;z-index:10;transform-origin:center center;pointer-events:none}
+.chat-screens video{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .8s ease-in-out;background:#000;pointer-events:none}
+.chat-screens video.active{opacity:1}
+.chat-stage-overlay{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:20;background:transparent}
+.chat-stage-overlay video{margin:0;padding:0;width:100%;height:100%;object-fit:fill;pointer-events:none;background:transparent;mask:url(#stage-screen-mask);-webkit-mask:url(#stage-screen-mask)}
+.chat-mode-logo{position:absolute;z-index:30;display:grid;place-items:center;filter:drop-shadow(0 0 14px #9d2bff99);pointer-events:none}
+.chat-mode-logo img{width:100%;height:100%;object-fit:contain;max-width:120px}
+.chat-now{position:absolute;z-index:40;background:#08020ddd;border-left:3px solid #a742ff;padding:12px 18px;display:flex;flex-direction:column}
+.chat-now small{color:#d68aff;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase}
+.chat-now b{font-size:1.1rem;margin:2px 0;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff}
+.chat-now span{font-size:.8rem;color:#c9a9d8;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat-now[data-mode="live"]{border-color:#6fffc3}
+.chat-now[data-mode="live"] small{color:#9dffd5}
+.chat-audience{position:absolute;z-index:50;display:flex;gap:8px;align-items:end;pointer-events:none}
+.chat-reactions{position:absolute;z-index:60;pointer-events:none;overflow:hidden}
+.chat-energy{position:absolute;z-index:70;background:#08020ddd;border:1px solid #7d26d9;border-radius:8px;padding:8px 12px;font-size:.65rem;display:flex;flex-direction:column;gap:4px;min-width:120px}
+.chat-energy div{width:100%;height:8px;background:#260f38;border-radius:4px;overflow:hidden}
+.chat-energy div i{display:block;height:100%;width:0%;background:linear-gradient(90deg,#9922ff,#00f0ff);transition:width .3s ease-out}
+.chat-energy b{font-size:.9rem;color:#fff}
+.chat-float{position:absolute;font-size:24px;animation:float-up 2.8s ease-out forwards;pointer-events:none}
+.chat-avatar{width:46px;height:46px;border-radius:50%;background:#8e34ff;border:2px solid #fff6;box-shadow:0 0 calc(15px + var(--room-energy,.08)*.08px) currentColor;position:relative;will-change:transform;animation:audience-dance var(--dance-speed,1.9s) ease-in-out var(--phase,0s) infinite}
+.chat-avatar.orb-purple{background:#8e34ff}
+.chat-avatar.orb-cyan{background:#1de0ff}
+.chat-avatar.orb-pink{background:#ff3fc5}
+.chat-avatar.orb-green{background:#31f293}
+.chat-avatar.orb-fire{background:#ff5e1e}
+.chat-avatar small{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:.55rem;color:#ddd}
+@keyframes float-up{0%{transform:translateY(0) scale(.8);opacity:0}15%{opacity:1;transform:translateY(-20px) scale(1.15)}80%{opacity:.9}100%{transform:translateY(-220px) scale(1.4);opacity:0}}
+@keyframes audience-dance{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(calc(-1 * var(--dance-distance,2px))) rotate(1deg)}}
+.canary-header{position:fixed;top:0;left:0;width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:calc(14px + env(safe-area-inset-top)) 18px 34px;background:linear-gradient(180deg,rgba(0,0,0,.75),rgba(0,0,0,0));pointer-events:auto;z-index:100}
+.canary-header .badge{background:rgba(142,40,217,0.8);border:1px solid #d16cff;border-radius:999px;color:#fff;font:700 .7rem/1 system-ui,sans-serif;padding:4px 12px;letter-spacing:.1em}
+.canary-header .badge.canary{background:#9d2bff;border-color:#e3a8ff}
+.canary-header .badge.legacy{background:#6e25bc;border-color:#9d2bff}
+.canary-controls{display:flex;gap:8px;margin-left:auto}
+.canary-btn{border:1px solid rgba(201,105,255,.58);border-radius:999px;background:rgba(10,3,17,.65);color:#fff;font:700 .72rem/1 system-ui,sans-serif;letter-spacing:.14em;padding:.5rem 1rem;cursor:pointer;transition:border-color .2s,background .2s}
+.canary-btn:hover{border-color:#e3a8ff;background:rgba(68,17,90,.78)}
+.canary-btn.locked{background:#555;border-color:#444;cursor:not-allowed}
+.canary-btn.canary-sim{background:#8b2be2}
+#canaryHealthPanel{position:fixed;top:12px;right:12px;max-width:360px;background:rgba(8,4,14,.96);border:1px solid #9d2bff;border-radius:8px;padding:12px;font-family:ui-monospace,monospace;font-size:11px;color:#00ffcc;line-height:1.5;z-index:100;max-height:50vh;overflow:auto;pointer-events:auto}
+#canaryHealthPanel[hidden]{display:none}
+.canary-log{max-width:380px;margin:8px auto;padding:12px 16px;background:rgba(5,2,10,.96);border:1px solid #4a1f73;border-radius:8px;font-family:ui-monospace,monospace;font-size:11px;color:#d889ff;white-space:pre-wrap;overflow:auto;max-height:200px}
+</style>
+</head>
+<body>
+<svg class="stage-mask-svg" width="0" height="0" style="position:absolute;pointer-events:none" aria-hidden="true">
+  <defs>
+    <mask id="stage-screen-mask" maskContentUnits="objectBoundingBox">
+      <rect width="1" height="1" fill="#ffffff" />
+      <rect id="maskScreenHole" x="0.23" y="0.335" width="0.536" height="0.485" rx="0.015" fill="#000000" />
+    </mask>
+  </defs>
+</svg>
+
+<div class="canary-header">
+  <span class="badge canary">CHAT CANARY PREVIEW</span>
+  <span class="badge" id="canaryModeBadge">RENDERING: NEW</span>
+  <span class="badge" id="canaryStatusBadge">STATUS: STARTING</span>
+  <div class="canary-controls">
+    <button class="canary-btn" id="simulateFailBtn">SIMULATE FAILURE</button>
+    <button class="canary-btn canary-sim" id="simulateRecoverBtn">SIMULATE RECOVERY</button>
+    <button class="canary-btn locked" id="activateLiveBtn" disabled>ACTIVATE LIVE CHAT (LOCKED)</button>
+  </div>
+</div>
+
+<div id="canaryHealthPanel" hidden></div>
+
+<main class="wrap" style="padding-top:60px">
+  <div class="canary-log" id="canaryLog"></div>
+</main>
+
+<audio id="audio" preload="none"></audio>
+
+<!-- Chat renderer container — this is where the live-chat renderer renders -->
+<div id="chatVisualRenderer" hidden></div>
+<div class="bg-media" aria-hidden="true">
+  <video id="backgroundVideo" autoplay muted loop playsinline webkit-playsinline preload="auto" poster="../assets/allthings140-background.webp?v=1.1.0">
+    <source media="(max-width: 680px)" src="../assets/visuals-mainpage-2026-08-11-v2.mp4?v=1.1.0" type="video/mp4">
+    <source src="../assets/visuals-home-desktop-hq.mp4?v=2.0.0" type="video/mp4">
+  </video>
+</div>
+<div class="bg-overlay" aria-hidden="true"></div>
+
+<script src="config.js?v=1.0.0"></script>
+<script src="renderer.js?v=1.0.0"></script>
+<script>
+(() => {
+  const logEl = document.getElementById("canaryLog");
+  const statusBadge = document.getElementById("canaryStatusBadge");
+  const modeBadge = document.getElementById("canaryModeBadge");
+
+  function log(msg, data) {
+    const ts = new Date().toLocaleTimeString();
+    logEl.textContent += `[${ts}] ${msg}` + (data ? "\n" + JSON.stringify(data, null, 2) : "") + "\n";
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function setModeBadge(mode) {
+    modeBadge.textContent = "RENDERING: " + mode.toUpperCase();
+    modeBadge.className = "badge " + (mode === "new" ? "canary" : "legacy");
+  }
+
+  function setStatusBadge(status) {
+    statusBadge.textContent = "STATUS: " + status;
+  }
+
+  // Canary simulation controls
+  document.getElementById("simulateFailBtn").addEventListener("click", () => {
+    if (window.AT140ChatRenderer) {
+      log("Manual simulation: forcing renderer failure");
+      window.AT140ChatRenderer.triggerFallback("simulated_failure");
+      setModeBadge("legacy");
+      setStatusBadge("FALLBACK (SIM)");
+      log("Expected: legacy visuals shown, new renderer hidden");
+    }
+  });
+
+  document.getElementById("simulateRecoverBtn").addEventListener("click", () => {
+    if (window.AT140ChatRenderer) {
+      log("Manual simulation: clearing manual legacy, retrying new renderer");
+      window.AT140ChatRenderer.setManualLegacy(false);
+      setModeBadge("new");
+      setStatusBadge("RECOVERED");
+      log("Expected: new renderer resumes after recovery");
+    }
+  });
+
+  // Monitor renderer health
+  setInterval(() => {
+    const health = window.AT140ChatRenderer?.getHealth();
+    if (health) {
+      const mode = window.AT140ChatRenderer.getMode();
+      setModeBadge(mode);
+      setStatusBadge(health.renderer?.status || "unknown");
+
+      // Auto-detect fallback
+      if (mode === "legacy" && health.userForcedLegacy === false) {
+        log("Auto-fallback detected: renderer fell back to legacy", { reason: health.renderer?.status });
+      }
+    }
+  }, 2000);
+
+  log("Chat Canary Preview initialized");
+  log("Environment: live-chat");
+  log("Renderer session will be generated on init");
+
+  // Auto-init renderer
+  setTimeout(() => {
+    if (window.AT140ChatRenderer) {
+      log("Renderer auto-init complete");
+    }
+  }, 1000);
+})();
+</script>
+</body>
+</html>

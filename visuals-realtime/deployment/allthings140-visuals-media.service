@@ -1,0 +1,23 @@
+[Unit]
+Description=ALLTHINGS140 Visuals Static Media Origin
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=allthings140-visuals
+Group=allthings140-visuals
+Environment=MEDIA_ROOT=/srv/allthings140-visuals/media
+Environment=MEDIA_PORT=20242
+Environment=MEDIA_CORS_ORIGIN=https://allthings140-visuals-green.pages.dev
+ExecStart=/usr/bin/python3 /opt/allthings140-visuals-media/static_media_server.py
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/srv/allthings140-visuals/media
+
+[Install]
+WantedBy=multi-user.target

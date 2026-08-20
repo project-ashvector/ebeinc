@@ -1,0 +1,28 @@
+<resources>
+    <color name="black">#050208</color>
+    <color name="dark_bg">#09030F</color>
+    <color name="top_bar">#D912061A</color>
+    <color name="bottom_nav">#E60D0418</color>
+    <color name="card_bg">#D9160921</color>
+    <color name="card_bg_soft">#D012081A</color>
+    <color name="card_border">#4D9D2BFF</color>
+    <color name="panel">#D9140A20</color>
+    <color name="panel_border">#59D17AFF</color>
+    <color name="orange">#FF5A00</color>
+    <color name="orange_dark">#C84300</color>
+    <color name="purple">#9D2BFF</color>
+    <color name="purple_neon">#D17AFF</color>
+    <color name="green_neon">#6FFFC3</color>
+    <color name="white">#FFF8EE</color>
+    <color name="muted">#B8AFBA</color>
+    <color name="divider">#34213F</color>
+    <color name="icon_background">#09030F</color>
+    <color name="scrim_dark">#5005020A</color>
+    
+    <!-- Chat avatar and text colors -->
+    <color name="chat_purple">#9D2BFF</color>
+    <color name="chat_cyan">#00F0FF</color>
+    <color name="chat_pink">#FF2A85</color>
+    <color name="chat_green">#00FF9D</color>
+    <color name="chat_orange">#FF7700</color>
+</resources>

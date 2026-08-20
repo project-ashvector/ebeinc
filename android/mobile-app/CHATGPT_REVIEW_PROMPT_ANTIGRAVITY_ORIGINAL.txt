@@ -1,0 +1,40 @@
+# ALLTHINGS140 RADIO — ANDROID PHONE APP COMPLETE SOURCE REVIEW
+
+I am providing you the latest complete source code package for my **ALLTHINGS140 Radio Android phone app** (`online.ebeinc.allthings140radio`).
+
+Antigravity performed a comprehensive audit and modernization pass across the codebase on my laptop:
+1. Located the authoritative project at `android/mobile-app/` and backed up the pre-audit baseline.
+2. Built and integrated a dedicated **Settings** screen (`SettingsActivity.java`, `activity_settings.xml`) with dynamic package version inspection (`v1.2.0`, Build `14`), station update checking against the live public telemetry APIs (`https://status.ebeinc.online/api/public/status`), endpoint diagnostics, and cache-clearing controls.
+3. Repaired edge-to-edge WindowInsets handling in `MainActivity.java` and `RadioSiteActivity.java` so status bar cutouts (such as on Samsung Galaxy S24 Plus) and bottom gesture navigation bars no longer clip UI elements.
+4. Hardened WebView security (disabled file/content access, enforced HTTPS cleartext traffic blocking, dynamic User-Agent with real version string).
+5. Fixed Media3 ExoPlayer type signatures in `RadioService.java` (`SessionError.ERROR_BAD_VALUE`) and added the `android.media.action.MEDIA_PLAY_FROM_SEARCH` intent filter for Android Auto voice compatibility.
+6. Replaced raw pixel values in `RadioVisualizerView.java` and `RadioSiteActivity.java` with density-scaled DP/SP measurements and safe text truncation.
+7. Verified full Gradle builds (`assembleDebug`, `assembleRelease`, `lint`, and `testDebugUnitTest` all passing with 0 errors).
+
+---
+
+## YOUR TASK: DEEP SECOND-OPINION CODE & ARCHITECTURE REVIEW
+
+Please perform an independent, deep-dive architectural and code review of this complete Android phone application source. Do not simply trust the previous audit—inspect every class, manifest, build script, and resource.
+
+Specifically review:
+1. **Responsive UI & Sizing Across Form Factors:**
+   - Galaxy S24 Plus (3120x1440 QHD+, 19.5:9 aspect ratio) and other modern flagship aspect ratios.
+   - Small screen phones (e.g. 720p, 480x800) and foldable/tablet viewports.
+   - Dynamic text scaling / accessibility font sizes.
+   - Touch target accessibility (minimum 48dp).
+2. **Audio Streaming & Background Lifecycle:**
+   - `RadioService.java` Media3 ExoPlayer 1.7.1 setup, lockscreen media controls, and notification channels.
+   - Continuous audio streaming from `https://stream.ebeinc.online/live.mp3` during screen-off and network handoffs (Wi-Fi to LTE/5G).
+   - Audio focus handling (phone calls, navigation prompts, audio becoming noisy on headphone unplug).
+3. **Settings & Update Checker Architecture:**
+   - `SettingsActivity.java` update checker logic and compatibility with future server-side update JSON payloads (`android_app_version`, `android_app_download_url`, `android_app_notes`).
+   - Diagnostic information accuracy and cache reset workflows.
+4. **Android Auto / Automotive Integration:**
+   - `RadioService.java` MediaLibraryService callback structure and root browsing nodes for vehicle head units.
+5. **Security, Privacy & Permissions:**
+   - Strict HTTPS enforcement, permission boundaries, exported component security, and WebView sandbox hygiene.
+6. **Build System & Release Preparation:**
+   - `app/build.gradle` dependencies, ProGuard/R8 minify configurations, and release signing readiness for Google Play Store.
+
+Review `APP_AUDIT_REPORT.txt` included in the root of the ZIP for full context, identify anything missed, and provide your detailed assessment and any recommended enhancements.

@@ -1,0 +1,14 @@
+[Unit]
+Description=Seed AllThings140Radio Google Drive music library
+After=network-online.target allthings140radio-drive.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=allthings140radio
+Group=allthings140radio
+Environment=RCLONE_CONFIG=/etc/allthings140radio/rclone.conf
+ExecStart=/usr/bin/rclone copy /srv/allthings140radio/data/music at140drive: --stats=1m --stats-one-line --transfers=3 --checkers=6 --drive-chunk-size=8M --timeout=2m --contimeout=20s --retries=3 --low-level-retries=3 --log-level=INFO
+Restart=on-failure
+RestartSec=15
+RemainAfterExit=yes

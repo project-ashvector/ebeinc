@@ -1,0 +1,12 @@
+{
+  "id": "bass_bro_local",
+  "displayName": "Bass Bro (Local Piper)",
+  "provider": "piper",
+  "modelPath": "/var/lib/allthings140radio/voices/bass_bro_local/en_US-lessac-medium.onnx",
+  "referenceAudioPath": "",
+  "referenceTranscript": "",
+  "speed": 1.0,
+  "pitch": 0,
+  "defaultPersona": "bass_music_bro",
+  "enabled": true
+}

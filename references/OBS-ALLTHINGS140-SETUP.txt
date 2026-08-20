@@ -1,0 +1,59 @@
+AllThings140Radio — OBS Sources
+================================
+
+PRIVATE AUDIO URL
+https://allthings140radio.online/obs/live.mp3?key=b286b833f15c151cd7cb59f0395b
+
+Keep this URL private. It follows the same continuous station output as the
+website, including AutoDJ and live takeovers. The token can be revoked and
+replaced without changing the public listener stream.
+
+OBS NOW-PLAYING OVERLAY
+https://allthings140radio.online/obs/now-playing/
+
+Compact version:
+https://allthings140radio.online/obs/now-playing/?compact=1
+
+Optional URL settings:
+  compact=1       smaller overlay
+  logo=0          hide the station logo
+  accent=%23HEX   custom six-digit accent color (URL-encoded #)
+
+Example:
+https://allthings140radio.online/obs/now-playing/?compact=1&accent=%2367efff
+
+OBS AUDIO SOURCE
+1. Sources > + > Media Source.
+2. Name: AllThings140 Private Radio Feed.
+3. Uncheck Local file.
+4. Input: paste the private audio URL above.
+5. Keep Restart playback when source becomes active enabled.
+6. Keep Close file when inactive disabled so scene changes do not tear down
+   the network connection.
+7. In Advanced Audio Properties, assign the source to streaming track 1.
+8. Use Monitor Off for stream-only audio, or Monitor and Output if you also
+   need to hear it locally. Do not capture that monitor device again through
+   Desktop Audio, or the station will echo.
+
+OBS OVERLAY SOURCE
+1. Sources > + > Browser.
+2. Name: AllThings140 Now Playing.
+3. URL: paste one of the overlay URLs above.
+4. Width: 900. Height: 180.
+5. Leave custom CSS empty.
+6. Disable Shutdown source when not visible so metadata polling stays warm.
+7. Enable Refresh browser when scene becomes active.
+
+RELIABILITY CHECKLIST
+- OBS Settings > Advanced > Network: enable automatic reconnect with a
+  2-second retry delay and at least 25 retries.
+- Use wired Ethernet, not Wi-Fi.
+- Disable computer sleep and USB/network power saving.
+- Keep OBS audio at 48 kHz stereo and AAC 128–160 kbps.
+- Use H.264 CBR and a 2-second keyframe interval for the shared Twitch/Kick
+  profile. X documents a 3-second interval, so a separate X output profile is
+  preferable when your multistream tool supports per-destination settings.
+- Avoid sending three full uploads directly if your connection lacks ample
+  headroom. One upload to a reliable cloud multistream relay is safer.
+- Watch OBS Stats for Dropped Frames (Network). Any sustained non-zero rise is
+  an uplink/route problem, not a source-volume problem.

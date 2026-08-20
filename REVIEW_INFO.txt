@@ -1,0 +1,57 @@
+ALLTHINGS140 VISUALS — v0.1.38 CHATGPT SMOOTHNESS / LIVE-READINESS SOURCE UPDATE
+Generated: 2026-08-17
+
+WORKSTATION
+- Version: 0.1.38
+- Build source: visuals-app/src/main.js + visuals-app/src-tauri/src/lib.rs
+- Tauri/Vite app
+- Canonical Green: https://allthings140-visuals-green.pages.dev/?approval=1
+- Realtime: https://visuals-realtime-staging.allthings140radio.online
+- Media origin: https://visuals-media-staging.allthings140radio.online
+- Production promotion remains LOCKED.
+
+REALTIME
+- Version: 0.1.2-staging
+- Source: visuals-realtime/app.py
+
+IMPORTANT v0.1.38 CHANGES
+- Compact publish contract; preview omits 24/7 playlist.
+- Routine layout publish uses Realtime, not Pages redeploy.
+- Real renderer-ACK requirement for Test-on-Green.
+- Native publish cancellation on failed tests.
+- WebSocket reconnect hardening in workstation.
+- Hidden/unused video source cleanup.
+- Runtime FFmpeg conversion timeout.
+- Green buffer-swap serialization and decoded-frame gate.
+- Emergency fallback removed from healthy playlist shuffle.
+- Duplicate layouts and renderer ACKs deduplicated.
+- Green fetch timeouts + non-overlapping polls.
+- Safe Playback Mode resets prior reactive transforms.
+- Zero-valued cutout coordinates preserved.
+- Realtime CORS preflight + concurrent fanout + SQLite live-write tuning.
+- Bounded/recoverable workstation state backups.
+- Local config chmod 0600.
+- Realtime Bearer credential no longer appears in curl process argv.
+- Build provenance visible in Diagnostics.
+- Stale duplicate source mirrors synchronized.
+- Mutating staging tests are opt-in.
+
+TESTS RUN IN CHATGPT SANDBOX
+- node --check visuals-app/src/main.js: PASS
+- node --check visuals-green/stage.js: PASS
+- python3 -m py_compile visuals-realtime/app.py: PASS
+- tests/test_v0138_contract.mjs: 38/38 PASS
+- tests/test_visuals_workstation_ui.mjs: 47/47 PASS
+- tests/test_visuals_system.py: 10/10 PASS
+- tests/test_realtime_http.py: 3/3 PASS
+- tests/test_green_workflow_scenarios.mjs: safely SKIPPED by default (requires explicit mutation opt-in)
+
+LIMITATIONS OF THIS SANDBOX
+- Rust/Cargo toolchain is unavailable here, so the final Tauri/Rust compile and .deb build must be done on the Zorin workstation.
+- The supplied screencast is a useful short smoke check, not a 30-minute production soak.
+- No Green-to-live promotion was performed.
+
+READ NEXT
+- README_APPLY_v0.1.38.md
+- CHATGPT_SMOOTHNESS_REVIEW_v0.1.38.md
+- UPDATE_PROMPT_v0.1.38.txt

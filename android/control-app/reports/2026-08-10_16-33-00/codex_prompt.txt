@@ -1,0 +1,112 @@
+You are repairing the existing ALLTHINGS140 Radio system.
+
+Read the attached report before editing. Preserve playlist order and 24/7 rotation logic. Make the smallest safe repair, test it, and verify stream, metadata, website, and next-track behavior.
+
+{
+  "version": "0.1.1",
+  "created_at": "2026-08-10_16-33-00",
+  "status": {
+    "ok": true,
+    "name": "AllThings140Radio",
+    "version": "0.6.0",
+    "autodj": {
+      "running": true,
+      "pid": 837623,
+      "mode": "catalog rotation",
+      "last_error": "",
+      "tracks": 444,
+      "current_track_id": 136,
+      "current_title": "LOUD",
+      "current_artist": "BENDA & VASTIVE",
+      "started_at": 1786404745,
+      "position_seconds": 35.10868215560913,
+      "duration_seconds": 192.574678,
+      "next_track_id": 614,
+      "next_title": "Saunter - Shock Value [Free Download]",
+      "next_artist": "",
+      "transition_reason": "automatic",
+      "ad_playing": false,
+      "ad_name": "",
+      "progress": 0.1823120387385985
+    },
+    "icecast": {
+      "online": true,
+      "listeners": 3,
+      "live_source": true,
+      "sources": [
+        {
+          "genre": "various",
+          "listener_peak": 4,
+          "listeners": 3,
+          "listenurl": "http://localhost:14000/live.mp3",
+          "server_description": "140 BPM and bass music, live around the clock.",
+          "server_name": "AllThings140Radio",
+          "server_type": "audio/mpeg",
+          "stream_start": "Mon, 10 Aug 2026 16:13:52 -0700",
+          "stream_start_iso8601": "2026-08-10T16:13:52-0700",
+          "dummy": null
+        }
+      ]
+    },
+    "disk": {
+      "path": "/var/lib/allthings140radio",
+      "free_bytes": 528054276096,
+      "total_bytes": 1006450962432,
+      "free_percent": 52.5,
+      "state": "healthy"
+    },
+    "watchdog": {
+      "state": "healthy",
+      "last_check_at": 1786404772,
+      "last_recovery_at": 0,
+      "recovery_count": 0,
+      "last_failure": ""
+    },
+    "silence": {
+      "state": "healthy",
+      "silent": false,
+      "silent_seconds": 0.0,
+      "last_audio_at": 1786403631,
+      "error": ""
+    },
+    "recording": {
+      "recording": false,
+      "archive_id": "",
+      "started_at": 0,
+      "storage": "r2"
+    },
+    "storage": {
+      "provider": "r2",
+      "remote_available": true
+    },
+    "ads": {
+      "playing": false,
+      "name": ""
+    },
+    "online": true
+  },
+  "tailscale": {
+    "connected": true,
+    "ips": [
+      "100.108.145.128"
+    ],
+    "detail": "Tailscale status format unavailable"
+  },
+  "services": {
+    "allthings140radio-tunnel.service": {
+      "returncode": 0,
+      "stdout": "active\n",
+      "stderr": ""
+    }
+  },
+  "disk": {
+    "returncode": 0,
+    "stdout": "Filesystem      Size  Used Avail Use% Mounted on\n/dev/nvme0n1p2  938G  398G  492G  45% /\n",
+    "stderr": ""
+  },
+  "processes": {
+    "returncode": 0,
+    "stdout": "kworker/3:1-cgroup_offline]\n 837772 ffmpeg          ffmpeg -hide_banner -nostats -loglevel info -i http://127.0.0.1:14000/live.mp3 -af silencedetect=noise=-48dB:d=20 -f null -\n 838436 kworker/11:0-cg [kworker/11:0-cgroup_release]\n 838533 kworker/7:2-cgr [kworker/7:2-cgroup_release]\n 838757 kworker/9:2-cgr [kworker/9:2-cgroup_release]\n 839042 brave           /opt/brave.com/brave/brave --type=renderer --crashpad-handler-pid=15094 --enable-crash-reporter=072372ea-c690-460f-b8b5-82d7c007662f, --enable-distillability-service --origin-trial-public-key=bYUKPJoPnCxeNvu72j4EmPuK7tr1PAC7SHh8ld9Mw3E=,fMS4mpO6buLQ/QMd+zJmxzty/VQ6B1EUZqoCU04zoRU= --change-stack-guard-on-fork=enable --ozone-platform=wayland --lang=en-US --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=570 --time-ticks-at-unix-epoch=-1786304717060665 --launch-time-ticks=99162487545 --shared-files=v8_context_snapshot_data:100 --metrics-shmem-handle=4,i,17904485370404415941,15308122255393095089,2097152 --field-trial-handle=3,i,3053036917935423699,7030829045916260737,262144 --disable-features=EyeDropper --variations-seed-version=main@2a5c6d95eaa55897e8d8e9a05fd5e5a77cd67328 --pseudonymization-salt-handle=7,i,1536932984083100493,10606302578899260955,4 --trace-process-track-uuid=3190709520425725424\n 839084 kworker/6:1-mem [kworker/6:1-memcg]\n 839292 kworker/u49:2-r [kworker/u49:2-rtw89_tx_wq]\n 839810 kworker/1:1     [kworker/1:1]\n 841182 kworker/11:2-cg [kworker/11:2-cgroup_release]\n 841837 kworker/8:1-i91 [kworker/8:1-i915-unordered]\n 841852 kworker/u48:5-e [kworker/u48:5-events_power_efficient]\n 841881 kworker/0:1-cgr [kworker/0:1-cgroup_release]\n 842048 kworker/7:1-cgr [kworker/7:1-cgroup_release]\n 842196 kworker/9:0-eve [kworker/9:0-events]\n 842350 kworker/u49:3-r [kworker/u49:3-rtw89_tx_wq]\n 843075 python3         python3 /opt/allthings140radio-dj/dj_app.py\n 843751 kworker/6:2-cgr [kworker/6:2-cgroup_release]\n 843756 kworker/10:1-cg [kworker/10:1-cgroup_release]\n 843898 kworker/4:2-cgr [kworker/4:2-cgroup_release]\n 843972 kworker/2:2-cgr [kworker/2:2-cgroup_release]\n 844211 kworker/5:1-cgr [kworker/5:1-cgroup_release]\n 844406 python3         python3 /usr/lib/at140radiocs/daemon.py\n 845220 kworker/11:1-cg [kworker/11:1-cgroup_free]\n 845832 kworker/u48:2-w [kworker/u48:2-writeback]\n 845892 kworker/8:2-cgr [kworker/8:2-cgroup_release]\n 846229 kworker/u49:0-r [kworker/u49:0-rtw89_tx_wq]\n 846268 python3         python3 /usr/lib/at140radiocs/gui.py\n 846470 brave           /opt/brave.com/brave/brave --type=renderer --crashpad-handler-pid=15094 --enable-crash-reporter=072372ea-c690-460f-b8b5-82d7c007662f, --enable-distillability-service --origin-trial-public-key=bYUKPJoPnCxeNvu72j4EmPuK7tr1PAC7SHh8ld9Mw3E=,fMS4mpO6buLQ/QMd+zJmxzty/VQ6B1EUZqoCU04zoRU= --change-stack-guard-on-fork=enable --ozone-platform=wayland --lang=en-US --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=573 --time-ticks-at-unix-epoch=-1786304717060665 --launch-time-ticks=99870663738 --shared-files=v8_context_snapshot_data:100 --metrics-shmem-handle=4,i,7531921016707535253,14654153281281998159,2097152 --field-trial-handle=3,i,3053036917935423699,7030829045916260737,262144 --disable-features=EyeDropper --variations-seed-version=main@2a5c6d95eaa55897e8d8e9a05fd5e5a77cd67328 --pseudonymization-salt-handle=7,i,1536932984083100493,10606302578899260955,4 --trace-process-track-uuid=3190709523236850971\n 846496 kworker/7:0-eve [kworker/7:0-events]\n 846731 kworker/0:0-eve [kworker/0:0-events]\n 847402 kworker/10:0-ev [kworker/10:0-events]\n 847750 kworker/3:2-eve [kworker/3:2-events]\n 848304 kworker/6:0     [kworker/6:0]\n 848495 kworker/2:0-mm_ [kworker/2:0-mm_percpu_wq]\n 848548 ffmpeg          ffmpeg -hide_banner -loglevel error -re -i /var/lib/allthings140radio/music/BENDA _ VASTIVE - LOUD.mp3 -vn -f s16le -ar 44100 -ac 2 pipe:1\n 848598 kworker/5:2-eve [kworker/5:2-events]\n 848872 python3         [python3] <defunct>\n 849113 ps              ps -eo pid,comm,args\n",
+    "stderr": ""
+  }
+}

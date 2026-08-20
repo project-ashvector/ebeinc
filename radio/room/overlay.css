@@ -1,0 +1,16 @@
+/* Authoritative Overlay HUD Stacking (z: 30–70) */
+.mode-logo{
+  position:absolute;
+  z-index:30;
+  display:grid;
+  place-items:center;
+  filter:drop-shadow(0 0 14px #9d2bff99);
+  pointer-events:none;
+}
+.mode-logo img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+}
+.now[data-mode="live"]{border-color:#6fffc3}
+.now[data-mode="live"] small{color:#9dffd5}

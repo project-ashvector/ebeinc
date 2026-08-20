@@ -1,0 +1,20 @@
+window.AT140_CHAT_CONFIG = {
+  environment: "live-chat",
+  realtimeUrl: "wss://visuals-realtime-staging.allthings140radio.online/ws",
+  realtimeStateUrl: "https://visuals-realtime-staging.allthings140radio.online/visuals-state",
+  realtimeLayoutUrl: "https://visuals-realtime-staging.allthings140radio.online/layout-state",
+  rendererAckUrl: "https://visuals-realtime-staging.allthings140radio.online/renderer-ack",
+  rendererStateUrl: "https://visuals-realtime-staging.allthings140radio.online/renderer-state",
+  rendererHealthUrl: "https://visuals-realtime-staging.allthings140radio.online/renderer-state",
+  radioStatusUrl: "https://status.ebeinc.online/api/public/status",
+  playlistUrl: "https://visuals-realtime-staging.allthings140radio.online/layout-state",
+  layoutUrl: "https://visuals-realtime-staging.allthings140radio.online/layout-state",
+  mediaBaseUrl: "https://visuals-media-staging.allthings140radio.online",
+  mediaVersion: "20260816-2",
+  streamUrl: "https://stream.ebeinc.online/live.mp3",
+  rendererHeartbeatIntervalMs: 5000,
+  rendererStaleThresholdMs: 15000,
+  autoFallbackCooldownMs: 45000,
+  fallbackRecoveryHoldMs: 30000,
+  maxConsecutiveFailures: 3
+};

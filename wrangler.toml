@@ -1,0 +1,7 @@
+name = "ebeinc"
+pages_build_output_dir = "."
+compatibility_date = "2026-08-18"
+
+[[kv_namespaces]]
+binding = "VISUALS_ROUTING_KV"
+id = "0d8984f3a7c24b929353d578a7d853c7"

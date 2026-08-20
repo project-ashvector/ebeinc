@@ -1,0 +1,125 @@
+You are doing the FINAL RELEASE VALIDATION of the ALLTHINGS140 Radio Android PHONE app v1.3.0.
+
+I will provide or place the reviewed source package named similar to:
+ALLTHINGS140-RADIO-ANDROID-v1.3.0-PLAY-REVIEW
+
+IMPORTANT:
+- This is the Android PHONE app, not the Galaxy Watch app.
+- Do not modify the website, server, Visuals desktop app, Hub app, EBE Dock AI, or unrelated projects.
+- Do not overwrite the only working copy. Make a timestamped backup first.
+- Do not downgrade targetSdk/API 36 just to make a build easier.
+- Do not restore the removed ~57 MB bg_video.mp4.
+- Do not turn MainActivity back into a WebView wrapper.
+- Do not re-add Green Room to the Play release UI.
+- Do not create/fabricate a signing key or expose existing signing secrets.
+- Do not call something PASS unless the command/device test actually passed.
+
+GOAL:
+Use the Android SDK/tooling on this laptop to prove whether v1.3.0 really builds and runs. Fix only concrete issues required for a stable release candidate, then package the exact validated source and outputs.
+
+1. BACKUP + ENVIRONMENT
+- Back up the v1.3.0 source before edits.
+- Report Java, Gradle, Android SDK root, installed Platform 36/build-tools, adb/device availability.
+- If Platform 36/build tools are missing, install only the required Android SDK components using the existing Android SDK setup. Do not replace unrelated toolchains.
+
+2. BUILD IN THIS ORDER
+Run and save complete logs for:
+./gradlew --version
+./gradlew clean
+./gradlew testDebugUnitTest
+./gradlew lintDebug
+./gradlew assembleDebug
+
+If those pass, run:
+./gradlew bundleRelease
+
+If bundleRelease cannot sign because no real release keystore is configured, that is expected: report "UNSIGNED/SIGNING CONFIG REQUIRED" rather than injecting debug signing. If a legitimate existing ALLTHINGS140 production upload keystore is already configured through secure environment/project properties, use it without printing its secrets.
+
+3. FIX COMPILE/LINT ISSUES
+If API/signature/resource/manifest/Media3 errors occur, fix the ROOT CAUSE. Preserve:
+- package ID online.ebeinc.allthings140radio
+- target/compile SDK 36
+- v1.3.0 / code 15 unless a new build number is genuinely needed because you make release changes
+- native MainActivity
+- one RadioService playback authority
+- Settings/version/update UI
+- privacy screen
+- hardened Visuals WebView
+- Green Room exclusion
+
+4. CONNECTED DEVICE
+If an Android phone is connected through adb, install the debug APK without touching unrelated apps:
+adb install -r <debug-apk>
+
+Prefer testing the Galaxy S24 Plus if that is the connected phone.
+
+Exercise DEVICE_TEST_PLAN.md. At minimum prove:
+- fresh launch
+- Play/Pause
+- real stream audio
+- metadata/listener count
+- Home/screen-off background playback
+- return to app state
+- Settings/version
+- Check for Updates offline + online
+- Visuals
+- Android 16/back/insets if device supports it
+- Wi-Fi interruption/recovery where safe
+- Bluetooth/system media controls if available
+
+Collect focused Logcat around the app package/service. Look for crashes, ANRs, Media3 errors, foreground-service errors, WebView errors, repeated reconnect loops, leaked window/activity messages, and StrictMode-like problems.
+
+5. ANDROID AUTO
+If Android Auto Desktop Head Unit or a compatible real head unit is available, verify the app appears as a media source, browse root/live station, play/pause, artwork, and metadata.
+
+6. RESPONSIVE TESTS
+Use physical device and/or emulators for:
+- narrow phone
+- Galaxy S24 Plus-ish dimensions
+- landscape
+- Android 16
+- >=600dp tablet/foldable
+- font scale 1.3x and 2.0x
+Take screenshots of the final UI and note any clipping/spacing/sizing issue. Fix root causes, not one-device hacks.
+
+7. RELEASE INSPECTION
+Inspect final APK/AAB:
+- expected application ID
+- version 1.3.0/code15 (or documented intentional increment)
+- target 36
+- only expected permissions
+- no debuggable release
+- no bg_video.mp4
+- no secrets
+- no unexpected native .so libraries
+- reasonable artifact size
+- 16 KB page-size compatibility check where tooling/device supports it
+
+8. DO NOT FAKE PLAY CONSOLE TASKS
+Do not claim these are complete unless they truly are:
+- hosted privacy-policy URL
+- Play App Signing enrollment
+- Data Safety form
+- foreground-service Play declaration
+- content rating / target audience
+- feature graphic
+- real store screenshots
+Those remain in GOOGLE_PLAY_RELEASE_CHECKLIST.md.
+
+9. FINAL OUTPUT
+Create:
+ALLTHINGS140-RADIO-ANDROID-v1.3.0-VALIDATED-SOURCE.zip
+(or increment version only if actual code changes justify it)
+
+Also create FINAL_VALIDATION_REPORT.txt containing:
+- environment
+- every Gradle command + PASS/FAIL
+- exact APK/AAB paths
+- device model + Android version
+- each device test PASS/FAIL/NOT TESTED
+- Android Auto result
+- issues found/fixed with files
+- unresolved blockers
+- final GO / NO-GO recommendation for Play internal testing and production
+
+Open the final output folder in the Zorin file manager when finished.

@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<base href="../">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050309">
+<meta name="description" content="AllThings140Radio Public Roadmap — Real milestones and technical progress for the 24/7 underground dubstep station.">
+<link rel="canonical" href="https://allthings140radio.online/roadmap/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://allthings140radio.online/roadmap/">
+<meta property="og:title" content="AllThings140Radio // Public Roadmap">
+<meta property="og:description" content="Real milestones, clear status, no imaginary numbers. Building 24/7 heavy dubstep radio and underground tools.">
+<meta property="og:image" content="https://allthings140radio.online/assets/allthings140-logo-512.png">
+<meta name="twitter:card" content="summary_large_image">
+<title>AllThings140Radio // Public Roadmap</title>
+<link rel="icon" href="assets/allthings140-logo-64.png?v=0.4.22" sizes="64x64" type="image/png">
+<link rel="apple-touch-icon" href="assets/allthings140-logo-512.png?v=0.4.21">
+<link rel="manifest" href="manifest.webmanifest?v=0.4.21">
+<link rel="stylesheet" href="styles.css?v=2.1.0">
+<link rel="stylesheet" href="support.css?v=1.1.0">
+<style>
+.roadmap-page{
+  padding: 48px 0 96px;
+  min-height: 80vh;
+}
+.roadmap-hero{
+  margin-bottom: 48px;
+}
+.roadmap-hero h1{
+  font-size: clamp(3rem, 6.5vw, 5.8rem);
+  line-height: .88;
+  margin-bottom: 20px;
+}
+.phase-group{
+  margin-bottom: 44px;
+}
+.phase-title{
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  font-size: .84rem;
+  font-weight: 900;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.phase-badge{
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: .68rem;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+.phase-badge.live{
+  background: rgba(110, 255, 195, 0.18);
+  border: 1px solid rgba(110, 255, 195, 0.6);
+  color: #6effc3;
+}
+.phase-badge.in-progress{
+  background: rgba(219, 165, 255, 0.18);
+  border: 1px solid rgba(219, 165, 255, 0.6);
+  color: #dba5ff;
+}
+.phase-badge.planned{
+  background: rgba(69, 234, 255, 0.15);
+  border: 1px solid rgba(69, 234, 255, 0.5);
+  color: #45eaff;
+}
+.phase-badge.future{
+  background: rgba(184, 170, 195, 0.15);
+  border: 1px solid rgba(184, 170, 195, 0.4);
+  color: #b8aac3;
+}
+.roadmap-cards{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 18px;
+}
+.roadmap-card{
+  border: 1px solid rgba(184, 92, 255, 0.35);
+  border-radius: 12px;
+  background: linear-gradient(145deg, rgba(16, 8, 26, 0.88), rgba(7, 3, 13, 0.94));
+  padding: 24px;
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.4), inset 0 0 24px rgba(138, 43, 226, 0.08);
+  backdrop-filter: blur(14px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform .2s ease, border-color .2s ease;
+}
+.roadmap-card:hover{
+  transform: translateY(-2px);
+  border-color: rgba(206, 125, 255, 0.6);
+}
+.roadmap-card-head{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.roadmap-card-head small{
+  color: #a99cb2;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+.roadmap-card h3{
+  margin: 0 0 10px;
+  font-size: 1.25rem;
+  color: #fff;
+  line-height: 1.25;
+}
+.roadmap-card p{
+  margin: 0;
+  color: #cbbcd2;
+  font-size: .88rem;
+  line-height: 1.6;
+}
+.roadmap-cta{
+  margin-top: 54px;
+  padding: 32px;
+  border: 1px solid rgba(184, 92, 255, 0.45);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(23, 9, 36, 0.9), rgba(8, 4, 14, 0.95));
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 28px;
+  align-items: center;
+}
+.roadmap-cta h2{
+  font-size: clamp(2.2rem, 4vw, 3.4rem);
+  margin: 0 0 8px;
+  line-height: 1;
+}
+.roadmap-cta p{
+  color: #c5b4cd;
+  margin: 0;
+  line-height: 1.6;
+  font-size: .95rem;
+}
+.roadmap-cta-actions{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+@media(max-width: 800px){
+  .roadmap-cta{
+    grid-template-columns: 1fr;
+    padding: 22px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="bg-media" aria-hidden="true">
+  <video id="backgroundVideo" autoplay muted loop playsinline webkit-playsinline preload="auto" poster="assets/allthings140-background.webp?v=1.1.0">
+    <source src="assets/visuals-home-desktop-hq.mp4?v=2.0.0" type="video/mp4">
+  </video>
+</div>
+<div class="bg-overlay" aria-hidden="true"></div>
+
+<!-- Header -->
+<header class="topbar wrap">
+  <a class="brand" href="./">
+    <span class="sigil"><img src="assets/allthings140-logo-64.png?v=0.4.22" alt="AllThings140 Logo"></span>
+    <span><strong>ALLTHINGS140</strong><small>RADIO</small></span>
+  </a>
+  <div class="nav-menu">
+    <button class="nav-toggle" id="navToggle" type="button" aria-controls="siteNav" aria-expanded="false">
+      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 20v-6m16 6v-6M7 13a7 7 0 0 1 10 0M9.8 15.8a3.1 3.1 0 0 1 4.4 0M12 19v1M4.2 9.8a11 11 0 0 1 15.6 0"/></svg>
+      <span>MENU</span>
+    </button>
+    <nav class="nav" id="siteNav" aria-label="Main navigation" hidden>
+      <a class="nav-entry" href="./"><span class="nav-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m3 11 9-8 9 8v10h-6v-6H9v6H3Z"/></svg></span><span>HOME</span></a>
+      <a class="nav-entry" href="visuals/"><span class="nav-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m12 2 10 19H2Z"/><path d="m12 7 5 10H7Z"/></svg></span><span>VISUALS TAB</span></a>
+      <a class="nav-entry is-current" href="roadmap/"><span class="nav-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 6h16v15H4Zm0 5h16M8 3v6m8-6v6"/></svg></span><span>ROADMAP</span></a>
+      <a class="nav-entry" href="./#schedule"><span class="nav-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 6h16v15H4Zm0 5h16M8 3v6m8-6v6"/><path d="M8 15h2m4 0h2m-8 3h2m4 0h2"/></svg></span><span>SCHEDULE</span></a>
+      <a class="nav-entry" href="./#submit"><span class="nav-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m3 11 18-8-8 18-2-8Z"/><path d="m11 13 5-5"/></svg></span><span>SUBMISSIONS</span></a>
+      <a class="nav-entry" href="./#about"><span class="nav-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 14v-2a8 8 0 0 1 16 0v2M4 14H2v6h4v-6Zm16 0h2v6h-4v-6Z"/></svg></span><span>STATION & HOSTS</span></a>
+      <a class="nav-entry" href="room/"><span class="nav-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 4h16v12H9l-5 4Z"/><path d="M8 8h8m-8 4h5"/></svg></span><span>GREEN ROOM</span></a>
+      <button class="nav-entry" type="button" data-open-support><span class="nav-icon" aria-hidden="true">💜</span><span>SUPPORT</span></button>
+      <a class="nav-entry" href="https://ebedesigns.online" target="_blank" rel="noopener"><span class="nav-icon" aria-hidden="true">🛒</span><span>SHOP MERCH ↗</span></a>
+    </nav>
+  </div>
+  <span class="status-chip" id="headerStatus" data-state="offline"><i></i>CONNECTING</span>
+</header>
+
+<main class="roadmap-page wrap">
+  <section class="roadmap-hero">
+    <p class="kicker">STATION EVOLUTION // 2026 ROADMAP</p>
+    <h1>PUBLIC<br>ROADMAP.<span>BUILDING THE UNDERGROUND.</span></h1>
+    <p class="lead">Real milestones, verified infrastructure, and transparent progress. We are expanding AllThings140 Radio without compromising our 24/7 broadcast authority or burdening listeners with paywalls.</p>
+  </section>
+
+  <!-- Phase 1: Live Foundation -->
+  <section class="phase-group">
+    <div class="phase-title">
+      <span class="phase-badge live">● LIVE NOW</span>
+      <span>PHASE 1 — 24/7 BROADCAST AUTHORITY & PLAYBACK</span>
+    </div>
+    <div class="roadmap-cards">
+      <article class="roadmap-card">
+        <div class="roadmap-card-head">
+          <small>CORE PLATFORM</small>
+          <span class="phase-badge live">LIVE</span>
+        </div>
+        <h3>24/7 Synchronized Broadcast Engine</h3>
+        <p>Authoritative Oracle VM streaming cluster running continuous heavy dubstep rotation, instant track transitions, and zero desync across all web and mobile listeners.</p>
+      </article>
+
+      <article class="roadmap-card">
+        <div class="roadmap-card-head">
+          <small>REALTIME FEED</small>
+          <span class="phase-badge live">LIVE</span>
+        </div>
+        <h3>Live Metadata & Telemetry Sync</h3>
+        <p>Sub-second metadata polling delivering current track title, artist info, progress duration, listener counts, and takeover banners in real time.</p>
+      </article>
+
+      <article class="roadmap-card">
+        <div class="roadmap-card-head">
+          <small>HOST CONTROLS</small>
+          <span class="phase-badge live">LIVE</span>
+        </div>
+        <h3>Resident & Guest DJ Takeovers</h3>
+        <p>Live takeover pipeline allowing Ebmarah, Eyewitnis, and guest DJs to connect live microphones and CDJ sets with zero audio dropouts or relay resets.</p>
+      </article>
+
+      <article class="roadmap-card">
+        <div class="roadmap-card-head">
+          <small>MOBILE</small>
+          <span class="phase-badge live">LIVE</span>
+        </div>
+        <h3>Dedicated Android Streaming App</h3>
+        <p>Standalone Android listening application with background playback, lock screen media session controls, and auto-reconnect resilience.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- Phase 2: In Development -->
+  <section class="phase-group">
+    <div class="phase-title">
+      <span class="phase-badge in-progress">⚡ IN ACTIVE DEVELOPMENT</span>
+      <span>PHASE 2 — HIGH-DEFINITION VISUALS & STAGING</span>
+    </div>
+    <div class="roadmap-cards">
+      <article class="roadmap-card">
+        <div class="roadmap-card-head">
+          <small>VISUALS ENGINE</small>
+          <span class="phase-badge in-progress">ACTIVE</span>
+        </div>
+        <h3>Dedicated 1080p 30 FPS Visuals Tab</h3>
+        <p>Dedicated high-definition visual broadcast plane with smooth 30 FPS hardware-accelerated playback, takeover artist overlays, and isolated audio controls.</p>
+      </article>
+
+      <article class="roadmap-card">
+        <div class="roadmap-card-head">
+          <small>OPERATIONS</small>
+          <span class="phase-badge in-progress">ACTIVE</span>
+        </div>
+        <h3>ALLTHINGS140 Operations Hub</h3>
+        <p>Central management dashboard with station health telemetry, rotation state controls, audio buffer monitors, and live takeover scheduler.</p>
+      </article>
+
+      <article class="roadmap-card">
+        <div class="roadmap-card-head">
+          <small>AUTOMOTIVE</small>
+          <span class="phase-badge in-progress">ACTIVE</span>
+        </div>
+        <h3>Vehicle Integration & Directory Expansion</h3>
+        <p>Android Auto support, in-vehicle media service validation, and submissions to global internet radio directories.</p>
+      </article>
+
+      <article class="roadmap-card">
+        <div class="roadmap-card-head">
+          <small>CURATION</small>
+          <span class="phase-badge in-progress">ACTIVE</span>
+        </div>
+        <h3>Streamlined Audio Submissions Pipeline</h3>
+        <p>Automated artist track and mix submission queue with direct Google Drive library integration and verification tools.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- Phase 3: Planned -->
+  <section class="phase-group">
+    <div class="phase-title">
+      <span class="phase-badge planned">✦ PLANNED MILESTONES</span>
+      <span>PHASE 3 — COMMUNITY, ARCHIVES & RESILIENCY</span>
+    </div>
+    <div class="roadmap-cards">
+      <article class="roadmap-card">
+        <div class="roadmap-card-head">
+          <small>DISCOVERY</small>
+          <span class="phase-badge planned">PLANNED</span>
+        </div>
+        <h3>Artist Profiles & Takeover Archives</h3>
+        <p>Dedicated DJ profile pages, timestamped tracklists, downloadable set recordings, and underground artist discovery features.</p>
+      </article>
+
+      <article class="roadmap-card">
+        <div class="roadmap-card-head">
+          <small>INFRASTRUCTURE</small>
+          <span class="phase-badge planned">PLANNED</span>
+        </div>
+        <h3>Encrypted Multi-Region Database Failover</h3>
+        <p>Nightly encrypted database replication across cloud providers to guarantee instant automatic failover under any node interruption.</p>
+      </article>
+
+      <article class="roadmap-card">
+        <div class="roadmap-card-head">
+          <small>COMMUNITY</small>
+          <span class="phase-badge planned">PLANNED</span>
+        </div>
+        <h3>Realtime Chat Reactions & DJ Shoutouts</h3>
+        <p>Enhanced listener interactions with track-synchronized bass drop reactions and on-air host shoutouts during live broadcasts.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- Phase 4: Future -->
+  <section class="phase-group">
+    <div class="phase-title">
+      <span class="phase-badge future">○ FUTURE VISION</span>
+      <span>PHASE 4 — SUSTAINABILITY & LIVE VENUE RELAYS</span>
+    </div>
+    <div class="roadmap-cards">
+      <article class="roadmap-card">
+        <div class="roadmap-card-head">
+          <small>SUSTAINABILITY</small>
+          <span class="phase-badge future">FUTURE</span>
+        </div>
+        <h3>Ethical Underground Sponsorships</h3>
+        <p>Carefully curated partnerships with sound systems, gear makers, and independent labels with transparent reporting, keeping free listening 100% ad-light.</p>
+      </article>
+
+      <article class="roadmap-card">
+        <div class="roadmap-card-head">
+          <small>STAGE & VENUES</small>
+          <span class="phase-badge future">FUTURE</span>
+        </div>
+        <h3>Live Event & Club Stage Visuals Feeds</h3>
+        <p>High-bitrate synchronized visual relays engineered for live club projection systems and bass festival stages.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- CTA Box -->
+  <section class="roadmap-cta">
+    <div>
+      <p class="kicker">GET INVOLVED</p>
+      <h2>SHAPE THE FUTURE<br>OF 140.</h2>
+      <p>Have ideas for the station, want to submit a track, or interested in playing a guest takeover? Join our underground community.</p>
+    </div>
+    <div class="roadmap-cta-actions">
+      <a class="btn primary" href="./#submit">SUBMIT AUDIO ↗</a>
+      <a class="btn" href="https://discord.gg/3vVzvuXP" target="_blank" rel="noopener">JOIN DISCORD ↗</a>
+      <button class="btn" type="button" data-open-support>💜 SUPPORT STATION</button>
+    </div>
+  </section>
+</main>
+
+<audio id="audio" preload="none"></audio>
+
+<!-- Mini Floating Player -->
+<div class="mini-player" id="miniPlayer">
+  <button id="miniPlay" type="button" aria-label="Play station">▶</button>
+  <img src="assets/allthings140-logo-64.png?v=0.4.22" alt="Station Icon">
+  <div>
+    <small>NOW TRANSMITTING</small>
+    <b id="miniTitle">ALLTHINGS140RADIO</b>
+    <span id="miniArtist">CONNECTING…</span>
+  </div>
+  <span class="mini-listeners"><b id="miniListeners">0</b> LIVE</span>
+  <button id="miniMute" type="button" aria-label="Mute station">VOL</button>
+  <a id="miniChat" class="mini-room-link" href="room/">GREEN ROOM</a>
+</div>
+
+<!-- Footer -->
+<footer class="wrap">
+  <a class="brand" href="./">
+    <span class="sigil"><img src="assets/allthings140-logo-64.png?v=0.4.22" alt="AllThings140 Logo"></span>
+    <span><strong>ALLTHINGS140</strong><small>RADIO</small></span>
+  </a>
+  <button class="footer-support" type="button" data-open-support>💜 SUPPORT THE STATION</button>
+  <a class="footer-merch" href="visuals/">◉ VISUALS TAB</a>
+  <a class="footer-merch" href="roadmap/">🗺 ROADMAP</a>
+  <a class="footer-merch" href="https://ebedesigns.online" target="_blank" rel="noopener">SHOP MERCH ↗</a>
+  <div class="foot-status" id="footerStatus">SYSTEM STATUS: CONNECTING</div>
+</footer>
+
+<!-- Support Modal Dialog -->
+<dialog class="support-dialog" id="supportDialog" aria-labelledby="supportDialogTitle">
+  <button class="support-close" id="supportClose" type="button" aria-label="Close modal">×</button>
+  <div id="supportCheckoutView">
+    <p class="kicker">FUEL THE BASS</p>
+    <h2 id="supportDialogTitle">SUPPORT ALLTHINGS140 RADIO</h2>
+    <p>Keeping underground bass music blasting 24/7 isn't free. Throw something in the tip jar to support bandwidth and server costs.</p>
+    <div class="support-goal" id="supportGoal" style="margin-bottom: 20px;">
+      <small id="supportGoalTitle">KEEP 140 ONLINE</small>
+      <p id="supportGoalDescription">Help power the station and keep underground bass music broadcasting 24/7.</p>
+      <strong><span id="supportGoalTotal">$0</span> / <span id="supportGoalTarget">$150</span></strong>
+      <div class="support-progress" role="progressbar" aria-label="Station support goal" aria-valuemin="0" aria-valuemax="150" aria-valuenow="0">
+        <i id="supportGoalBar"></i>
+      </div>
+    </div>
+    <form id="supportForm">
+      <fieldset style="border:0;padding:0;margin:0">
+        <legend style="color:#dba5ff;font-size:.72rem;font-weight:900;letter-spacing:.12em;">CHOOSE AN AMOUNT</legend>
+        <div class="support-amounts">
+          <button type="button" data-support-cents="500"><b>$5</b><span>Bandwidth</span></button>
+          <button type="button" data-support-cents="1000"><b>$10</b><span>Keep It Loud</span></button>
+          <button type="button" data-support-cents="2000"><b>$20</b><span>140 Supporter</span></button>
+          <button type="button" data-support-cents="5000"><b>$50</b><span>Legend Tier</span></button>
+        </div>
+        <label style="display:block;margin-top:10px;font-size:.72rem;font-weight:800;color:#c0a9cf;">
+          CUSTOM AMOUNT ($)
+          <input id="supportAmount" type="number" inputmode="decimal" min="1" max="1000" step="0.01" value="10.00" required style="width:100%;padding:10px;border-radius:6px;border:1px solid rgba(184,92,255,0.4);background:rgba(8,4,14,0.9);color:#fff;margin-top:4px;">
+        </label>
+      </fieldset>
+      <label style="display:block;margin-top:12px;font-size:.72rem;font-weight:800;color:#c0a9cf;">
+        DISPLAY NAME (OPTIONAL)
+        <input id="supportName" maxlength="40" placeholder="Your name" style="width:100%;padding:10px;border-radius:6px;border:1px solid rgba(184,92,255,0.4);background:rgba(8,4,14,0.9);color:#fff;margin-top:4px;">
+      </label>
+      <label style="display:block;margin-top:12px;font-size:.72rem;font-weight:800;color:#c0a9cf;">
+        MESSAGE (OPTIONAL)
+        <textarea id="supportMessage" maxlength="180" rows="2" placeholder="Keep 140 alive 🔥" style="width:100%;padding:10px;border-radius:6px;border:1px solid rgba(184,92,255,0.4);background:rgba(8,4,14,0.9);color:#fff;margin-top:4px;"></textarea>
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:.76rem;color:#c0a9cf;">
+        <input id="supportPublic" type="checkbox" checked> Show my support in the public feed
+      </label>
+      <button class="btn primary" id="supportCheckout" type="submit" style="width:100%;margin-top:18px;min-height:48px;">CONTINUE TO SECURE STRIPE CHECKOUT</button>
+      <p id="supportFeedback" role="status" style="margin-top:8px;font-size:.78rem;color:#ff8eae;"></p>
+    </form>
+  </div>
+  <div class="support-success" id="supportSuccessView" hidden style="text-align:center;padding:20px;">
+    <span style="font-size:2.5rem;">💜</span>
+    <h2>THANK YOU FOR SUPPORTING 140</h2>
+    <p id="supportSuccessMessage">You just helped keep the bass alive.</p>
+    <button class="btn primary" id="supportReturn" type="button" style="margin-top:14px;">RETURN TO THE RADIO</button>
+  </div>
+</dialog>
+
+<!-- Green Room launcher — dedicated standalone chat + visuals experience -->
+<a class="chat-launcher green-room-launcher" href="room/"><span>GREEN ROOM</span> <b>LIVE</b></a>
+
+<script src="support.js?v=1.1.0"></script>
+<script>
+(() => {
+  "use strict";
+  const audio = document.getElementById("audio");
+  const miniPlay = document.getElementById("miniPlay");
+  const miniTitle = document.getElementById("miniTitle");
+  const miniArtist = document.getElementById("miniArtist");
+  const miniListeners = document.getElementById("miniListeners");
+  const headerStatus = document.getElementById("headerStatus");
+  const footerStatus = document.getElementById("footerStatus");
+  const miniMute = document.getElementById("miniMute");
+  const navToggle = document.getElementById("navToggle");
+  const siteNav = document.getElementById("siteNav");
+
+  const statusUrls = ["/api/public/status", "https://status.ebeinc.online/api/public/status"];
+  let streamUrl = "";
+  let desiredPlay = false;
+  let isResolving = false;
+  let reconnectTimer = null;
+  let reconnectAttempts = 0;
+
+  if (navToggle && siteNav) {
+    navToggle.addEventListener("click", () => {
+      const open = siteNav.hasAttribute("hidden");
+      if (open) {
+        siteNav.removeAttribute("hidden");
+        navToggle.setAttribute("aria-expanded", "true");
+      } else {
+        siteNav.setAttribute("hidden", "");
+        navToggle.setAttribute("aria-expanded", "false");
+      }
+    });
+  }
+
+  function clean(val, fallback) {
+    const s = String(val || "").trim();
+    return s || fallback;
+  }
+
+  function setPlayingState(playing) {
+    miniPlay.textContent = playing ? "❚❚" : "▶";
+    miniPlay.setAttribute("aria-label", playing ? "Pause station" : "Play station");
+    document.body.classList.toggle("playing", playing);
+  }
+
+  async function resolveStatus() {
+    for (const url of statusUrls) {
+      const ctl = new AbortController();
+      const t = setTimeout(() => ctl.abort(), 5000);
+      try {
+        const res = await fetch(url + "?t=" + Date.now(), { cache: "no-store", signal: ctl.signal });
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        if (!data.online || !data.stream_url) throw new Error();
+        
+        miniTitle.textContent = clean(data.current_title, "AllThings140Radio");
+        miniArtist.textContent = clean(data.current_artist, "24/7 Transmission");
+        miniListeners.textContent = String(data.listeners || 0);
+        
+        const state = data.mode === "live" ? "live" : "autodj";
+        headerStatus.dataset.state = state;
+        headerStatus.innerHTML = `<i></i>${data.mode === "live" ? "NOW LIVE" : "24/7 BROADCAST"}`;
+        footerStatus.textContent = `SYSTEM STATUS: ONLINE (${data.listeners || 0} CONNECTED)`;
+        
+        return data;
+      } catch {
+      } finally {
+        clearTimeout(t);
+      }
+    }
+    headerStatus.dataset.state = "offline";
+    headerStatus.innerHTML = "<i></i>OFFLINE";
+    footerStatus.textContent = "SYSTEM STATUS: RECONNECTING…";
+    throw new Error("offline");
+  }
+
+  async function resolveStream() {
+    const data = await resolveStatus();
+    if (streamUrl !== data.stream_url) {
+      streamUrl = data.stream_url;
+      audio.src = streamUrl;
+      audio.load();
+    }
+    return streamUrl;
+  }
+
+  async function connectAudio() {
+    if (!desiredPlay || isResolving) return;
+    isResolving = true;
+    try {
+      await resolveStream();
+      await audio.play();
+      clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+      reconnectAttempts = 0;
+      setPlayingState(true);
+    } catch {
+      if (desiredPlay) scheduleReconnect();
+    } finally {
+      isResolving = false;
+    }
+  }
+
+  function scheduleReconnect() {
+    if (!desiredPlay || reconnectTimer) return;
+    const wait = Math.min(15000, 1000 * Math.pow(2, Math.min(reconnectAttempts++, 4)));
+    reconnectTimer = setTimeout(() => {
+      reconnectTimer = null;
+      connectAudio();
+    }, wait);
+  }
+
+  async function togglePlay() {
+    if (desiredPlay && !audio.paused) {
+      desiredPlay = false;
+      clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+      audio.pause();
+      setPlayingState(false);
+      return;
+    }
+    desiredPlay = true;
+    await connectAudio();
+  }
+
+  miniPlay.addEventListener("click", togglePlay);
+  audio.addEventListener("playing", () => {
+    reconnectAttempts = 0;
+    if (desiredPlay) setPlayingState(true);
+  });
+  audio.addEventListener("pause", () => {
+    if (!desiredPlay) setPlayingState(false);
+    else if (!reconnectTimer) scheduleReconnect();
+  });
+  audio.addEventListener("error", () => { if (desiredPlay) scheduleReconnect(); });
+  audio.addEventListener("stalled", () => { if (desiredPlay) scheduleReconnect(); });
+  
+  if (miniMute) {
+    miniMute.addEventListener("click", () => {
+      audio.muted = !audio.muted;
+      miniMute.textContent = audio.muted ? "MUTED" : "VOL";
+    });
+  }
+
+  setInterval(() => { if (!document.hidden) resolveStatus().catch(() => {}); }, 8000);
+  resolveStatus().catch(() => {});
+})();
+</script>
+</body>
+</html>

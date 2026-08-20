@@ -1,0 +1,19 @@
+{
+  "name": "allthings140radio-visuals",
+  "private": true,
+  "version": "0.1.42",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 14340",
+    "build": "vite build",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.8.0",
+    "@tauri-apps/plugin-dialog": "^2.4.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.8.4",
+    "vite": "^7.1.3"
+  }
+}

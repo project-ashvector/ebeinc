@@ -1,0 +1,25 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ALLTHINGS140 // GREEN VISUALS STAGING</title><link rel="stylesheet" href="stage.css?v=2.5.0"><link rel="stylesheet" href="overlay.css?v=2.2.0"></head><body>
+<svg class="stage-mask-svg" width="0" height="0" style="position:absolute;pointer-events:none;" aria-hidden="true">
+  <defs>
+    <mask id="stage-screen-mask" maskContentUnits="objectBoundingBox">
+      <rect width="1" height="1" fill="#ffffff" />
+      <rect id="maskScreenHole" x="0.23" y="0.335" width="0.536" height="0.485" rx="0.015" fill="#000000" />
+    </mask>
+  </defs>
+</svg>
+<main id="stage">
+  <div id="stageComposition" class="stage-composition">
+    <div class="screens" id="screens"><video class="active" muted playsinline preload="auto"></video><video muted playsinline preload="auto"></video></div>
+    <div class="stage-overlay stage-layer-compositor" id="stageLayer">
+      <video id="stageVideo" class="stage-single-video" muted loop autoplay playsinline preload="auto" src="https://visuals-media-staging.allthings140radio.online/stage/stage-0001.mp4"></video>
+    </div>
+    <div class="stage-frame debug-frame" aria-hidden="true"></div>
+    <aside class="mode-logo"><img id="modeLogo" src="https://allthings140radio.online/assets/takeover-fallback-logo.webp" alt="ALLTHINGS140Radio logo"></aside>
+    <div class="reactions" id="reactionLayer"></div>
+    <section class="audience" id="audience" aria-label="Audience"></section>
+    <section class="energy"><small>ROOM ENERGY</small><div><i id="energyBar"></i></div><b id="energyLabel">0%</b><span id="reactionTotal">Tonight's Reactions: 0</span></section>
+    <section class="now" data-mode="autodj"><small id="mode">24/7 PLAYLIST</small><b id="track">STAGING UPLINK</b><span id="artist">ALLTHINGS140</span></section>
+  </div>
+</main>
+<aside class="room"><header><b>AUDIENCE ROOM</b><span id="connection">OFFLINE — VISUALS CONTINUE</span></header><form id="profile"><input id="name" maxlength="24" placeholder="Display name" aria-label="Display name"><select id="avatar" aria-label="Avatar"><option value="orb-purple">Purple</option><option value="orb-cyan">Cyan</option><option value="orb-pink">Pink</option><option value="orb-green">Green</option><option value="orb-fire">Fire</option></select><button>SAVE PROFILE</button></form><ol id="chat"></ol><form id="message"><input id="messageText" maxlength="240" placeholder="Say something…" aria-label="Chat message"><button>SEND</button></form><div class="react"><button data-reaction="fire">🔥</button><button data-reaction="skull">💀</button><button data-reaction="heart">💜</button><button data-reaction="bolt">⚡</button><button data-reaction="bass">🔊</button></div></aside>
+<button id="listen">▶ LISTEN LIVE</button><audio id="audio" preload="none"></audio><script src="config.js?v=2.1.0"></script><script src="stage.js?v=2.5.0"></script></body></html>

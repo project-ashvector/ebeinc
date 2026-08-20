@@ -1,0 +1,11 @@
+[Unit]
+Description=Sync Oracle music and catalog backup to the PC fallback
+After=network-online.target tailscaled.service
+Wants=network-online.target tailscaled.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/allthings140radio-fallback-sync
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

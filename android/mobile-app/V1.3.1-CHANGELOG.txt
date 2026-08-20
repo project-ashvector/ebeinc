@@ -1,0 +1,108 @@
+================================================================================
+ALLTHINGS140 RADIO — ANDROID v1.3.1 RELEASE CHANGELOG
+================================================================================
+Release Date: August 19, 2026
+Package: online.ebeinc.allthings140radio
+Version Name: 1.3.1
+Version Code: 16
+Target SDK: Android 15 (API 36)
+Minimum SDK: Android 6.0 Marshmallow (API 23)
+
+--------------------------------------------------------------------------------
+1. FULL-SCREEN ARTWORK BACKGROUND INTEGRATION
+--------------------------------------------------------------------------------
+- Replaced the plain dark background with the vertical ALLTHINGS140 Radio artwork
+  (841x1870 resolution) optimized for modern flagship phones like Samsung Galaxy S24+
+  and scalable across all Android phone and tablet screen form factors.
+- Implemented edge-to-edge system window inset handling so the background extends
+  cleanly behind the status bar and gesture navigation bar.
+- Fixed background behind content: scrolling the Radio view or chat does not shift
+  or stretch the background.
+- Translucent dark purple/ultraviolet cards allow the background speaker artwork
+  to remain visible while maintaining high contrast and readability for text and controls.
+
+--------------------------------------------------------------------------------
+2. REWORKED TOP VISUAL CARD WITH LOCAL 16:9 VIDEO LOOP
+--------------------------------------------------------------------------------
+- Removed legacy decorative canvas animations (motion rings, radar circles, center
+  orange circle, waveform canvas, pink dots).
+- Card now features:
+  * Current active track title (bold, large typography, smart end-ellipsizing).
+  * Transmission status badge (READY FOR TRANSMISSION / ● LIVE TRANSMISSION).
+  * Looping 16:9 ALLTHINGS140 visuals video screen with rounded corners.
+- Video playback engine:
+  * Hardware-accelerated isolated video renderer (VisualsVideoView).
+  * 100% MUTED at all times: zero interference with RadioService media audio.
+  * Lifecycle-aware: automatically pauses when the app is backgrounded or when
+    switching to the Green Room Chat tab, resuming seamlessly on return.
+  * Prevents memory leaks and multiple player instances.
+
+--------------------------------------------------------------------------------
+3. HIGH-EFFICIENCY VIDEO COMPRESSION
+--------------------------------------------------------------------------------
+- Original video asset:
+  * Format: H.264 Main (avc1) / AAC 2kbps
+  * Resolution: 1280x720 (720p), 30 fps
+  * Bitrate: ~8,061 kb/s
+  * Duration: 12 minutes 40 seconds
+  * Filesize: 765,868,984 bytes (~730.4 MB)
+- Optimized Android build asset (res/raw/visuals_loop.mp4):
+  * Format: H.264 High profile (avc1) with faststart atom, audio track stripped
+  * Resolution: 854x480 (480p, 16:9), 30 fps
+  * Bitrate: ~422 kb/s (Video: 419 kb/s)
+  * Filesize: 40,107,169 bytes (38.25 MB)
+  * Compression ratio: 94.76% size reduction (~19x smaller)
+  * Result: Visually crisp, buttery smooth 30fps playback with minimal APK footprint.
+
+--------------------------------------------------------------------------------
+4. NATIVE GREEN ROOM LIVE CHAT TAB
+--------------------------------------------------------------------------------
+- Added a dedicated GREEN ROOM CHAT tab to the application.
+- CHAT ONLY: No heavy visual stage or redundant 3D graphics in the chat interface.
+- Direct connection to ALLTHINGS140 live WebSocket chat backend (wss://chat.ebeinc.online/ws).
+- Mobile-optimized features:
+  * Real-time live messages with glowing user avatar badges, usernames, timestamps.
+  * Verified artist/station checkmarks (✓).
+  * Live user presence counter (● X in chat) and connection status indicator.
+  * Quick reaction bar: 🔥 💀 💜 ⚡ 🔊.
+  * Profile customizer to set user display name and glow color (Purple, Cyan, Pink, Green, Orange).
+  * Keyboard handling: windowSoftInputMode="adjustResize" ensures the keyboard never obscures
+    the message input field.
+
+--------------------------------------------------------------------------------
+5. GOOGLE PLAY UGC SAFETY & MODERATION
+--------------------------------------------------------------------------------
+- Backend Moderation Integration:
+  * Automatic abusive word / hate speech filtering with redaction (***).
+  * Rate-limiting and anti-flood protection (max 4 messages/10s, 800ms throttle).
+  * Single link limit per message to prevent spam.
+  * Server-side moderator commands (delete message, clear chat, mute user session, broadcast).
+- In-App Safety & Compliance:
+  * Community Rules & Moderation notice accessible directly from the Chat screen.
+  * Long-press / tap message options:
+    - Report Message: Immediately hides inappropriate messages and notifies moderation.
+    - Block / Mute User: Persistently hides messages from blocked usernames across sessions.
+    - Copy Text to clipboard.
+
+--------------------------------------------------------------------------------
+6. SEAMLESS AUDIO CONTINUITY & PERSISTENT PLAYBACK
+--------------------------------------------------------------------------------
+- Single authority RadioService (Android Media3 / ExoPlayer foreground service).
+- Live radio playback NEVER stops or stutters when switching between:
+  * Radio tab
+  * Green Room Chat tab
+  * Settings
+  * External browser links
+- Play/Pause state dynamically synchronized:
+  * ▶ PLAY LIVE RADIO when paused/idle
+  * ❚❚ PAUSE LIVE RADIO when streaming live
+- Foreground media notification, lock-screen controls, Bluetooth, and Android Auto preserved.
+
+--------------------------------------------------------------------------------
+7. SETTINGS & DYNAMIC VERSIONING
+--------------------------------------------------------------------------------
+- Dynamically retrieves and displays "Version 1.3.1 • Build 16" from BuildConfig.
+- Target SDK 36 validation.
+- Station update check against status API.
+- Direct links to Privacy Policy, Google Play listing, and Station Website.
+================================================================================

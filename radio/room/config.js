@@ -1,0 +1,19 @@
+window.AT140_GREEN_CONFIG={
+  environment:"live-chat",
+  realtimeUrl:"wss://visuals-realtime-staging.allthings140radio.online/ws",
+  chatUrl:"wss://chat.ebeinc.online/ws",
+  realtimeStateUrl:"https://visuals-realtime-staging.allthings140radio.online/visuals-state",
+  realtimeLayoutUrl:"https://visuals-realtime-staging.allthings140radio.online/layout-state",
+  rendererAckUrl:"https://visuals-realtime-staging.allthings140radio.online/renderer-ack",
+  radioStatusUrl:"https://status.ebeinc.online/api/public/status",
+  playlistUrl:"./playlist.json",
+  layoutUrl:"./layout.json",
+  // Large media is served by the isolated Oracle staging media origin, never Pages.
+  mediaBaseUrl:"https://visuals-media-staging.allthings140radio.online",
+  mediaVersion:"20260816-2",
+  routingUrl:"https://allthings140radio.online/api/visual-routing",
+  legacyFallbackEnabled:true,
+  legacyFallbackDesktop:"https://allthings140radio.online/assets/visuals-home-desktop-hq.mp4?v=2.0.0",
+  legacyFallbackMobile:"https://allthings140radio.online/assets/visuals-mainpage-2026-08-11-v2.mp4?v=1.1.0",
+  streamUrl:"https://stream.ebeinc.online/live.mp3"
+};

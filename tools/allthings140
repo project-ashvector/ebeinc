@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+script_path="$(readlink -f -- "${BASH_SOURCE[0]}")"
+project_dir="$(cd -- "$(dirname -- "$script_path")/.." && pwd)"
+command_name="${1:-status}"
+radio_host="${ALLTHINGS140_HOST:-allthings140radio-server}"
+
+case "$command_name" in
+  status)
+    exec python3 "$project_dir/tools/radio_healthcheck.py"
+    ;;
+  diagnose)
+    echo "ALLTHINGS140 RADIO DIAGNOSTICS"
+    date -Is
+    python3 "$project_dir/tools/radio_healthcheck.py"
+    python3 "$project_dir/tools/site_smoke.py" --json
+    ;;
+  health|now-playing)
+    curl -fsS --max-time 10 "http://${radio_host}:14080/api/health" | python3 -c 'import json,sys; d=json.load(sys.stdin); a=d.get("autodj",{}); print(json.dumps(d,indent=2) if sys.argv[1]=="health" else "%s — %s\nNext: %s — %s"%(a.get("current_artist") or "Unknown artist",a.get("current_title") or "Unknown track",a.get("next_artist") or "Unknown artist",a.get("next_title") or "Unknown track"))' "$command_name"
+    ;;
+  services)
+    curl -fsS --max-time 10 "http://${radio_host}:14080/api/health" | python3 -c 'import json,sys; d=json.load(sys.stdin); print("server=active\nautodj=%s\nicecast=%s\ndrive=see supervisor/diagnostics\ntunnel=public status reachable"%("active" if d.get("autodj",{}).get("running") else "failed","active" if d.get("icecast",{}).get("online") else "failed"))'
+    ;;
+  logs)
+    echo "Logs require authorized SSH. Run on Oracle: journalctl -u allthings140radio-server.service -n 80 --no-pager" >&2; exit 2
+    ;;
+  drive)
+    [[ "${2:-status}" == status ]] || { echo "Only 'drive status' is available without a configured authenticated sync workflow." >&2; exit 2; }
+    echo "Drive details require authorized Oracle diagnostics; station health remains available without credentials." >&2; exit 2
+    ;;
+  playlist)
+    [[ "${2:-status}" == status ]] || { echo "Use the authenticated DJ application to refresh the playlist." >&2; exit 2; }
+    curl -fsS --max-time 10 "http://${radio_host}:14080/api/health" | python3 -c 'import json,sys; a=json.load(sys.stdin).get("autodj",{}); print("tracks=%s running=%s current=%s"%(a.get("tracks"),a.get("running"),a.get("current_title")))'
+    ;;
+  cache)
+    case "${2:-status}" in
+      status|health)
+        curl -fsS --max-time 10 "http://${radio_host}:14080/api/health" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(json.dumps(d.get("cache",{}),indent=2))'
+        ;;
+      list)
+        echo "Cache inventory requires authorized Oracle diagnostics; use cache status for the bounded summary." >&2; exit 2
+        ;;
+      fill)
+        echo "Cache fill runs continuously as allthings140radio-cache.service; use cache status to verify readiness."; exit 0
+        ;;
+      *) echo "Supported: cache status|health|list|fill" >&2; exit 2;;
+    esac
+    ;;
+  backup)
+    [[ "${2:-status}" == status ]] || { echo "Only 'backup status' is exposed from workstations." >&2; exit 2; }
+    echo "Backup details require authorized Oracle diagnostics." >&2; exit 2
+    ;;
+  restart)
+    [[ "${2:-}" == stream ]] || { echo "Supported: restart stream" >&2; exit 2; }
+    echo "Restart requires an authenticated DJ/Server control session; no reusable secret is stored in this CLI." >&2; exit 2
+    ;;
+  status-json)
+    exec python3 "$project_dir/tools/radio_healthcheck.py" --json
+    ;;
+  help|-h|--help)
+    cat <<'EOF'
+Usage: allthings140 COMMAND
+
+  status       Check website, status freshness, current track, and stream audio
+  status-json  Emit the same public health result as machine-readable JSON
+  diagnose     Run public station and website diagnostics
+  health       Show detailed private health over Tailscale
+  now-playing  Show current and next track
+  services     Show critical Oracle service states
+  logs         Show recent radio-server journal entries
+  drive status Show Drive service and aggregate storage status
+  playlist status  Show rotation status
+  cache status     Show predictive hot-cache summary
+  backup status    Show encrypted off-host backup status
+  restart stream  Confirm and restart the server/AutoDJ service
+
+Disruptive actions are intentionally not exposed by this public-health command.
+Use the authenticated DJ/Server/EBE Dock controls over Tailscale.
+EOF
+    ;;
+  *)
+    echo "Unknown or intentionally restricted command: $command_name" >&2
+    echo "Run: allthings140 help" >&2
+    exit 2
+    ;;
+esac

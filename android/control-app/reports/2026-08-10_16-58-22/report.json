@@ -1,0 +1,108 @@
+{
+  "version": "0.1.1",
+  "created_at": "2026-08-10_16-58-22",
+  "status": {
+    "ok": true,
+    "name": "AllThings140Radio",
+    "version": "0.6.0",
+    "autodj": {
+      "running": true,
+      "pid": 852468,
+      "mode": "catalog rotation",
+      "last_error": "",
+      "tracks": 444,
+      "current_track_id": 702,
+      "current_title": "\ud835\udd6f\ud835\udd8a\ud835\udd9b\ud835\udd94\ud835\udd91\ud835\udd9b\ud835\udd8a - Garfield in Hell (Free Download) (Also it_s very old)",
+      "current_artist": "",
+      "started_at": 1786406233,
+      "position_seconds": 69.90660333633423,
+      "duration_seconds": 212.472,
+      "next_track_id": 381,
+      "next_title": "Sophie Powers & NOAHFINNCE - Clearview (Fermilat Bootleg)",
+      "next_artist": "",
+      "transition_reason": "automatic",
+      "ad_playing": false,
+      "ad_name": "",
+      "progress": 0.32901560363875815
+    },
+    "icecast": {
+      "online": true,
+      "listeners": 2,
+      "live_source": true,
+      "sources": [
+        {
+          "genre": "various",
+          "listener_peak": 3,
+          "listeners": 2,
+          "listenurl": "http://localhost:14000/live.mp3",
+          "server_description": "140 BPM and bass music, live around the clock.",
+          "server_name": "AllThings140Radio",
+          "server_type": "audio/mpeg",
+          "stream_start": "Mon, 10 Aug 2026 16:36:09 -0700",
+          "stream_start_iso8601": "2026-08-10T16:36:09-0700",
+          "dummy": null
+        }
+      ]
+    },
+    "disk": {
+      "path": "/var/lib/allthings140radio",
+      "free_bytes": 527934328832,
+      "total_bytes": 1006450962432,
+      "free_percent": 52.5,
+      "state": "healthy"
+    },
+    "watchdog": {
+      "state": "healthy",
+      "last_check_at": 1786406299,
+      "last_recovery_at": 0,
+      "recovery_count": 0,
+      "last_failure": ""
+    },
+    "silence": {
+      "state": "healthy",
+      "silent": false,
+      "silent_seconds": 0.0,
+      "last_audio_at": 1786404968,
+      "error": ""
+    },
+    "recording": {
+      "recording": false,
+      "archive_id": "",
+      "started_at": 0,
+      "storage": "r2"
+    },
+    "storage": {
+      "provider": "r2",
+      "remote_available": true
+    },
+    "ads": {
+      "playing": false,
+      "name": ""
+    },
+    "online": true
+  },
+  "tailscale": {
+    "connected": true,
+    "ips": [
+      "100.108.145.128"
+    ],
+    "detail": "Tailscale status format unavailable"
+  },
+  "services": {
+    "allthings140radio-tunnel.service": {
+      "returncode": 0,
+      "stdout": "active\n",
+      "stderr": ""
+    }
+  },
+  "disk": {
+    "returncode": 0,
+    "stdout": "Filesystem      Size  Used Avail Use% Mounted on\n/dev/nvme0n1p2  938G  398G  492G  45% /\n",
+    "stderr": ""
+  },
+  "processes": {
+    "returncode": 0,
+    "stdout": "268 python3         python3 /usr/lib/at140radiocs/gui.py\n 846470 brave           /opt/brave.com/brave/brave --type=renderer --crashpad-handler-pid=15094 --enable-crash-reporter=072372ea-c690-460f-b8b5-82d7c007662f, --enable-distillability-service --origin-trial-public-key=bYUKPJoPnCxeNvu72j4EmPuK7tr1PAC7SHh8ld9Mw3E=,fMS4mpO6buLQ/QMd+zJmxzty/VQ6B1EUZqoCU04zoRU= --change-stack-guard-on-fork=enable --ozone-platform=wayland --lang=en-US --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=573 --time-ticks-at-unix-epoch=-1786304717060665 --launch-time-ticks=99870663738 --shared-files=v8_context_snapshot_data:100 --metrics-shmem-handle=4,i,7531921016707535253,14654153281281998159,2097152 --field-trial-handle=3,i,3053036917935423699,7030829045916260737,262144 --disable-features=EyeDropper --variations-seed-version=main@2a5c6d95eaa55897e8d8e9a05fd5e5a77cd67328 --pseudonymization-salt-handle=7,i,1536932984083100493,10606302578899260955,4 --trace-process-track-uuid=3190709523236850971\n 846731 kworker/0:0-cgr [kworker/0:0-cgroup_release]\n 847402 kworker/10:0-cg [kworker/10:0-cgroup_release]\n 849369 kworker/11:2-cg [kworker/11:2-cgroup_release]\n 852455 python3         /usr/bin/python3 /opt/allthings140radio-server/server.py\n 852468 ffmpeg          ffmpeg -hide_banner -loglevel warning -f s16le -ar 44100 -ac 2 -i pipe:0 -vn -codec:a libmp3lame -b:a 128k -content_type audio/mpeg -ice_name AllThings140Radio -ice_description 140 BPM and bass music, live around the clock. -f mp3 icecast://source:wboGdgaxCbIzBbDcSWmZsivkRhvEzr79@127.0.0.1:14000/live.mp3\n 852819 ffmpeg          ffmpeg -hide_banner -nostats -loglevel info -i http://127.0.0.1:14000/live.mp3 -af silencedetect=noise=-48dB:d=20 -f null -\n 852928 python3         python3 /usr/lib/at140radiocs/daemon.py\n 855790 kworker/u49:3-r [kworker/u49:3-rtw89_tx_wq]\n 855846 kworker/8:1-cgr [kworker/8:1-cgroup_release]\n 855865 kworker/9:1-cgr [kworker/9:1-cgroup_release]\n 857001 kworker/0:2-cgr [kworker/0:2-cgroup_release]\n 857213 kworker/6:2-eve [kworker/6:2-events]\n 857279 kworker/2:0-cgr [kworker/2:0-cgroup_release]\n 857539 kworker/7:3-eve [kworker/7:3-events]\n 858026 kworker/u48:1-e [kworker/u48:1-events_unbound]\n 858076 kworker/4:0-cgr [kworker/4:0-cgroup_release]\n 858684 kworker/u49:1-r [kworker/u49:1-rtw89_tx_wq]\n 858864 kworker/5:2-cgr [kworker/5:2-cgroup_release]\n 859101 kworker/11:1-cg [kworker/11:1-cgroup_release]\n 859180 kworker/8:0-i91 [kworker/8:0-i915-unordered]\n 860862 kworker/9:0-cgr [kworker/9:0-cgroup_release]\n 860965 kworker/6:1-cgr [kworker/6:1-cgroup_release]\n 861224 kworker/1:2-cgr [kworker/1:2-cgroup_release]\n 861815 kworker/3:2-mm_ [kworker/3:2-mm_percpu_wq]\n 862009 kworker/2:2-cgr [kworker/2:2-cgroup_release]\n 862027 kworker/7:0-mm_ [kworker/7:0-mm_percpu_wq]\n 862192 kworker/u49:0-r [kworker/u49:0-rtw89_tx_wq]\n 862228 kworker/4:1-cgr [kworker/4:1-cgroup_release]\n 862274 kworker/u48:2-e [kworker/u48:2-events_power_efficient]\n 862519 kworker/10:2-ev [kworker/10:2-events]\n 862815 kworker/5:1-mm_ [kworker/5:1-mm_percpu_wq]\n 863896 kworker/0:1-eve [kworker/0:1-events]\n 864465 kworker/9:2-eve [kworker/9:2-events]\n 865083 kworker/1:0-eve [kworker/1:0-events]\n 865218 kworker/1:3-eve [kworker/1:3-events]\n 865673 kworker/4:2-eve [kworker/4:2-events]\n 865993 kworker/10:1-cg [kworker/10:1-cgroup_release]\n 866065 ffmpeg          ffmpeg -hide_banner -loglevel error -re -i /var/lib/allthings140radio/music/\ud835\udd6f\ud835\udd8a\ud835\udd9b\ud835\udd94\ud835\udd91\ud835\udd9b\ud835\udd8a - Garfield in Hell (Free Download) (Also it_s very old).mp3 -vn -f s16le -ar 44100 -ac 2 pipe:1\n 866369 kworker/8:2     [kworker/8:2]\n 866711 kworker/2:1-mm_ [kworker/2:1-mm_percpu_wq]\n 866965 kworker/u49:2-r [kworker/u49:2-rtw89_tx_wq]\n 867079 kworker/u48:0   [kworker/u48:0]\n 867238 kworker/11:0-mm [kworker/11:0-mm_percpu_wq]\n 867244 python3         [python3] <defunct>\n 867306 python          /home/ebmarah/.local/share/vaultplay-bridge/.venv/bin/python /home/ebmarah/.local/share/vaultplay-bridge/server.py\n 867325 ps              ps -eo pid,comm,args\n",
+    "stderr": ""
+  }
+}

@@ -5,7 +5,7 @@ type Color = "purple"|"cyan"|"pink"|"green";
 type StoredMessage={id:string;name:string;text:string;ts:number;color:Color;verified:boolean;senderId:string};
 type SocketState={id:string;name:string;color:Color;verified:boolean;moderator:boolean;muted:boolean;recent:number[];lastText:string;lastTextAt:number;requestAt?:number};
 type Schedule={title:string;host:string;details:string;start:number;end:number};
-const ALLOWED_ORIGINS=new Set(["https://ebeinc.online","https://www.ebeinc.online","https://ebeinc-uqt.pages.dev"]),NAME_RE=/[^\p{L}\p{N} _-]/gu,URL_RE=/(?:https?:\/\/|www\.)/gi,BLOCKED_RE=/\b(?:n[i1]gg(?:er|a)|f[a@]gg?[o0]t|k[i1]ke|ch[i1]nk)\b/gi,COLORS=new Set<Color>(["purple","cyan","pink","green"]);
+const ALLOWED_ORIGINS=new Set(["https://allthings140radio.online","https://www.allthings140radio.online","https://ebeinc.online","https://www.ebeinc.online","https://ebeinc-uqt.pages.dev"]),NAME_RE=/[^\p{L}\p{N} _-]/gu,URL_RE=/(?:https?:\/\/|www\.)/gi,BLOCKED_RE=/\b(?:n[i1]gg(?:er|a)|f[a@]gg?[o0]t|k[i1]ke|ch[i1]nk)\b/gi,COLORS=new Set<Color>(["purple","cyan","pink","green"]);
 function originAllowed(origin:string|null){return !!origin&&(ALLOWED_ORIGINS.has(origin)||/^https:\/\/[a-z0-9-]+\.ebeinc-uqt\.pages\.dev$/.test(origin)||/^http:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/.test(origin))}
 function cleanName(value:unknown,fallback:string){const valueClean=String(value??"").normalize("NFKC").replace(NAME_RE,"").replace(/\s+/g," ").trim().slice(0,24);return valueClean.length>=2?valueClean:fallback}
 function cleanMessage(value:unknown){return String(value??"").normalize("NFKC").replace(/[\u0000-\u001f\u007f]/g," ").replace(/\s+/g," ").trim().slice(0,280)}

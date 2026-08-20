@@ -1,0 +1,36 @@
+# Secrets and machine-local configuration
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.token
+*credentials*.json
+*client_secret*.json
+
+# Editor/OS state
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.code-workspace
+*.log
+tmp/
+temp/
+node_modules/
+.next/
+dist/
+coverage/
+*.tsbuildinfo
+.wrangler/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.gradle/
+**/build/
+local.properties
+*.jks
+*.keystore

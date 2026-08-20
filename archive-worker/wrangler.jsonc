@@ -1,0 +1,13 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "allthings140-archive-gateway",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-09",
+  "routes": [
+    { "pattern": "archives.ebeinc.online", "custom_domain": true }
+  ],
+  "r2_buckets": [
+    { "binding": "ARCHIVES", "bucket_name": "allthings140radio-archives" }
+  ],
+  "observability": { "enabled": true }
+}

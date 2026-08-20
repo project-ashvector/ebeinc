@@ -1,0 +1,353 @@
+ALLTHINGS140 RADIO — PROJECT RECORD
+====================================
+Last updated: 2026-08-09
+
+This is the reusable record of the AllThings140Radio website, Visuals page,
+radio server, DJ app, ads, deployments, completed features, and next work.
+
+1. BRAND AND DEPLOYMENT
+-----------------------
+- Public domain: https://allthings140radio.online/
+- Cloudflare Pages project: ebeinc
+- Site source: radio/
+- Latest known successful Pages deployment during performance work:
+  https://374f2974.ebeinc-uqt.pages.dev
+- Other recent deployment previews:
+  https://9b2c76a4.ebeinc-uqt.pages.dev
+  https://b3a2f939.ebeinc-uqt.pages.dev
+  https://f2539e8e.ebeinc-uqt.pages.dev
+- Wrangler is authenticated to the Cloudflare account.
+- R2 is not enabled yet. Wrangler returned Cloudflare error 10042 and asked
+  for R2 to be enabled in the Cloudflare dashboard.
+
+2. PUBLIC WEBSITE
+-----------------
+Main files:
+- radio/index.html
+- radio/app.js
+- radio/styles.css
+- radio/sw.js
+- radio/_headers
+- radio/_redirects
+- _worker.js
+
+Completed site features:
+- AllThings140 branded 24/7 heavy dubstep/riddim/140 BPM landing page.
+- Shared live player with title, artist, listener count, progress, next track,
+  live/AutoDJ state, reconnect logic, volume, mute, sleep timer, and Media
+  Session metadata.
+- Responsive desktop and phone layouts.
+- Home, Archive, Chat, Schedule, Submit, Hosts, Discord, Visuals, APK, and
+  Install App navigation.
+- HOME is first in desktop and mobile menus.
+- ARCHIVE replaced the duplicated LISTEN menu item and points to the Past
+  Streams section.
+- Mobile dropdown uses a solid touch-friendly menu/select.
+- Listener chat drawer and live engagement/reaction controls.
+- Track request and submission/review forms.
+- Fourthwall payment link/card for approved track submissions.
+- Discord community section.
+- PWA/service-worker support.
+
+Track history/archive groundwork:
+- Recently transmitted history uses server history fields when available.
+- Local fallback history uses localStorage key allthings140-track-history.
+- Past Streams card supports future host/title/date/audio/waveform rendering.
+- Persistent takeover recording, waveform generation, replay URLs, and the
+  public archive API are NOT implemented yet.
+
+3. VISUALS TAB
+--------------
+URL: https://allthings140radio.online/visuals/
+File: radio/visuals/index.html
+
+Completed:
+- Full-screen looping background video.
+- MAIN PAGE and LISTEN LIVE controls.
+- Automatic live stream connection and current-track card.
+- Mobile-safe autoplay and reconnect behavior.
+- User video source was:
+  /home/ebmarah/Documents/at140 radio/66.mp4
+- Original source: 1920x1080, 60 FPS, about 43 MB, about 174 seconds.
+- Desktop optimized asset:
+  radio/assets/visuals-66.mp4
+  1280x720, 24 FPS, about 18.7 MB.
+- Mobile optimized asset:
+  radio/assets/visuals-66-mobile.mp4
+  640x360, 24 FPS, about 8.8 MB.
+- JavaScript selects the mobile asset at max-width 680px and the sharper
+  desktop asset otherwise.
+- Older radiovisualtab.mp4 remains as a legacy fallback asset.
+
+4. STREAM ALERTS
+----------------
+- A StreamElements overlay URL was tested.
+- The full-screen iframe painted a white document over the site and caused a
+  blank page, so it was removed.
+- Native transparent website alerts are not connected yet.
+- StreamElements can cover configured Twitch/Kick/YouTube events; TikTok and X
+  need a separate event/API bridge.
+
+5. PRODUCTION RADIO SERVER
+--------------------------
+Source: /opt/allthings140radio-server/server.py
+Current observed version: 0.4.23
+
+The Python server owns authentication, catalog/review queue, AutoDJ, guest/live
+handoff, Icecast, and public status.
+
+Completed behavior:
+- Persistent FFmpeg AutoDJ encoder connected to the shared Icecast mount.
+- Individual track decoders feed the encoder.
+- Live guest handoff pauses AutoDJ.
+- Watchdog restores AutoDJ after failed/disconnected live sessions.
+- Public and authenticated health/status endpoints.
+- No-repeat rotation_order plus rotation_seen tracking.
+- Eligible tracks are shuffled and reshuffled after the complete cycle.
+- Manual next, previous, restart, and play-now controls.
+
+Current health after the queue update:
+- AutoDJ running.
+- 387 playable/approved rotation tracks observed.
+- DJ app showed 389 catalog entries.
+- Icecast online.
+- Health endpoint: http://127.0.0.1:14080/api/health
+
+Useful endpoints:
+- GET /api/health
+- GET /api/public/status
+- GET /api/status
+- GET /api/autodj/queue
+- POST /api/autodj/next
+- POST /api/autodj/previous
+- POST /api/autodj/restart
+- POST /api/autodj/play-track
+- POST /api/autodj/reshuffle
+
+6. DJ APP
+---------
+Source: /opt/allthings140radio-dj/dj_app.py
+Version shown before latest queue patch: 0.4.17
+
+Existing tabs:
+- On Air
+- Live DJ
+- Guest DJs
+- Catalog Library
+- Catalog Setup
+- Submissions
+- SoundCloud Discovery
+- Settings
+- Setup & Help
+
+Existing controls include station status, previous/restart/next/play-now,
+catalog upload, rights confirmation, metadata editing, duplicate scan,
+safe pruning to server trash, guest invites, Traktor/Mixxx handoff, live
+streaming, submissions, and discovery tools.
+
+Latest queue update:
+- The On Air tab previously rendered only 60 tracks around the current song.
+- It now renders the complete server rotation.
+- Added RESHUFFLE FULL QUEUE button.
+- The button calls POST /api/autodj/reshuffle after confirmation.
+- Server reshuffle clears the random order and seen set, then hands off to a
+  fresh shuffled order.
+- Backups:
+  /opt/allthings140radio-server/server.py.before-queue-update
+  /opt/allthings140radio-dj/dj_app.py.before-queue-update
+
+7. ALERT ADS
+------------
+Source folder: /home/ebmarah/Documents/alerts
+Server pool: /opt/allthings140radio-server/ads
+
+- Nine new MP3 alerts were added.
+- Server pool contains 15 MP3 ads total.
+- Ads are shuffled, avoid immediate repeats, duck the music, and run about
+  every 7 minutes.
+- New alerts were measured around -23 to -26 LUFS.
+- Only the nine new server copies were normalized louder, roughly 8–10 dB,
+  with peak limiting. Originals in Documents/alerts were preserved.
+- Existing server health includes ad_playing and ad_name.
+
+Not implemented yet:
+- DJ-app upload/delete/preview.
+- Enable/disable individual ads.
+- Play Ad Now test button.
+- Adjustable ad interval UI.
+- Loudness meter and automatic normalization UI.
+- Ad history/reporting.
+
+8. SERVER RELIABILITY WORK STILL NEEDED
+----------------------------------------
+- Health watchdog for Icecast, FFmpeg encoder/decoder, AutoDJ, and live relay.
+- Automatic restart with backoff and no-dead-air fallback.
+- Silence detection.
+- Disk-space monitoring and warnings.
+- Discord/email health alerts.
+- Persistent structured logs for each track, ad, handoff, restart, and error.
+- Optional rotation-state persistence across process restarts.
+
+9. TAKEOVER RECORDING STILL NEEDED
+-----------------------------------
+- Record each takeover automatically.
+- Save host, title, start/end, duration, and source.
+- Generate waveform PNG/SVG or waveform JSON.
+- Store replay audio in R2/Stream.
+- Add read-only public archive API and SoundCloud-like replay cards.
+- Add retention and cleanup rules.
+
+10. SITE PERFORMANCE
+--------------------
+Completed:
+- Separate high-quality desktop and smaller mobile video encodes.
+- Mobile/desktop selection in Visuals.
+- Service-worker cache bumped from v43 to v44 in the workspace.
+- Video requests are excluded from the radio service-worker cache.
+
+Pending:
+- Enable Cloudflare R2 or Stream.
+- Move large videos and future replays to durable media storage.
+- Add media hostname/route and cache headers.
+- Add more video quality choices if needed.
+- Hard-refresh or unregister old service workers after updates if a browser
+  still serves stale assets.
+
+11. SOCIAL AUTOMATION
+---------------------
+- X, Twitch, Kick, YouTube, TikTok, and other social pages were discussed.
+- Browser Use/local Chrome work was configured earlier.
+- Unattended hourly X posting is NOT running.
+- Leaving this chat or browser open does not create a background agent.
+- A separate scheduled bot/API integration with explicit authorization and
+  posting rules is needed for unattended posts.
+
+12. FUTURE PROMPT TEMPLATE
+--------------------------
+You are working on the AllThings140Radio project. Read
+docs/ALLTHINGS140RADIO-PROJECT-RECORD.txt first. Preserve existing user
+changes. The public site is allthings140radio.online and its source is radio/.
+The production server is /opt/allthings140radio-server/server.py and the DJ
+app is /opt/allthings140radio-dj/dj_app.py. Do not reset the worktree. Before
+changing production files, make a backup and validate syntax. State whether the
+task affects the Pages site, production radio server, DJ app, or all three.
+Implement the request, test it, and report any permissions, Cloudflare, R2,
+authentication, or deployment blocker honestly.
+
+13. OPERATING NOTES
+-------------------
+- Keep the synchronized Icecast stream stable during changes.
+- Avoid restarting during an active takeover unless necessary.
+- Back up production Python before installation.
+- Do not delete catalog audio directly; use the server trash/recovery flow.
+- Do not overwrite original user media when creating loudness/video derivatives.
+- Use py_compile, node --check, and git diff --check where applicable.
+- Hard-refresh browsers after site and service-worker updates.
+
+14. 2026-08-09 DEVELOPMENT AUDIT / STAGED RELIABILITY WORK
+------------------------------------------------------------
+Live audit before this work confirmed:
+- server API healthy on 127.0.0.1:14080
+- Icecast online with 2 listeners at audit time
+- AutoDJ running with 387 playable tracks and persistent FFmpeg encoder
+- no live takeover active during the audit
+- approximately 43% disk used on the primary data partition
+- allthings140radio-server, Icecast, and tunnel services were active
+
+Backups created before production-file work:
+- /opt/allthings140radio-server/server.py.backup-20260809-063106
+- /opt/allthings140radio-dj/dj_app.py.backup-20260809-063106
+
+Staged workspace changes (validated with Python compilation, not yet installed
+because root service-file authentication was unavailable in this session):
+- tools/server.py adds bounded JSONL event logging, disk health reporting,
+  ad metadata persistence, disabled-ad filtering, configurable ad interval,
+  manual ad request support, /api/events, /api/ads, /api/ads/settings, and
+  enable/disable/play/delete ad actions.
+- tools/server.py adds a bounded StationWatchdog that watches AutoDJ, Icecast,
+  and disk state and avoids intervention during live handoff.
+- tools/dj_app.py adds a Station Ads tab for upload, enable/disable, play-now,
+  recoverable trash, interval setting, and ad inventory display.
+
+Current blocker:
+- Installing these staged server/DJ changes under /opt requires root
+  authentication. Non-interactive sudo is not permitted and pkexec waits for
+  an unavailable authentication prompt. The validated copies remain in tools/
+  and the live service was not replaced by an unverified partial install.
+- Cloudflare R2 remains unavailable (previous error 10042); the archive work
+  should use a local storage abstraction until account enablement is performed.
+
+15. 2026-08-09 PRODUCTION RELEASE 0.5.0
+--------------------------------------
+Installed production files:
+- /opt/allthings140radio-server/server.py
+- /opt/allthings140radio-server/radio_extensions.py
+- /opt/allthings140radio-dj/dj_app.py
+
+Reliability:
+- Watchdog state and bounded recovery counters are exposed in health data.
+- A 25-second startup grace prevents false watchdog recovery during normal boot.
+- FFmpeg-based silence monitoring uses a configurable duration and does not
+  intervene during live handoff or advertisement playback.
+- Rotation order, seen IDs, and position persist atomically in
+  /var/lib/allthings140radio/rotation-state.json; corrupt or stale state is
+  ignored safely when catalog membership changes.
+- Structured events now cover track completion/failure, silence, ads,
+  recording, archive processing, and watchdog activity.
+- Optional severe-failure Discord-compatible webhook configuration uses the
+  ALLTHINGS140_DISCORD_WEBHOOK_URL environment variable with cooldown and
+  deduplication. No credential is configured by default.
+
+Advertisements:
+- Managed MP3 uploads are validated with ffprobe and duplicate names remain in
+  the advertisement directory.
+- Ads support enable/disable, local preview, manual play, recoverable trash,
+  adjustable interval, analysis, Normalize Copy, last-played/play-count data,
+  and recent automatic/manual history.
+- Normalization changes only the managed server derivative; its prior copy is
+  moved to /var/lib/allthings140radio/trash/ads/pre-normalize.
+
+Takeover archive:
+- Legitimate browser guest, native Traktor/Mixxx guest, local Traktor, and DJ
+  app handoffs automatically start recording only after the live source is
+  present. Returning to AutoDJ finalizes the recording.
+- Archive metadata is versioned in the existing SQLite station database.
+- Local audio: /var/lib/allthings140radio/archives/audio
+- Waveforms: /var/lib/allthings140radio/archives/waveforms
+- Retention defaults to keep_all. No automatic media deletion is enabled.
+- Post-processing generates 720-point waveform JSON asynchronously. Recording
+  or waveform failure cannot interrupt live broadcasting.
+- Storage provider is local. R2 remains blocked by Cloudflare error 10042.
+
+New endpoints:
+- GET /api/public/archive
+- GET /api/public/archive/<id>
+- GET/HEAD /api/public/archive/<id>/audio (Range supported)
+- GET/HEAD /api/public/archive/<id>/waveform
+- GET /api/public/alerts
+- GET /api/archive (authenticated management inventory)
+- POST /api/alerts/test (authenticated admin/manager)
+- POST /api/ads/<filename>/analyze
+- POST /api/ads/<filename>/normalize
+
+Website:
+- Past Streams now requests the public archive API and renders replay cards,
+  interactive audio controls, date/duration, and waveform canvases.
+- Starting a replay pauses the live station and other replay cards.
+- Native transparent alerts support title, message, source, image, optional
+  audio, queueing, duration, mobile layout, public polling, custom events, and
+  a development test API. No full-page alert iframe is used.
+- Service-worker cache is allthings140-radio-v45 and MP4 remains excluded.
+
+Recovery backups:
+- /opt/allthings140radio-server/server.py.backup-20260809-121936
+- /opt/allthings140radio-server/server.py.backup-20260809-122424
+- /opt/allthings140radio-dj/dj_app.py.backup-20260809-121936
+- /var/lib/allthings140radio/station.db.backup-20260809-121936
+- /etc/allthings140radio/config.json.backup-20260809-121936
+
+Rollback server code:
+1. Confirm no live takeover or advertisement is active.
+2. Copy the desired server.py.backup timestamp over server.py.
+3. Restart only allthings140radio-server.service.
+4. Verify /api/health and the live Icecast mount.

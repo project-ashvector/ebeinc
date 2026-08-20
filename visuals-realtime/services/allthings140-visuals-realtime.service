@@ -1,0 +1,21 @@
+[Unit]
+Description=ALLTHINGS140 Visuals Realtime Community Gateway
+After=network-online.target
+Wants=network-online.target
+[Service]
+Type=simple
+User=allthings140-visuals
+Group=allthings140-visuals
+EnvironmentFile=/etc/allthings140-visuals/realtime.env
+WorkingDirectory=/opt/allthings140-visuals-realtime
+ExecStart=/opt/allthings140-visuals-realtime/.venv/bin/python app.py
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=15
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/allthings140-visuals
+[Install]
+WantedBy=multi-user.target

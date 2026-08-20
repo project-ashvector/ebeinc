@@ -1,0 +1,13 @@
+[Unit]
+Description=Backup ALLTHINGS140 visuals realtime state
+[Service]
+Type=oneshot
+User=allthings140-visuals
+Group=allthings140-visuals
+EnvironmentFile=/etc/allthings140-visuals/realtime.env
+WorkingDirectory=/opt/allthings140-visuals-realtime
+ExecStart=/opt/allthings140-visuals-realtime/.venv/bin/python scripts/backup.py
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/allthings140-visuals /srv/allthings140-visuals

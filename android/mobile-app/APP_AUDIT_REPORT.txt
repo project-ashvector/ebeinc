@@ -1,0 +1,204 @@
+ALLTHINGS140 RADIO ANDROID PHONE APP — RELEASE-CANDIDATE AUDIT
+================================================================
+Audit date: August 18, 2026
+Reviewed package: ALLTHINGS140-RADIO-ANDROID-LATEST-REVIEW-PACKAGE
+Resulting release candidate: 1.3.0 (versionCode 15)
+Package ID: online.ebeinc.allthings140radio
+Minimum Android: API 23
+Compile / target SDK: API 36
+
+EXECUTIVE RESULT
+----------------
+The uploaded v1.2.0 project was not ready to submit to Google Play as-is. Its visible phone experience was primarily a WebView of the station website while native playback code existed separately, the project targeted API 35, the UI still had sizing/adaptation weaknesses, the source bundled a ~57 MB decorative video, release signing could fall back to inappropriate development behavior, and Play-policy work remained incomplete.
+
+This review converts the project into a substantially stronger v1.3.0 release candidate centered on a native Android radio experience. The main screen is now native and responsive; one Media3 MediaLibraryService owns playback; the app exposes proper Settings/version/update UI; Visuals remains an optional hardened station WebView; a privacy screen is included; Android Auto/media browsing declarations are modernized; the toolchain targets API 36; and unnecessary size/permissions/debug-style controls were removed.
+
+IMPORTANT: v1.3.0 has NOT been honestly declared "fully Play-ready" because this sandbox does not contain an Android SDK and cannot reach Gradle distribution servers. The new source therefore still requires one final build/lint/device validation on the development laptop before submission. The public hosted privacy-policy URL, release signing/Play App Signing, Play Console declarations, real screenshots, and feature graphic also remain external release tasks.
+
+WHY THIS AUDIT OVERRIDES THE ORIGINAL REPORT
+--------------------------------------------
+The original Antigravity report is preserved as APP_AUDIT_REPORT_ANTIGRAVITY_ORIGINAL.txt. It correctly found and improved several issues, but it missed or understated important release concerns:
+
+1. The primary visible app was still essentially a WebView wrapper around the public website.
+2. API 35 is about to become insufficient for new Play submissions/updates after the August 31, 2026 target-SDK deadline; this release candidate targets API 36.
+3. Android 16 changes edge-to-edge, back navigation, and large-screen behavior, so fixed/orientation-centric assumptions are no longer appropriate.
+4. The public Green Room is freeform user-generated chat and should not be placed in the Play app until reporting/blocking/terms/moderation requirements are implemented.
+5. A local in-app notice is not enough by itself for Play; a public hosted privacy-policy URL is still required.
+6. A Play release must be delivered as a signed Android App Bundle for normal new-app publishing flow, not merely a debug APK.
+
+MAJOR FINDINGS AND FIXES
+------------------------
+
+CRITICAL / RELEASE BLOCKERS FOUND
+
+[RESOLVED IN SOURCE] 1. Primary experience was WebView-first.
+- Risk: weak native product experience and potential Play functionality concerns.
+- Fix: MainActivity is now a real native listener screen. Website content is secondary.
+
+[RESOLVED IN SOURCE] 2. Target SDK was API 35.
+- Fix: compileSdk/targetSdk moved to 36. AGP/Gradle were updated accordingly.
+
+[EXTERNAL BLOCKER] 3. No final verified v1.3.0 AAB can be produced in this sandbox.
+- Reason: Android SDK is absent and JVM outbound DNS to services.gradle.org is blocked.
+- Required: run the included FINAL_LAPTOP_VALIDATION_PROMPT.txt on the actual development laptop.
+
+[EXTERNAL BLOCKER] 4. Public hosted privacy-policy URL is not yet verified.
+- Play submission must not use only the in-app privacy notice.
+- A ready-to-edit hosting draft is included as PRIVACY_POLICY_WEB_DRAFT.md.
+
+[EXTERNAL BLOCKER] 5. Production signing/Play App Signing must be configured.
+- Release build no longer falls back to debug signing.
+- Real release credentials must remain outside the source ZIP.
+
+HIGH-SEVERITY FINDINGS
+
+[RESOLVED] 1. Playback architecture was split between website audio and native RadioService.
+- Fix: RadioService is the single native playback authority for the app, lock screen, Bluetooth/headsets, and Android Auto/media browsing.
+- MainActivity uses a MediaController connected to that service.
+
+[RESOLVED] 2. Main UI had layout/sizing risk across phones and modern Android window insets.
+- Fixes include:
+  - no forced portrait orientation
+  - ScrollView/fill-viewport main content
+  - display-cutout/status/navigation inset handling
+  - responsive content padding and visualizer heights using land/sw600dp qualifiers
+  - 48dp+ controls
+  - buttons changed to wrap-content + minimum touch height to better tolerate large font scale
+  - long song/artist values ellipsize/wrap safely
+
+[RESOLVED] 3. Secondary WebView had too much power for a consumer app shell.
+- Fix: in-app WebView is now limited to HTTPS station Visuals paths. It disables file/content access, geolocation, mixed content, third-party cookies, and production WebView debugging. Navigation outside the allowed station section opens externally.
+
+[RESOLVED] 4. Green Room public chat creates user-generated-content policy obligations.
+- Fix for initial release: Green Room is deliberately NOT exposed in the Play release UI.
+- Re-enable only after the web/app service supports accepted Terms/community rules, in-app content/user reporting, user blocking, and active moderation.
+
+[RESOLVED] 5. Huge decorative video bloated the app and risked performance/storage problems.
+- Removed res/raw/bg_video.mp4 (~57 MB from prior source).
+- Replaced with a lightweight native branded visualizer that does not request microphone/audio-recording access.
+
+[RESOLVED] 6. Release signing safety.
+- Removed inappropriate automatic development/debug signing fallback.
+- Release signing activates only when a real keystore is explicitly configured.
+
+MEDIUM-SEVERITY FINDINGS
+
+[RESOLVED] 1. Settings screen was too engineering/debug oriented.
+- Rebuilt as consumer-facing Settings with app version, build/target info, Check for Updates, privacy, website, and Google Play path when an update is reported.
+
+[RESOLVED] 2. Update UI could imply success without a real release feed.
+- It now distinguishes: checking, unavailable, feed not configured, update available, up-to-date, local build newer, invalid response.
+- It does not silently install APKs.
+- If the station status feed does not expose android_app_version/android_app_notes, it says so accurately.
+
+[RESOLVED] 3. Update callback lifecycle edge case.
+- Settings now checks isFinishing()/isDestroyed() before updating UI after the network task returns.
+
+[RESOLVED] 4. Duplicate/overlapping station status work.
+- MainActivity uses a single-thread executor plus an in-flight guard so a slow status request cannot create a 15-second polling backlog.
+
+[RESOLVED] 5. Launcher/store icon handling was inefficient.
+- Correct launcher density sizes were generated.
+- Adaptive icon XML + foreground were added.
+- A 512x512 Play Store icon is included under play-store-assets/.
+- Local station artwork is included for media surfaces.
+
+LOW / POLISH FINDINGS
+
+[RESOLVED] Branded native visual hierarchy added: visualizer, LIVE state, now-playing card, connection status, listener count, large play control, and Explore section.
+[RESOLVED] Native theme/edge colors align with station purple/orange/dark branding.
+[RESOLVED] Text and controls use scalable sp/dp rather than raw px values.
+[RESOLVED] Website opens in the device browser; Visuals is the only intended embedded first-party web section.
+[RESOLVED] Old debug cache/endpoint/download controls are gone from user-facing settings.
+
+PLAYBACK / MEDIA REVIEW
+-----------------------
+- Stream URL: https://stream.ebeinc.online/live.mp3
+- Media3 ExoPlayer + MediaLibrarySession
+- Audio usage/content type configured as media/music
+- Audio-becoming-noisy handling enabled
+- Network wake mode enabled for live playback
+- Service has mediaPlayback foreground-service type/permission
+- App session exposes one browsable live station for Android Auto/media browsers
+- A bounded 5-second recovery attempt is scheduled after stream errors while playWhenReady remains true
+- MainActivity reconnects to the service and can retry playback
+- System media session activity returns users to MainActivity
+
+Known item to verify on device: actual per-song title/artist metadata in the lock-screen/Android Auto surface. MainActivity has station-status fallback metadata, while the Media3 player can also expose stream metadata. The exact live server metadata behavior must be observed on a real device before release.
+
+NETWORK / STATUS REVIEW
+-----------------------
+StationStatusClient tries public station status sources and supports common Icecast/API shapes. Main UI can display title, artist, listener count, online/unknown state. Runtime endpoint behavior could not be verified from this sandbox because outbound DNS/network access is restricted for local build tools. Verify against the actual live station during device testing.
+
+SECURITY / PRIVACY REVIEW
+-------------------------
+Static source scan found:
+- no API keys/passwords/private keys/tokens matching common secret patterns
+- no cleartext non-schema HTTP URL in app runtime source
+- usesCleartextTraffic=false
+- no CAMERA, RECORD_AUDIO, contacts, location, SMS, call-log, external-storage, or media-library data permissions
+- no ads/analytics/Firebase SDK declared in this source
+- no C/C++/native .so source found
+- app WebView blocks file/content/geolocation/mixed-content access
+- release signing credentials are not embedded in source
+
+The app still connects to first-party stream/status/web services; normal network service logs can observe technical request information such as IP address/user agent. Final Data Safety and privacy-policy answers must match the real server/provider practices, not just native code.
+
+STATIC VALIDATION COMPLETED AFTER v1.3.0 CHANGES
+------------------------------------------------
+PASS: 25 XML files parsed successfully.
+PASS: 0 missing app resource references.
+PASS: 0 missing manifest component source classes.
+PASS: 0 hardcoded px layout dimensions.
+PASS: 0 Green Room or /room/ references in runtime source.
+PASS: 0 orientation-lock references.
+PASS: 0 dangerous data-access permissions from the reviewed permission set.
+PASS: 0 cleartext runtime URLs (excluding Android schema declarations).
+PASS: static secret-pattern scan found no obvious embedded credentials.
+PASS: no C/C++/native .so source found.
+PASS: VersionUtils standalone smoke test previously passed version comparison/debug-suffix cases during this audit.
+
+BUILD / LINT / DEVICE TEST STATUS
+---------------------------------
+v1.3.0 Gradle build: NOT VERIFIED IN THIS SANDBOX
+v1.3.0 Android lint: NOT VERIFIED IN THIS SANDBOX
+v1.3.0 instrumentation/device test: NOT VERIFIED IN THIS SANDBOX
+v1.3.0 signed release AAB: NOT CREATED IN THIS SANDBOX
+
+Reason: the execution environment has Java but no Android SDK, and Gradle wrapper download is blocked by outbound DNS. Do NOT interpret the static passes above as a substitute for a real Android build.
+
+The previous v1.2.0 Antigravity package reported passing builds/tests, but that is not proof that the changed v1.3.0 source compiles. The included laptop validation prompt exists specifically to close this gap.
+
+GOOGLE PLAY EXTERNAL WORK STILL REQUIRED
+----------------------------------------
+1. Run full Gradle/test/lint/bundle validation with Android SDK 36.
+2. Install/debug-test on physical phones, especially Galaxy S24 Plus, a smaller phone, Android 16, landscape, and at least one larger-screen/foldable/tablet profile.
+3. Test screen-off/background playback, Bluetooth/headphones, audio focus/interruption, process recreation, network loss/recovery, metadata, and Android Auto.
+4. Configure production signing + Play App Signing and generate the signed AAB.
+5. Host a complete public privacy policy at a stable non-PDF URL and enter the same URL in Play Console.
+6. Complete Data Safety based on real native + server/provider behavior.
+7. Declare foreground-service media playback in Play Console App Content where required.
+8. Complete content rating, target audience, ads declaration, app access, and Android Auto declarations accurately.
+9. Capture real app screenshots from the final build and make the required 1024x500 feature graphic.
+10. Do not add Green Room back to the release until its UGC safety stack is implemented and tested.
+
+FILES ADDED FOR RELEASE HANDOFF
+-------------------------------
+- GOOGLE_PLAY_RELEASE_CHECKLIST.md
+- PLAY_STORE_LISTING_DRAFT.md
+- STORE_ASSET_CHECKLIST.md
+- PRIVACY_POLICY_WEB_DRAFT.md
+- DEVICE_TEST_PLAN.md
+- FINAL_LAPTOP_VALIDATION_PROMPT.txt
+- RELEASE_NOTES.md
+- APP_AUDIT_REPORT_ANTIGRAVITY_ORIGINAL.txt
+- CHATGPT_REVIEW_PROMPT_ANTIGRAVITY_ORIGINAL.txt
+
+FINAL ASSESSMENT
+----------------
+Code/product direction: STRONG RELEASE CANDIDATE
+Static source health: PASS
+Known code-level critical blocker after static audit: NONE IDENTIFIED
+Real build/device verification: REQUIRED
+Play Console/legal/store-asset readiness: NOT YET COMPLETE
+Safe to claim production-ready today: NO — complete the included release checklist first.

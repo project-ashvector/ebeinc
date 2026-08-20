@@ -1,2 +1,80 @@
 .wrangler/
-chat-worker/node_modules/
+
+# Dependencies and generated build trees
+node_modules/
+**/node_modules/
+target/
+**/target/
+build/
+**/build/
+.gradle/
+**/.gradle/
+.cache/
+**/.cache/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+**/.venv/
+dist/
+builds/
+build-deb/
+
+# Local environment, credentials, signing material, and private configuration
+.env
+.env.*
+!.env.example
+*.token
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.der
+*.mobileprovision
+*credentials*.json
+*client_secret*.json
+*secret*.json
+*secrets*.json
+local.properties
+keystore.properties
+signing.properties
+
+# Archives, packages, generated reports, and editor/OS state
+backups/
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.deb
+*.rpm
+*.apk
+*.aab
+*.appimage
+*.AppImage
+*.log
+*.tmp
+*.swp
+*.swo
+*~
+.DS_Store
+.idea/
+.vscode/
+
+# Large source/master media is preserved outside Git. Referenced web derivatives
+# below 25 MiB remain eligible for explicit staging.
+radio/assets/visuals-desktop-master/
+radio/assets/visuals-66-hq.mp4
+radio/assets/visuals-66.mp4
+radio/assets/visuals-home-desktop-hq.mp4
+radio/assets/visuals-mainpage-2026-08-11.mp4
+radio/assets/visuals-mainpage-2026-08-11-v2.mp4
+radio/assets/phone-visuals-tab-correct-v2.mp4
+radio/assets/visuals-phone.mp4
+
+# Canonical Android source excludes copied masters and historical update/build packages.
+android/mobile-app/visuals/
+android/mobile-app/update 1.3.0/
+android/google play/

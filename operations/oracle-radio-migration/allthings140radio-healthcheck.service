@@ -1,0 +1,12 @@
+[Unit]
+Description=AllThings140Radio local health check
+After=allthings140radio-server.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/allthings140radio-server/radio_supervisor.py
+User=root
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/var/lib/allthings140radio
