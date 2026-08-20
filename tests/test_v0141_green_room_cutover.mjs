@@ -86,7 +86,7 @@ check(realtime.includes('c.get("renderer_environment")==req_env'), 'renderer-sta
 check(realtime.includes('app.on_cleanup.append(close_room_db)'), 'realtime closes SQLite cleanly during test/service cleanup');
 
 const sw = read('radio/sw.js');
-check(sw.includes('allthings140-radio-v60'), 'service worker cache namespace is bumped');
+check(sw.includes('allthings140-radio-v61'), 'service worker cache namespace is bumped');
 check(/mp4\|webm\|mp3/.test(sw), 'service worker excludes MP4/WebM/MP3 live media from CacheStorage');
 check(sw.includes('room/chat-bridge.js?v=1.0.0'), 'service worker shell includes current Green Room chat bridge');
 check(sw.includes('cache.put(request, copy)'), 'navigation responses are cached under their own URL');

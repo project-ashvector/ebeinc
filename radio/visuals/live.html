@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <meta name="description" content="AllThings140Radio Live Visuals — synchronized 24/7 Stage and Visual transmission.">
+  <title>AllThings140Radio // Live Visuals</title>
+  <link rel="icon" href="../assets/allthings140-logo-64.png" sizes="64x64" type="image/png">
+  <link rel="stylesheet" href="../room/stage.css?v=2.5.0">
+  <link rel="stylesheet" href="../room/overlay.css?v=2.4.0">
+  <style>
+    #stage{inset:0}
+    .room{display:none}
+    .room-top-controls{left:16px;right:16px;justify-content:space-between}
+    .room-top-controls a,.room-top-controls button{background:#12071ccc}
+    @media(max-width:900px) and (orientation:portrait){#stage{inset:0;height:100%}}
+    @media(max-width:900px) and (orientation:landscape){#stage{inset:0}}
+  </style>
+</head>
+<body>
+<svg class="stage-mask-svg" width="0" height="0" style="position:absolute;pointer-events:none" aria-hidden="true">
+  <defs>
+    <mask id="stage-screen-mask" maskContentUnits="objectBoundingBox">
+      <rect width="1" height="1" fill="#fff"></rect>
+      <rect id="maskScreenHole" x="0.23" y="0.335" width="0.536" height="0.485" rx="0.015" fill="#000"></rect>
+    </mask>
+  </defs>
+</svg>
+<main id="stage">
+  <div id="legacyFallback" class="legacy-fallback" hidden aria-hidden="true">
+    <video id="legacyFallbackVideo" muted loop playsinline webkit-playsinline preload="metadata"></video>
+    <div class="legacy-fallback-label" id="legacyFallbackLabel" hidden>LEGACY VISUAL SAFETY MODE</div>
+  </div>
+  <div id="stageComposition" class="stage-composition">
+    <div class="screens" id="screens"><video class="active" muted playsinline preload="auto"></video><video muted playsinline preload="auto"></video></div>
+    <div class="stage-overlay stage-layer-compositor" id="stageLayer"><video id="stageVideo" class="stage-single-video" muted loop playsinline preload="auto"></video></div>
+    <div class="stage-frame debug-frame" aria-hidden="true"></div>
+    <aside class="mode-logo"><img id="modeLogo" src="../assets/takeover-fallback-logo.webp" alt="ALLTHINGS140Radio logo"></aside>
+    <div class="reactions" id="reactionLayer"></div>
+    <section class="audience" id="audience" aria-label="Audience"></section>
+    <section class="energy"><small>ROOM ENERGY</small><div><i id="energyBar"></i></div><b id="energyLabel">0%</b><span id="reactionTotal">Tonight's Reactions: 0</span></section>
+    <section class="now" data-mode="autodj"><small id="mode">24/7 PLAYLIST</small><b id="track">CONNECTING TO STATION</b><span id="artist">ALLTHINGS140</span></section>
+  </div>
+</main>
+<aside class="room" aria-hidden="true">
+  <header><b>VISUALS TRANSPORT</b><span id="connection">CONNECTING</span></header>
+  <form id="profile"><input id="name" maxlength="24" value="Listener"><select id="avatar"><option value="orb-purple">Purple</option></select><button>Save</button></form>
+  <ol id="chat"></ol>
+  <form id="message"><input id="messageText" maxlength="240"><button>Send</button></form>
+</aside>
+<div class="room-top-controls">
+  <a id="homeLink" href="../">← MAIN PAGE</a>
+  <button id="listen" type="button">▶ LISTEN LIVE</button>
+</div>
+<audio id="audio" preload="none"></audio>
+<script src="config-live.js?v=1.0.0"></script>
+<script src="../room/stage.js?v=2.5.0"></script>
+</body>
+</html>

@@ -206,6 +206,35 @@ async function handleVisualRoutingGet(request, env) {
   return Response.json({ ...state, persistent: Boolean(env.VISUALS_ROUTING_KV) }, { status: 200, headers: { "Cache-Control": "no-store" } });
 }
 
+async function handlePublicVisualsRoutingGet(env) {
+  const state = await readRoutingState(env);
+  // The shared, burn-in-tested compositor consumes the historical `chat`
+  // selector. Expose a read-only adapter for the independent public Visuals
+  // selector so the renderer engine remains byte-identical across Green,
+  // Room and /visuals/.
+  return Response.json({
+    chat: state.visuals,
+    visuals: state.visuals,
+    persistent: Boolean(env.VISUALS_ROUTING_KV),
+  }, { status: 200, headers: { "Cache-Control": "no-store" } });
+}
+
+async function servePublicVisuals(request, env) {
+  const state = await readRoutingState(env);
+  const target = state.visuals === "new" ? "/visuals/live.html" : "/visuals/index.html";
+  const assetUrl = new URL(request.url);
+  assetUrl.pathname = target;
+  const response = await env.ASSETS.fetch(new Request(assetUrl, request));
+  const headers = new Headers(response.headers);
+  headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
+  headers.set("X-AT140-Visuals-Mode", state.visuals === "new" ? "live-compositor" : "legacy-hls");
+  return new Response(request.method === "HEAD" ? null : response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
 async function handleVisualRoutingPost(request, env, ctx) {
   if (!env.VISUALS_ROUTING_KV) {
     return Response.json({ error: "Visual routing storage unavailable" }, { status: 503, headers: { "Cache-Control": "no-store" } });
@@ -323,6 +352,9 @@ async function handleVisualHealth(request, env) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    if ((url.pathname === "/visuals" || url.pathname === "/visuals/") && (request.method === "GET" || request.method === "HEAD")) {
+      return servePublicVisuals(request, env);
+    }
     if (url.pathname === "/obs/live.mp3" && (request.method === "GET" || request.method === "HEAD")) {
       return obsAudioStream(request, env);
     }
@@ -332,6 +364,9 @@ export default {
     if (url.pathname === "/api/public/takeover-alert" && request.method === "POST") return handleTakeoverAlert(request, env, ctx);
     if (url.pathname === "/api/visual-routing" && request.method === "GET") {
       return handleVisualRoutingGet(request, env);
+    }
+    if (url.pathname === "/api/visuals-routing" && request.method === "GET") {
+      return handlePublicVisualsRoutingGet(env);
     }
     if (url.pathname === "/api/visual-routing" && request.method === "POST") {
       return handleVisualRoutingPost(request, env, ctx);
