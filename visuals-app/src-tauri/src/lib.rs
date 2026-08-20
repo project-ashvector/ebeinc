@@ -8,10 +8,10 @@ use std::{
     hash::{Hash, Hasher},
     fs,
     io::{Read, Seek, SeekFrom, Write},
-    net::TcpListener,
+    net::{Shutdown, TcpListener, TcpStream},
     path::{Path, PathBuf},
     process::{Command, Stdio, Output},
-    sync::{Arc, Mutex, OnceLock, RwLock},
+    sync::{atomic::{AtomicBool, Ordering}, mpsc, Arc, Mutex, OnceLock, RwLock},
     thread,
     time::{Duration, Instant},
 };
@@ -19,6 +19,11 @@ use std::{
 use std::os::unix::fs::PermissionsExt;
 
 static CANCELLED_JOBS: OnceLock<Mutex<HashSet<String>>> = OnceLock::new();
+static INSTANCE_LOCK_PATH: OnceLock<Mutex<Option<PathBuf>>> = OnceLock::new();
+static MEDIA_SERVER_STOP: AtomicBool = AtomicBool::new(false);
+const MAX_CANCELLED_JOBS: usize = 256;
+const MAX_PROBE_CACHE_ITEMS: usize = 512;
+const MEDIA_SERVER_WORKERS: usize = 8;
 
 fn get_cancelled_jobs() -> &'static Mutex<HashSet<String>> {
     CANCELLED_JOBS.get_or_init(|| Mutex::new(HashSet::new()))
@@ -30,6 +35,20 @@ fn is_job_cancelled(job_id: Option<&str>) -> bool {
     } else {
         false
     }
+}
+
+struct JobCleanup(Option<String>);
+
+impl Drop for JobCleanup {
+    fn drop(&mut self) {
+        if let Some(id) = self.0.as_deref() {
+            if let Ok(mut jobs) = get_cancelled_jobs().lock() { jobs.remove(id); }
+        }
+    }
+}
+
+fn finish_job(job_id: Option<&str>) -> JobCleanup {
+    JobCleanup(job_id.map(str::to_string))
 }
 
 fn run_cmd_with_timeout(
@@ -157,7 +176,7 @@ fn validate_staging_url(url: &str) -> Result<(), String> {
 #[tauri::command]
 fn get_visual_routing() -> Result<Value, String> {
     let output = Command::new("curl")
-        .args(["-fsS", "-m", "5", "-A", "ALLTHINGS140-Workstation/0.1.42", "https://allthings140radio.online/api/visual-routing"])
+        .args(["-fsS", "-m", "5", "-A", "ALLTHINGS140-Workstation/0.1.43", "https://allthings140radio.online/api/visual-routing"])
         .output();
     if let Ok(out) = output {
         if out.status.success() {
@@ -170,7 +189,10 @@ fn get_visual_routing() -> Result<Value, String> {
 }
 
 #[tauri::command]
-fn set_visual_routing(chat: Option<String>, visuals: Option<String>, reason: Option<String>) -> Result<Value, String> {
+fn set_visual_routing(chat: Option<String>, visuals: Option<String>, reason: Option<String>, confirmation: Option<String>) -> Result<Value, String> {
+    if confirmation.as_deref() != Some("PROMOTE GREEN ROOM") {
+        return Err("Production routing is locked: type PROMOTE GREEN ROOM in the explicit production confirmation dialog".into());
+    }
     let token = get_admin_token();
     let payload = json!({
         "chat": chat,
@@ -195,7 +217,7 @@ fn set_visual_routing(chat: Option<String>, visuals: Option<String>, reason: Opt
     cmd.args([
         "-fsS",
         "-m", "8",
-        "-A", "ALLTHINGS140-Workstation/0.1.42",
+        "-A", "ALLTHINGS140-Workstation/0.1.43",
         "-X", "POST",
         "-H", &format!("@{}", header_path.display()),
         "--data-binary", "@-",
@@ -434,6 +456,21 @@ fn probe_cache() -> Arc<RwLock<HashMap<String, (u64, u64, Value)>>> {
         .clone()
 }
 
+fn atomic_write(path: &Path, bytes: &[u8]) -> Result<(), String> {
+    let tmp = path.with_extension(format!("tmp-{}", std::process::id()));
+    let mut file = fs::File::create(&tmp).map_err(|e| e.to_string())?;
+    file.write_all(bytes).map_err(|e| e.to_string())?;
+    file.sync_all().map_err(|e| e.to_string())?;
+    fs::rename(&tmp, path).map_err(|e| e.to_string())
+}
+
+fn trim_probe_cache(cache: &mut HashMap<String, (u64, u64, Value)>) {
+    if cache.len() <= MAX_PROBE_CACHE_ITEMS { return; }
+    let remove_count = cache.len() - MAX_PROBE_CACHE_ITEMS;
+    let stale: Vec<String> = cache.keys().take(remove_count).cloned().collect();
+    for key in stale { cache.remove(&key); }
+}
+
 fn probe_media_cached(path: &Path) -> Value {
     let key = path.to_string_lossy().to_string();
     let meta = match fs::metadata(path) {
@@ -467,6 +504,7 @@ fn probe_media_cached(path: &Path) -> Value {
                         let value = item["value"].clone();
                         if let Ok(mut cache) = probe_cache().write() {
                             cache.insert(key.clone(), (modified, size, value.clone()));
+                            trim_probe_cache(&mut cache);
                         }
                         return value;
                     }
@@ -477,6 +515,7 @@ fn probe_media_cached(path: &Path) -> Value {
     let value = probe_media_blocking(key.clone()).unwrap_or_else(|_| json!({}));
     if let Ok(mut cache) = probe_cache().write() {
         cache.insert(key.clone(), (modified, size, value.clone()));
+        trim_probe_cache(&mut cache);
     }
     if let Ok(dir) = data_dir() {
         let index_path = dir.join("media-index.json");
@@ -485,8 +524,20 @@ fn probe_media_cached(path: &Path) -> Value {
             .and_then(|raw| serde_json::from_str::<Value>(&raw).ok())
             .filter(Value::is_object)
             .unwrap_or_else(|| json!({}));
+        if let Some(map) = index.as_object_mut() {
+            map.retain(|path, _| Path::new(path).exists());
+            if map.len() >= 2048 {
+                let remove_count = map.len() - 2047;
+                let stale: Vec<String> = map.keys().filter(|existing| *existing != &key).take(remove_count).cloned().collect();
+                for stale_key in stale { map.remove(&stale_key); }
+            }
+        }
         index[&key] = json!({"modified":modified,"size":size,"value":value});
-        if let Ok(raw) = serde_json::to_vec(&index) { let _ = fs::write(index_path, raw); }
+        if let Ok(raw) = serde_json::to_vec(&index) {
+            if let Err(err) = atomic_write(&index_path, &raw) {
+                let _ = append_app_log("ERROR".into(), format!("media-index atomic write failed: {err}"));
+            }
+        }
     }
     value
 }
@@ -507,6 +558,74 @@ fn mime(path: &Path) -> &'static str {
     }
 }
 
+fn handle_media_stream(mut stream: TcpStream, routes: &Arc<RwLock<HashMap<String, PathBuf>>>) {
+    let _ = stream.set_read_timeout(Some(Duration::from_secs(5)));
+    let _ = stream.set_write_timeout(Some(Duration::from_secs(15)));
+    let mut buf = [0u8; 16384];
+    let n = stream.read(&mut buf).unwrap_or(0);
+    let req = String::from_utf8_lossy(&buf[..n]);
+    let mut lines = req.lines();
+    let request_line = lines.next().unwrap_or("");
+    let mut parts = request_line.split_whitespace();
+    let method = parts.next().unwrap_or("");
+    let target = parts.next().unwrap_or("");
+    if !matches!(method, "GET" | "HEAD") {
+        let _ = stream.write_all(b"HTTP/1.1 405 Method Not Allowed\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+        return;
+    }
+    let id = target.split('?').next().unwrap_or("").trim_start_matches('/').strip_prefix("media/").unwrap_or("");
+    let file = routes.read().ok().and_then(|m| m.get(id).cloned());
+    let Some(file) = file else {
+        let _ = stream.write_all(b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+        return;
+    };
+    let Ok(meta) = fs::metadata(&file) else {
+        let _ = stream.write_all(b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+        return;
+    };
+    let len = meta.len();
+    if len == 0 {
+        let _ = stream.write_all(b"HTTP/1.1 416 Range Not Satisfiable\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+        return;
+    }
+    let range = req.lines().find_map(|h| {
+        let (k, v) = h.split_once(':')?;
+        k.eq_ignore_ascii_case("range").then(|| v.trim().strip_prefix("bytes=").map(str::to_string)).flatten()
+    });
+    let mut start = 0u64;
+    let mut end = len.saturating_sub(1);
+    let mut status = "200 OK";
+    if let Some(spec) = range {
+        if let Some((a, b)) = spec.split_once('-') {
+            if let Ok(x) = a.parse::<u64>() {
+                if x >= len {
+                    let _ = stream.write_all(format!("HTTP/1.1 416 Range Not Satisfiable\r\nContent-Range: bytes */{len}\r\nConnection: close\r\n\r\n").as_bytes());
+                    return;
+                }
+                start = x;
+                if !b.is_empty() { if let Ok(y) = b.parse::<u64>() { end = y.min(end); } }
+                status = "206 Partial Content";
+            }
+        }
+    }
+    if start > end { return; }
+    let count = end - start + 1;
+    let content_type = mime(&file);
+    let headers = if status == "206 Partial Content" {
+        format!("HTTP/1.1 {status}\r\nContent-Type: {content_type}\r\nContent-Length: {count}\r\nContent-Range: bytes {start}-{end}/{len}\r\nAccept-Ranges: bytes\r\nConnection: close\r\n\r\n")
+    } else {
+        format!("HTTP/1.1 {status}\r\nContent-Type: {content_type}\r\nContent-Length: {len}\r\nAccept-Ranges: bytes\r\nConnection: close\r\n\r\n")
+    };
+    let _ = stream.write_all(headers.as_bytes());
+    if method == "GET" {
+        if let Ok(mut f) = fs::File::open(file) {
+            let _ = f.seek(SeekFrom::Start(start));
+            let _ = std::io::copy(&mut f.take(count), &mut stream);
+        }
+    }
+    let _ = stream.shutdown(Shutdown::Both);
+}
+
 fn start_server() -> Result<String, String> {
     if let Some(url) = MEDIA_SERVER_URL.get() {
         return Ok(url.clone());
@@ -516,107 +635,32 @@ fn start_server() -> Result<String, String> {
     let listener = TcpListener::bind("127.0.0.1:0").map_err(|e| e.to_string())?;
     let port = listener.local_addr().map_err(|e| e.to_string())?.port();
 
+    listener.set_nonblocking(true).map_err(|e| e.to_string())?;
+    MEDIA_SERVER_STOP.store(false, Ordering::SeqCst);
     thread::spawn(move || {
-        for stream in listener.incoming().flatten() {
+        let (sender, receiver) = mpsc::sync_channel::<TcpStream>(MEDIA_SERVER_WORKERS * 2);
+        let receiver = Arc::new(Mutex::new(receiver));
+        for _ in 0..MEDIA_SERVER_WORKERS {
+            let receiver = receiver.clone();
             let routes = routes.clone();
-            thread::spawn(move || {
-                let mut stream = stream;
-                let mut buf = [0u8; 16384];
-                let n = stream.read(&mut buf).unwrap_or(0);
-                let req = String::from_utf8_lossy(&buf[..n]);
-                let mut lines = req.lines();
-                let request_line = lines.next().unwrap_or("");
-                let mut parts = request_line.split_whitespace();
-                let method = parts.next().unwrap_or("");
-                let target = parts.next().unwrap_or("");
-                let id = target
-                    .split('?')
-                    .next()
-                    .unwrap_or("")
-                    .trim_start_matches('/')
-                    .strip_prefix("media/")
-                    .unwrap_or("");
-
-                let file = routes.read().ok().and_then(|m| m.get(id).cloned());
-                let Some(file) = file else {
-                    let _ = stream.write_all(
-                        b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n",
-                    );
-                    return;
-                };
-
-                let Ok(meta) = fs::metadata(&file) else {
-                    let _ = stream.write_all(
-                        b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n",
-                    );
-                    return;
-                };
-                let len = meta.len();
-                if len == 0 {
-                    let _ = stream.write_all(
-                        b"HTTP/1.1 416 Range Not Satisfiable\r\nContent-Length: 0\r\nConnection: close\r\n\r\n",
-                    );
-                    return;
-                }
-
-                let range = req.lines().find_map(|h| {
-                    let (k, v) = h.split_once(':')?;
-                    if k.eq_ignore_ascii_case("range") {
-                        Some(v.trim().strip_prefix("bytes=")?.to_string())
-                    } else {
-                        None
-                    }
-                });
-
-                let mut start = 0u64;
-                let mut end = len.saturating_sub(1);
-                let mut status = "200 OK";
-                if let Some(spec) = range {
-                    if let Some((a, b)) = spec.split_once('-') {
-                        if let Ok(x) = a.parse::<u64>() {
-                            start = x.min(end);
-                            if !b.is_empty() {
-                                if let Ok(y) = b.parse::<u64>() {
-                                    end = y.min(end);
-                                }
-                            }
-                            status = "206 Partial Content";
-                        }
-                    }
-                }
-
-                if start > end {
-                    let _ = stream.write_all(
-                        format!(
-                            "HTTP/1.1 416 Range Not Satisfiable\r\nContent-Range: bytes */{len}\r\nConnection: close\r\n\r\n"
-                        )
-                        .as_bytes(),
-                    );
-                    return;
-                }
-
-                let count = end - start + 1;
-                let content_type = mime(&file);
-                let headers = if status == "206 Partial Content" {
-                    format!(
-                        "HTTP/1.1 {status}\r\nContent-Type: {content_type}\r\nContent-Length: {count}\r\nContent-Range: bytes {start}-{end}/{len}\r\nAccept-Ranges: bytes\r\nConnection: close\r\n\r\n"
-                    )
-                } else {
-                    format!(
-                        "HTTP/1.1 {status}\r\nContent-Type: {content_type}\r\nContent-Length: {len}\r\nAccept-Ranges: bytes\r\nConnection: close\r\n\r\n"
-                    )
-                };
-                let _ = stream.write_all(headers.as_bytes());
-
-                if method == "GET" {
-                    if let Ok(mut f) = fs::File::open(file) {
-                        let _ = f.seek(SeekFrom::Start(start));
-                        let mut take = f.take(count);
-                        let _ = std::io::copy(&mut take, &mut stream);
-                    }
-                }
+            thread::spawn(move || loop {
+                let stream = receiver.lock().ok().and_then(|rx| rx.recv().ok());
+                match stream { Some(stream) => handle_media_stream(stream, &routes), None => break }
             });
         }
+        while !MEDIA_SERVER_STOP.load(Ordering::SeqCst) {
+            match listener.accept() {
+                Ok((stream, _)) => {
+                    if let Err(mpsc::TrySendError::Full(mut stream)) = sender.try_send(stream) {
+                        let _ = stream.set_write_timeout(Some(Duration::from_secs(2)));
+                        let _ = stream.write_all(b"HTTP/1.1 503 Service Unavailable\r\nRetry-After: 1\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+                    }
+                }
+                Err(err) if err.kind() == std::io::ErrorKind::WouldBlock => thread::sleep(Duration::from_millis(25)),
+                Err(_) => thread::sleep(Duration::from_millis(100)),
+            }
+        }
+        drop(sender);
     });
 
     let url = format!("http://127.0.0.1:{port}");
@@ -635,6 +679,34 @@ fn data_dir() -> Result<PathBuf, String> {
         .join("allthings140radio-visuals");
     fs::create_dir_all(&p).map_err(|e| e.to_string())?;
     Ok(p)
+}
+
+fn acquire_instance_lock() -> Result<(), String> {
+    let path = data_dir()?.join("workstation.lock");
+    if let Ok(raw) = fs::read_to_string(&path) {
+        if let Ok(pid) = raw.trim().parse::<u32>() {
+            if PathBuf::from(format!("/proc/{pid}")).exists() {
+                return Err(format!("Another ALLTHINGS140 Visuals workstation instance is already running (PID {pid})"));
+            }
+        }
+        let _ = fs::remove_file(&path);
+    }
+    let mut file = fs::OpenOptions::new().write(true).create_new(true).open(&path)
+        .map_err(|e| format!("Could not acquire workstation instance lock: {e}"))?;
+    writeln!(file, "{}", std::process::id()).map_err(|e| e.to_string())?;
+    file.sync_all().map_err(|e| e.to_string())?;
+    *INSTANCE_LOCK_PATH.get_or_init(|| Mutex::new(None)).lock().map_err(|_| "Instance lock poisoned")? = Some(path);
+    Ok(())
+}
+
+fn release_process_resources() {
+    MEDIA_SERVER_STOP.store(true, Ordering::SeqCst);
+    if let Some(lock) = INSTANCE_LOCK_PATH.get() {
+        if let Ok(mut path) = lock.lock() {
+            if let Some(path) = path.take() { let _ = fs::remove_file(path); }
+        }
+    }
+    if let Ok(mut jobs) = get_cancelled_jobs().lock() { jobs.clear(); }
 }
 
 fn state_path() -> Result<PathBuf, String> {
@@ -667,11 +739,51 @@ fn newest_valid_state_backup(dir: &Path) -> Option<Value> {
     for path in files {
         let Ok(raw) = fs::read(&path) else { continue; };
         if let Ok(mut value) = serde_json::from_slice::<Value>(&raw) {
+            if validate_state_semantics(&value).is_err() { continue; }
             value["recoveredFromBackup"] = Value::String(path.display().to_string());
             return Some(value);
         }
     }
     None
+}
+
+fn finite_in_range(value: &Value, min: f64, max: f64) -> bool {
+    value.as_f64().is_some_and(|v| v.is_finite() && v >= min && v <= max)
+}
+
+fn validate_state_semantics(state: &Value) -> Result<(), String> {
+    let obj = state.as_object().ok_or("State root must be an object")?;
+    let schema = obj.get("schema").and_then(Value::as_u64).unwrap_or(3);
+    if !(1..=3).contains(&schema) { return Err(format!("Unsupported state schema {schema}")); }
+    let presets = obj.get("presets").and_then(Value::as_array).ok_or("State presets must be an array")?;
+    if presets.is_empty() { return Err("State must contain at least one preset".into()); }
+    let active = obj.get("activePreset").and_then(Value::as_str).ok_or("State activePreset is missing")?;
+    if !presets.iter().any(|p| p.get("name").and_then(Value::as_str) == Some(active)) {
+        return Err("State activePreset does not reference an existing preset".into());
+    }
+    if let Some(layers) = obj.get("workspaceLayers") {
+        let layers = layers.as_array().ok_or("workspaceLayers must be an array")?;
+        let mut ids = HashSet::new();
+        for layer in layers {
+            let id = layer.get("id").and_then(Value::as_str).filter(|id| !id.is_empty()).ok_or("Layer ID is missing")?;
+            if !ids.insert(id) { return Err(format!("Duplicate layer ID: {id}")); }
+        }
+    }
+    for preset in presets {
+        if let Some(frames) = preset.get("layerFrames").and_then(Value::as_object) {
+            for (id, frame) in frames {
+                for key in ["x", "y", "width", "height"] {
+                    if !finite_in_range(&frame[key], -1000.0, 2000.0) { return Err(format!("Invalid {key} geometry for {id}")); }
+                }
+                if !finite_in_range(&frame["scale"], 0.01, 100.0) { return Err(format!("Invalid scale for {id}")); }
+                if !finite_in_range(&frame["opacity"], 0.0, 1.0) { return Err(format!("Invalid opacity for {id}")); }
+            }
+        }
+    }
+    for key in ["playlist", "takeovers", "activity"] {
+        if let Some(value) = obj.get(key) { if !value.is_array() { return Err(format!("{key} must be an array")); } }
+    }
+    Ok(())
 }
 
 fn default_state() -> Value {
@@ -715,9 +827,13 @@ fn load_state() -> Result<Value, String> {
         return Ok(v);
     }
     let raw = fs::read(&p).map_err(|e| e.to_string())?;
-    match serde_json::from_slice::<Value>(&raw) {
+    let parsed = serde_json::from_slice::<Value>(&raw).map_err(|e| e.to_string())
+        .and_then(|v| validate_state_semantics(&v).map(|_| v));
+    match parsed {
         Ok(v) => Ok(v),
         Err(primary_err) => {
+            let corrupt = p.with_extension(format!("corrupt-{}.json", Utc::now().format("%Y%m%dT%H%M%S%3fZ")));
+            let _ = fs::copy(&p, &corrupt);
             let versions = data_dir()?.join("versions");
             if let Some(v) = newest_valid_state_backup(&versions) {
                 return Ok(v);
@@ -729,6 +845,7 @@ fn load_state() -> Result<Value, String> {
 
 #[tauri::command]
 fn save_state(state: Value) -> Result<Value, String> {
+    validate_state_semantics(&state)?;
     let p = state_path()?;
     let versions = data_dir()?.join("versions");
     fs::create_dir_all(&versions).map_err(|e| e.to_string())?;
@@ -742,13 +859,7 @@ fn save_state(state: Value) -> Result<Value, String> {
         )
         .map_err(|e| e.to_string())?;
     }
-    let tmp = p.with_extension("tmp");
-    fs::write(
-        &tmp,
-        serde_json::to_vec_pretty(&state).map_err(|e| e.to_string())?,
-    )
-    .map_err(|e| e.to_string())?;
-    fs::rename(tmp, p).map_err(|e| e.to_string())?;
+    atomic_write(&p, &serde_json::to_vec_pretty(&state).map_err(|e| e.to_string())?)?;
     prune_version_backups(&versions, 120);
     Ok(json!({"ok":true,"savedAt":Utc::now().to_rfc3339()}))
 }
@@ -946,7 +1057,14 @@ fn scan_layer_media_blocking(layer_id: String, folder: String) -> Result<Value, 
             .as_array()
             .and_then(|a| a.iter().find(|s| s["codec_type"] == "video"));
         if let Ok(mut map) = routes.write() {
+            map.retain(|_, path| path.exists());
             map.insert(route_id.clone(), runtime.clone());
+            if map.len() > 2048 {
+                let protected: HashSet<String> = items.iter().filter_map(|item: &Value| item["routeId"].as_str().map(str::to_string)).collect();
+                let excess = map.len() - 2048;
+                let stale: Vec<String> = map.keys().filter(|id| !protected.contains(*id) && *id != &route_id).take(excess).cloned().collect();
+                for id in stale { map.remove(&id); }
+            }
         }
         let name = source.file_name().and_then(|x| x.to_str()).unwrap_or("media");
         items.push(json!({
@@ -983,7 +1101,8 @@ async fn scan_layer_media(layer_id: String, folder: String) -> Result<Value, Str
 }
 
 fn import_default_media_blocking() -> Result<Value, String> {
-    let visual_source = PathBuf::from("/home/ebmarah/Videos/at140radio/desktop visuals/visuals");
+    let visual_source = dirs::home_dir().ok_or("Home directory unavailable")?
+        .join("Videos/at140radio/desktop visuals/visuals");
     let project = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .and_then(Path::parent)
@@ -1092,13 +1211,13 @@ fn publish_staging_blocking(state: Value) -> Result<Value, String> {
     let visual_media = green.join("media/playlist");
     let mut phases = json!({"mediaSync":"PENDING","pagesArtifact":"PENDING","pagesDeploy":"PENDING","greenHealth":"PENDING"});
 
-    let sync_stage = Command::new("rsync")
-        .args(["-az", "--partial", "--checksum", "--omit-dir-times", "--no-perms", &format!("{}/", stage_media.display()), &format!("{}:{}/stage/", media_target, remote_root)])
-        .output().map_err(|e| format!("Media sync failed to start: {e}"))?;
+    let mut sync_stage_cmd = Command::new("rsync");
+    sync_stage_cmd.args(["-az", "--partial", "--timeout=15", "--checksum", "--omit-dir-times", "--no-perms", &format!("{}/", stage_media.display()), &format!("{}:{}/stage/", media_target, remote_root)]);
+    let sync_stage = run_cmd_with_timeout(sync_stage_cmd, 120, None)?;
     if !sync_stage.status.success() { return Err(format!("Stage media sync failed: {}", String::from_utf8_lossy(&sync_stage.stderr))); }
-    let sync_visuals = Command::new("rsync")
-        .args(["-az", "--partial", "--checksum", "--omit-dir-times", "--no-perms", &format!("{}/", visual_media.display()), &format!("{}:{}/visuals/", media_target, remote_root)])
-        .output().map_err(|e| format!("Media sync failed to start: {e}"))?;
+    let mut sync_visuals_cmd = Command::new("rsync");
+    sync_visuals_cmd.args(["-az", "--partial", "--timeout=15", "--checksum", "--omit-dir-times", "--no-perms", &format!("{}/", visual_media.display()), &format!("{}:{}/visuals/", media_target, remote_root)]);
+    let sync_visuals = run_cmd_with_timeout(sync_visuals_cmd, 300, None)?;
     if !sync_visuals.status.success() { return Err(format!("Visual media sync failed: {}", String::from_utf8_lossy(&sync_visuals.stderr))); }
     phases["mediaSync"] = Value::String("PASS".into());
 
@@ -1107,13 +1226,17 @@ fn publish_staging_blocking(state: Value) -> Result<Value, String> {
         let local_bytes = fs::read(&stage_probe).map_err(|e| e.to_string())?;
         let expected = sha256_bytes(&local_bytes)?;
         let remote_path = format!("{remote_root}/stage/stage-0001.mp4");
-        let remote_hash = Command::new("ssh").args([&media_target, "sha256sum", &remote_path]).output().map_err(|e| e.to_string())?;
+        let mut remote_hash_cmd = Command::new("ssh");
+        remote_hash_cmd.args(["-o", "BatchMode=yes", "-o", "ConnectTimeout=8", &media_target, "sha256sum", &remote_path]);
+        let remote_hash = run_cmd_with_timeout(remote_hash_cmd, 20, None)?;
         let actual = String::from_utf8_lossy(&remote_hash.stdout).split_whitespace().next().unwrap_or("").to_string();
         if !remote_hash.status.success() || expected.is_empty() || expected != actual { return Err(format!("Remote stage-0001 hash mismatch (local={expected}, remote={actual})")); }
         let remote_url = format!("{media_origin}/stage/stage-0001.mp4");
-        let head = Command::new("curl").args(["-fsSI", &remote_url]).output().map_err(|e| e.to_string())?;
+        let mut head_cmd = Command::new("curl"); head_cmd.args(["-fsSI", "-m", "8", &remote_url]);
+        let head = run_cmd_with_timeout(head_cmd, 10, None)?;
         if !head.status.success() { return Err(format!("Remote stage-0001 HEAD failed: {}", String::from_utf8_lossy(&head.stderr))); }
-        let range = Command::new("curl").args(["-fsS", "-H", "Range: bytes=0-1048575", "-o", "/tmp/at140-stage-range-test.bin", "-D", "/tmp/at140-stage-range-test.headers", &remote_url]).output().map_err(|e| e.to_string())?;
+        let mut range_cmd = Command::new("curl"); range_cmd.args(["-fsS", "-m", "10", "-H", "Range: bytes=0-1048575", "-o", "/tmp/at140-stage-range-test.bin", "-D", "/tmp/at140-stage-range-test.headers", &remote_url]);
+        let range = run_cmd_with_timeout(range_cmd, 12, None)?;
         if !range.status.success() { return Err(format!("Remote stage-0001 Range failed: {}", String::from_utf8_lossy(&range.stderr))); }
         let headers = fs::read_to_string("/tmp/at140-stage-range-test.headers").unwrap_or_default();
         if !headers.contains("206") || !headers.to_ascii_lowercase().contains("accept-ranges") { return Err("Remote stage-0001 did not return a valid 206 Range response".into()); }
@@ -1204,9 +1327,8 @@ fn publish_staging_blocking(state: Value) -> Result<Value, String> {
     }
     phases["pagesArtifact"] = Value::String("PASS".into());
 
-    let out = Command::new("npx")
-        .current_dir(&root)
-        .args([
+    let mut deploy_cmd = Command::new("npx");
+    deploy_cmd.current_dir(&root).args([
             "wrangler",
             "pages",
             "deploy",
@@ -1216,9 +1338,8 @@ fn publish_staging_blocking(state: Value) -> Result<Value, String> {
             "--branch",
             "staging",
             "--commit-dirty=true",
-        ])
-        .output()
-        .map_err(|e| e.to_string())?;
+        ]);
+    let out = run_cmd_with_timeout(deploy_cmd, 300, None)?;
     if !out.status.success() {
         return Err(format!(
             "Staging deploy failed: {}",
@@ -1236,19 +1357,15 @@ fn publish_staging_blocking(state: Value) -> Result<Value, String> {
         .trim_end_matches('/')
         .to_string();
     let green_health_url = "https://allthings140-visuals-green.pages.dev/?approval=1";
-    let green_health = Command::new("curl")
-        .args(["-fsSI", green_health_url])
-        .output()
-        .map_err(|e| format!("GREEN health check failed to start: {e}"))?;
+    let mut green_health_cmd = Command::new("curl"); green_health_cmd.args(["-fsSI", "-m", "8", green_health_url]);
+    let green_health = run_cmd_with_timeout(green_health_cmd, 10, None)?;
     if !green_health.status.success() {
         return Err(format!("GREEN health check failed: {}", String::from_utf8_lossy(&green_health.stderr)));
     }
 
     let manifest_url = format!("{deployment_url}/layout.json?verify={revision}");
-    let remote_manifest = Command::new("curl")
-        .args(["-fsS", &manifest_url])
-        .output()
-        .map_err(|e| format!("Remote manifest check failed to start: {e}"))?;
+    let mut remote_manifest_cmd = Command::new("curl"); remote_manifest_cmd.args(["-fsS", "-m", "8", &manifest_url]);
+    let remote_manifest = run_cmd_with_timeout(remote_manifest_cmd, 10, None)?;
     if !remote_manifest.status.success() { return Err(format!("Remote manifest check failed: {}", String::from_utf8_lossy(&remote_manifest.stderr))); }
     let remote_json: Value = serde_json::from_slice(&remote_manifest.stdout).map_err(|e| format!("Remote manifest JSON invalid: {e}"))?;
     if remote_json["layoutRevision"] != published["layoutRevision"] || remote_json["layoutHash"] != published["layoutHash"] {
@@ -1472,6 +1589,7 @@ fn safe_playlist_asset_id(item: &Value, local_path: Option<&Path>) -> Result<Str
 fn compact_playlist_for_green(state: &Value, media_origin: &str) -> Result<Value, String> {
     let Some(items) = state.get("playlist").and_then(|v| v.as_array()) else { return Ok(json!([])); };
     let mut out = Vec::new();
+    let mut seen = HashSet::new();
     for item in items {
         if item.get("enabled").and_then(|v| v.as_bool()) == Some(false) { continue; }
         let explicit_url = item.get("publicUrl").and_then(|v| v.as_str())
@@ -1479,6 +1597,7 @@ fn compact_playlist_for_green(state: &Value, media_origin: &str) -> Result<Value
             .filter(|u| u.starts_with("https://"));
         let local_path = playlist_local_path(item);
         let id = safe_playlist_asset_id(item, local_path.as_deref())?;
+        if !seen.insert(id.clone()) { return Err(format!("Duplicate enabled playlist asset ID: {id}")); }
         // A local runtime/source file is authoritative for workstation-managed
         // playlist entries. Prefer its content-addressed staging URL over any
         // stale persisted publicUrl from an earlier publish.
@@ -1505,6 +1624,7 @@ fn compact_playlist_for_green(state: &Value, media_origin: &str) -> Result<Value
 fn publish_layout_fast_blocking(payload: Value) -> Result<Value, String> {
     let state = if payload["state"].is_object() { &payload["state"] } else { &payload };
     let job_id = payload["jobId"].as_str().or_else(|| state["jobId"].as_str()).map(|s| s.to_string());
+    let _job_cleanup = finish_job(job_id.as_deref());
 
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .parent()
@@ -1706,6 +1826,7 @@ fn publish_layout_fast_blocking(payload: Value) -> Result<Value, String> {
         "layers": layers,
         "mediaBaseUrl": media_origin,
         "playlist": playlist_contract,
+        "cycle": state.get("cycle").cloned().unwrap_or_else(|| json!({"mode":"ordered","interval":"media-ended","skipFailed":true,"avoidImmediateRepeat":true})),
         "fallback": { "id": "known-good-fallback", "url": "https://allthings140radio.online/assets/visuals-phone.mp4?v=1.1.0", "fit": "cover" },
         "previewMode": is_preview,
         "safePlaybackMode": state.get("safePlaybackMode").and_then(|v| v.as_bool()).unwrap_or(false),
@@ -1807,6 +1928,7 @@ fn publish_layout_fast_blocking(payload: Value) -> Result<Value, String> {
 #[tauri::command]
 fn cancel_staging_publish(job_id: String) -> Result<Value, String> {
     if let Ok(mut set) = get_cancelled_jobs().lock() {
+        if set.len() >= MAX_CANCELLED_JOBS { set.clear(); }
         set.insert(job_id.clone());
     }
     Ok(json!({ "ok": true, "cancelled": job_id }))
@@ -1848,30 +1970,27 @@ fn schedule_takeover_blocking(schedule: Value) -> Result<Value, String> {
         return Err("Dedicated Visuals server SSH key is unavailable".into());
     }
     let remote = "set -a; . /etc/allthings140-visuals/realtime.env; set +a; curl -fsS -X POST -H \"Authorization: Bearer $ADMIN_TOKEN\" -H 'Content-Type: application/json' --data-binary @- http://127.0.0.1:8765/admin/schedule";
-    let mut child = Command::new("ssh")
-        .args([
+    let payload_path = data_dir()?.join(format!("schedule-{}.json", Utc::now().timestamp_millis()));
+    atomic_write(&payload_path, &serde_json::to_vec(&schedule).map_err(|e| e.to_string())?)?;
+    let input = fs::File::open(&payload_path).map_err(|e| e.to_string())?;
+    let mut cmd = Command::new("ssh");
+    cmd.args([
             "-i",
             key.to_str().ok_or("Invalid SSH key path")?,
             "-o",
             "BatchMode=yes",
+            "-o",
+            "ConnectTimeout=8",
             "opc@163.192.1.208",
             "sudo",
             "bash",
             "-lc",
             remote,
         ])
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .map_err(|e| e.to_string())?;
-    child
-        .stdin
-        .as_mut()
-        .ok_or("SSH input unavailable")?
-        .write_all(&serde_json::to_vec(&schedule).map_err(|e| e.to_string())?)
-        .map_err(|e| e.to_string())?;
-    let out = child.wait_with_output().map_err(|e| e.to_string())?;
+        .stdin(Stdio::from(input));
+    let out = run_cmd_with_timeout(cmd, 20, None);
+    let _ = fs::remove_file(&payload_path);
+    let out = out?;
     if !out.status.success() {
         return Err(format!(
             "Server schedule failed: {}",
@@ -1901,7 +2020,11 @@ fn app_info() -> Value {
 }
 
 pub fn run() {
-    tauri::Builder::default()
+    if let Err(err) = acquire_instance_lock() {
+        eprintln!("{err}");
+        return;
+    }
+    let app = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             load_state,
@@ -1925,8 +2048,13 @@ pub fn run() {
             set_visual_routing,
             get_visual_health
         ])
-        .run(tauri::generate_context!())
-        .expect("Visuals workstation failed")
+        .build(tauri::generate_context!())
+        .expect("Visuals workstation failed");
+    app.run(|_, event| {
+        if matches!(event, tauri::RunEvent::Exit | tauri::RunEvent::ExitRequested { .. }) {
+            release_process_resources();
+        }
+    });
 }
 
 #[cfg(test)]
@@ -1962,6 +2090,119 @@ mod tests {
         assert_eq!(state["canonicalComposition"]["width"], 1920);
         assert_eq!(state["canonicalComposition"]["height"], 1080);
         assert!(state["presets"].is_array());
+        assert!(validate_state_semantics(&state).is_ok());
+    }
+
+    #[test]
+    fn semantic_state_validation_rejects_corrupt_geometry_and_duplicate_layers() {
+        let mut state = default_state();
+        state["presets"][0]["layerFrames"]["visual-content"]["opacity"] = json!(2.0);
+        assert!(validate_state_semantics(&state).unwrap_err().contains("opacity"));
+        let mut state = default_state();
+        state["workspaceLayers"] = json!([{"id":"visual-content"},{"id":"visual-content"}]);
+        assert!(validate_state_semantics(&state).unwrap_err().contains("Duplicate layer ID"));
+    }
+
+    #[test]
+    fn atomic_write_replaces_complete_document() {
+        let path = std::env::temp_dir().join(format!("at140-atomic-{}.json", std::process::id()));
+        atomic_write(&path, br#"{"valid":true}"#).unwrap();
+        assert_eq!(fs::read_to_string(&path).unwrap(), r#"{"valid":true}"#);
+        assert!(!path.with_extension(format!("tmp-{}", std::process::id())).exists());
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn backup_recovery_skips_semantically_invalid_newest_state() {
+        let dir = std::env::temp_dir().join(format!("at140-backups-{}", std::process::id()));
+        let _ = fs::create_dir_all(&dir);
+        fs::write(dir.join("workstation-001.json"), serde_json::to_vec(&default_state()).unwrap()).unwrap();
+        fs::write(dir.join("workstation-002.json"), br#"{"presets":[]}"#).unwrap();
+        let recovered = newest_valid_state_backup(&dir).expect("older valid backup should recover");
+        assert_eq!(recovered["schema"], 3);
+        assert!(recovered["recoveredFromBackup"].as_str().unwrap().ends_with("workstation-001.json"));
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn cancellation_entries_are_cleaned_after_job_scope() {
+        let id = "phase3-cancel-test";
+        get_cancelled_jobs().lock().unwrap().insert(id.into());
+        { let _cleanup = finish_job(Some(id)); assert!(is_job_cancelled(Some(id))); }
+        assert!(!is_job_cancelled(Some(id)));
+    }
+
+    #[test]
+    fn playlist_contract_preserves_order_and_rejects_duplicate_ids() {
+        let state = json!({"playlist":[
+            {"id":"one","name":"One","url":"https://example.invalid/one.mp4","enabled":true},
+            {"id":"two","name":"Two","url":"https://example.invalid/two.mp4","enabled":true},
+            {"id":"off","name":"Off","url":"https://example.invalid/off.mp4","enabled":false}
+        ]});
+        let compact = compact_playlist_for_green(&state, "https://media.invalid").unwrap();
+        assert_eq!(compact.as_array().unwrap().len(), 2);
+        assert_eq!(compact[0]["id"], "one");
+        assert_eq!(compact[1]["id"], "two");
+        let duplicate = json!({"playlist":[
+            {"id":"same","url":"https://example.invalid/a.mp4"},
+            {"id":"same","url":"https://example.invalid/b.mp4"}
+        ]});
+        assert!(compact_playlist_for_green(&duplicate, "https://media.invalid").unwrap_err().contains("Duplicate"));
+    }
+
+    #[test]
+    fn local_media_server_keeps_range_support_under_parallel_requests() {
+        let path = std::env::temp_dir().join(format!("at140-range-{}.mp4", std::process::id()));
+        fs::write(&path, vec![7u8; 4096]).unwrap();
+        media_routes().write().unwrap().insert("range-test".into(), path.clone());
+        let url = start_server().unwrap();
+        let address = url.trim_start_matches("http://").to_string();
+        let mut workers = Vec::new();
+        for _ in 0..12 {
+            let address = address.clone();
+            workers.push(thread::spawn(move || {
+                let mut stream = TcpStream::connect(address).unwrap();
+                stream.write_all(b"GET /media/range-test HTTP/1.1\r\nHost: localhost\r\nRange: bytes=100-199\r\nConnection: close\r\n\r\n").unwrap();
+                let mut response = Vec::new();
+                stream.read_to_end(&mut response).unwrap();
+                let text = String::from_utf8_lossy(&response);
+                assert!(text.starts_with("HTTP/1.1 206 Partial Content"));
+                assert!(text.contains("Content-Length: 100"));
+            }));
+        }
+        for worker in workers { worker.join().unwrap(); }
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn repeated_visual_rescans_keep_stable_ids_and_bounded_maps() {
+        let Some(home) = dirs::home_dir() else { return; };
+        let folder = home.join("Videos/at140radio/desktop visuals/visuals");
+        if !folder.is_dir() { return; }
+        let first = scan_layer_media_blocking("visual-content".into(), folder.display().to_string()).unwrap();
+        let expected: Vec<String> = first["items"].as_array().unwrap().iter()
+            .filter_map(|item| item["routeId"].as_str().map(str::to_string)).collect();
+        assert!(expected.len() >= 50, "real Visual library should remain substantial");
+        for _ in 0..10 {
+            let scan = scan_layer_media_blocking("visual-content".into(), folder.display().to_string()).unwrap();
+            let ids: Vec<String> = scan["items"].as_array().unwrap().iter()
+                .filter_map(|item| item["routeId"].as_str().map(str::to_string)).collect();
+            assert_eq!(ids, expected);
+        }
+        assert!(media_routes().read().unwrap().len() <= 2048);
+        assert!(probe_cache().read().unwrap().len() <= MAX_PROBE_CACHE_ITEMS);
+    }
+
+    #[test]
+    fn current_workstation_state_serializes_complete_green_cycle() {
+        let Ok(path) = state_path() else { return; };
+        let Ok(raw) = fs::read(&path) else { return; };
+        let state: Value = serde_json::from_slice(&raw).unwrap();
+        let expected = state["playlist"].as_array().unwrap().iter().filter(|item| item["enabled"] != false).count();
+        let compact = compact_playlist_for_green(&state, "https://visuals-media-staging.allthings140radio.online").unwrap();
+        assert!(expected >= 50);
+        assert_eq!(compact.as_array().unwrap().len(), expected);
+        assert!(compact.as_array().unwrap().iter().all(|item| item["url"].as_str().is_some_and(|url| url.starts_with("https://visuals-media-staging.allthings140radio.online/visuals/"))));
     }
 
     #[test]

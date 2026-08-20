@@ -9,7 +9,7 @@ const ROOT = path.resolve(HERE, '..');
 const read = rel => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 const sha = rel => crypto.createHash('sha256').update(fs.readFileSync(path.join(ROOT, rel))).digest('hex');
 
-console.log('=== ALLTHINGS140 GREEN ROOM CUTOVER CONTRACT (v0.1.42) ===\n');
+console.log('=== ALLTHINGS140 GREEN ROOM CUTOVER CONTRACT (v0.1.43) ===\n');
 let passed = 0;
 const check = (condition, message) => {
   assert.ok(condition, message);
@@ -18,10 +18,10 @@ const check = (condition, message) => {
 };
 
 const pkg = JSON.parse(read('visuals-app/package.json'));
-check(pkg.version === '0.1.42', 'workstation package version is 0.1.42');
-check(JSON.parse(read('visuals-app/src-tauri/tauri.conf.json')).version === '0.1.42', 'Tauri version is 0.1.42');
-check(/version\s*=\s*"0\.1\.42"/.test(read('visuals-app/src-tauri/Cargo.toml')), 'Cargo package version is 0.1.42');
-check(/let appVersion = '0\.1\.42'/.test(read('visuals-app/src/main.js')), 'frontend version is 0.1.42');
+check(pkg.version === '0.1.43', 'workstation package version is 0.1.43');
+check(JSON.parse(read('visuals-app/src-tauri/tauri.conf.json')).version === '0.1.43', 'Tauri version is 0.1.43');
+check(/version\s*=\s*"0\.1\.43"/.test(read('visuals-app/src-tauri/Cargo.toml')), 'Cargo package version is 0.1.43');
+check(/let appVersion = '0\.1\.43'/.test(read('visuals-app/src/main.js')), 'frontend version is 0.1.43');
 
 const home = read('radio/index.html');
 check(home.includes('id="backgroundVideo"'), 'homepage keeps the proven legacy background video');
@@ -103,7 +103,7 @@ check(!main.includes('PUBLIC CHAT → NEW'), 'retired homepage-injection activat
 check(!main.includes('btnSimulateFailure'), 'non-functional v0.1.39 failure-simulation control is removed');
 
 const rust = read('visuals-app/src-tauri/src/lib.rs');
-check(rust.includes('ALLTHINGS140-Workstation/0.1.42'), 'routing requests identify the current workstation version');
+check(rust.includes('ALLTHINGS140-Workstation/0.1.43'), 'routing requests identify the current workstation version');
 check(rust.includes('renderer-state?environment=live-chat'), 'workstation health reads live-chat renderer state directly');
 const routingFn = rust.slice(rust.indexOf('fn set_visual_routing'), rust.indexOf('fn get_visual_health'));
 check(routingFn.includes('routing-headers-'), 'workstation stages routing authorization in a protected temporary header file');
@@ -115,4 +115,4 @@ check(worker.includes('PUBLIC_GET_PATH'), 'public radio API allowlist remains pr
 check(worker.includes('env.ASSETS.fetch(request)'), 'unmatched radio requests still fall through to static assets');
 check(worker.includes('DEFAULT_ROUTING = { chat: "legacy", visuals: "legacy" }'), 'routing defaults fail safe to legacy');
 
-console.log(`\n${passed}/${passed} v0.1.42 Green Room cutover checks passed`);
+console.log(`\n${passed}/${passed} v0.1.43 Green Room cutover checks passed`);

@@ -38,9 +38,9 @@ const tauriConf = JSON.parse(readFileSync(join(APP_DIR, 'src-tauri', 'tauri.conf
 
 // 2. Version consistency
 console.log('\n2. Verifying Version Synchronization:');
-assert(pkgJson.version === '0.1.42', `package.json version is 0.1.42 (got ${pkgJson.version})`);
-assert(tauriConf.version === '0.1.42', `tauri.conf.json version is 0.1.42 (got ${tauriConf.version})`);
-assert(mainJs.includes("appVersion = '0.1.42'"), 'main.js defaults to appVersion 0.1.42');
+assert(pkgJson.version === '0.1.43', `package.json version is 0.1.43 (got ${pkgJson.version})`);
+assert(tauriConf.version === '0.1.43', `tauri.conf.json version is 0.1.43 (got ${tauriConf.version})`);
+assert(mainJs.includes("appVersion = '0.1.43'"), 'main.js defaults to appVersion 0.1.43');
 
 // 3. Layout CSS & Scrolling Architecture
 console.log('\n3. Verifying Window & Scrolling CSS Constraints:');
@@ -58,7 +58,7 @@ assert(mainJs.includes('https://allthings140-visuals-green.pages.dev/?approval=1
 assert(mainJs.includes('wss://visuals-realtime-staging.allthings140radio.online/ws'), 'Canonical Realtime WebSocket is wss://visuals-realtime-staging.allthings140radio.online/ws');
 assert(mainJs.includes('https://visuals-media-staging.allthings140radio.online'), 'Canonical Media Origin is https://visuals-media-staging.allthings140radio.online');
 assert(mainJs.includes('OPEN GREEN AUDIENCE ROOM'), 'Includes "OPEN GREEN AUDIENCE ROOM" control');
-assert(mainJs.includes('TEST THIS VISUAL ON GREEN'), 'Includes "TEST THIS VISUAL ON GREEN" control');
+assert(mainJs.includes('TEST VISUAL CYCLE ON GREEN'), 'Includes "TEST VISUAL CYCLE ON GREEN" control');
 assert(mainJs.includes('PUBLISH CURRENT LAYOUT'), 'Includes "PUBLISH CURRENT LAYOUT" control');
 assert(mainJs.includes('COPY GREEN URL'), 'Includes "COPY GREEN URL" control');
 assert(mainJs.includes('getGreenSyncStatus'), 'Tracks live Green sync status (SYNCED / LOCAL_CHANGES / PUBLISHING / OFFLINE)');

@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "ALLTHINGS140Radio Visuals",
-  "version": "0.1.42",
+  "version": "0.1.43",
   "identifier": "online.allthings140radio.visuals",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -24,8 +24,8 @@
       "assetProtocol": {
         "enable": true,
         "scope": [
-          "/home/ebmarah/Videos/at140radio/desktop visuals/**",
-          "/home/ebmarah/Projects/AllThings140Radio/visuals-green/media/**"
+          "$HOME/Videos/at140radio/desktop visuals/**",
+          "$HOME/Projects/AllThings140Radio/visuals-green/media/**"
         ]
       },
       "csp": "default-src 'self'; connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:* https://allthings140-visuals-green.pages.dev https://visuals-realtime-staging.allthings140radio.online wss://visuals-realtime-staging.allthings140radio.online https://status.ebeinc.online https://allthings140radio.online; media-src 'self' asset: http://asset.localhost https://asset.localhost http://127.0.0.1:* https://allthings140radio.online blob:; img-src 'self' asset: http://asset.localhost data: blob: https://allthings140radio.online; style-src 'self' 'unsafe-inline'; script-src 'self'"

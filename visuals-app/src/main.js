@@ -1,6 +1,7 @@
 import './style.css';
 import { invoke, convertFileSrc } from '@tauri-apps/api/core';
 import { open } from '@tauri-apps/plugin-dialog';
+import { buildOrderedCycle, mediaIdentity } from './cycle-contract.js';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -42,7 +43,7 @@ let history = [];
 let future = [];
 let editorZoom = 1;
 let snapEnabled = true;
-let appVersion = '0.1.42';
+let appVersion = '0.1.43';
 let buildInfo = { gitCommit: 'unknown', buildUnix: '0' };
 let mediaLibrary = [];
 const layerLibraries = new Map();
@@ -308,7 +309,12 @@ function compactPlaylistEntry(item) {
   };
 }
 
-function livePublishSnapshot(preview = false) {
+function orderedCyclePlaylist() {
+  const visual = selectedMedia(layerDef('visual-content'));
+  return buildOrderedCycle(state.playlist, mediaIdentity(visual), compactPlaylistEntry);
+}
+
+function livePublishSnapshot(mode = 'cycle') {
   // Deliberately construct a small publish contract instead of cloning the entire
   // workstation state. This keeps the WebKitGTK UI responsive even with hundreds
   // of local media items and prevents accidental local-only/debug data from
@@ -367,12 +373,13 @@ function livePublishSnapshot(preview = false) {
     workspaceLayers,
     screenOpening: structuredClone(screenOpening(p)),
     safePlaybackMode: Boolean(state.safePlaybackMode),
-    previewMode: Boolean(preview),
+    previewMode: mode === 'single',
     productionLocked: true,
-    playlist: preview ? [] : (state.playlist || []).map(compactPlaylistEntry)
+    cycle: { mode: 'ordered', interval: 'media-ended', skipFailed: true, avoidImmediateRepeat: true },
+    playlist: mode === 'single' ? [] : orderedCyclePlaylist()
   };
 
-  if (preview) {
+  if (mode === 'single') {
     const visualLayer = workspaceLayers.find(x => x.id === 'visual-content');
     const media = visualLayer?.selectedMedia;
     if (media) {
@@ -604,7 +611,7 @@ function workspace() {
           ${CANONICAL_GREEN_URL}
         </div>
         <button id="browser" class="btn-green">🌐 OPEN GREEN AUDIENCE ROOM</button>
-        <button id="testGreen" class="btn-cyan">⚡ TEST THIS VISUAL ON GREEN</button>
+        <button id="testGreen" class="btn-cyan">⚡ TEST VISUAL CYCLE ON GREEN</button>
         <div class="row" style="gap:4px;margin-top:4px;">
           <button id="validateStageOnly" class="btn-sm" style="flex:1;font-size:10px;padding:6px 4px;background:#1e293b;border:1px solid #334155;color:#93c5fd;" title="Validate Stage media independently with substep timings">⚡ STAGE ONLY</button>
           <button id="validateVisualOnly" class="btn-sm" style="flex:1;font-size:10px;padding:6px 4px;background:#1e293b;border:1px solid #334155;color:#93c5fd;" title="Validate Visual media independently with substep timings">⚡ VISUAL ONLY</button>
@@ -1700,10 +1707,12 @@ function bind(name) {
         if (!confirm('Switch the PUBLIC GREEN ROOM to LEGACY VIDEO SAFETY MODE?\n\nThis affects only /room/. The homepage and /visuals/ remain unchanged.')) {
           return;
         }
+        const confirmation = prompt('PRODUCTION ROUTING CONTROL\n\nType PROMOTE GREEN ROOM to confirm this public /room/ routing change.');
+        if (confirmation !== 'PROMOTE GREEN ROOM') { showToast('Production routing change cancelled'); return; }
         btnFallback.disabled = true;
         btnFallback.textContent = 'Falling back…';
         try {
-          await invoke('set_visual_routing', { chat: 'legacy', reason: 'green_room_legacy_fallback' });
+          await invoke('set_visual_routing', { chat: 'legacy', reason: 'green_room_legacy_fallback', confirmation });
           activity('GREEN ROOM → LEGACY VIDEO', 'Workstation manual Green Room visual fallback executed');
           activity('LEGACY FALLBACK VERIFIED', 'Green Room visual mode set to legacy');
           showToast('✓ Green Room switched to legacy video safety mode');
@@ -1724,10 +1733,12 @@ function bind(name) {
         if (!confirm('Enable the GREEN ROOM COMPOSITOR?\n\nThis changes only the visual engine inside /room/. The homepage and /visuals/ remain untouched.')) {
           return;
         }
+        const confirmation = prompt('PRODUCTION ROUTING CONTROL\n\nType PROMOTE GREEN ROOM to confirm this public /room/ routing change.');
+        if (confirmation !== 'PROMOTE GREEN ROOM') { showToast('Production routing change cancelled'); return; }
         btnUseNew.disabled = true;
         btnUseNew.textContent = 'Activating…';
         try {
-          await invoke('set_visual_routing', { chat: 'new', reason: 'green_room_compositor_enable' });
+          await invoke('set_visual_routing', { chat: 'new', reason: 'green_room_compositor_enable', confirmation });
           activity('GREEN ROOM COMPOSITOR ENABLED', 'Public /room/ visual engine set to compositor');
           activity('GREEN ROOM → COMPOSITOR', 'Green Room visual mode set to new');
           showToast('✓ Green Room compositor enabled');
@@ -1990,15 +2001,18 @@ function connect() {
   }
   metrics.ws = 'CONNECTING';
   updateHealth();
-  ws = new WebSocket(CANONICAL_REALTIME_WS);
-  ws.onopen = () => {
+  const socket = new WebSocket(CANONICAL_REALTIME_WS);
+  ws = socket;
+  socket.onopen = () => {
+    if (ws !== socket) return;
     wsRetryCount = 0;
     metrics.ws = 'LIVE';
-    ws.send(JSON.stringify({ type: 'join', name: 'Visuals Workstation', avatar: 'orb-purple', audience: false, event_id: crypto.randomUUID() }));
+    socket.send(JSON.stringify({ type: 'join', name: 'Visuals Workstation', avatar: 'orb-purple', audience: false, event_id: crypto.randomUUID() }));
     activity('Realtime connected', CANONICAL_REALTIME_WS);
     updateHealth();
   };
-  ws.onmessage = e => {
+  socket.onmessage = e => {
+    if (ws !== socket) return;
     try {
       const d = JSON.parse(e.data);
       if (d.energy != null) metrics.energy = d.energy;
@@ -2015,10 +2029,11 @@ function connect() {
       updateHealth();
     } catch (_) {}
   };
-  ws.onerror = () => {
-    try { ws?.close(); } catch (_) {}
+  socket.onerror = () => {
+    try { socket.close(); } catch (_) {}
   };
-  ws.onclose = () => {
+  socket.onclose = () => {
+    if (ws !== socket) return;
     ws = null;
     metrics.ws = 'OFFLINE';
     updateHealth();
@@ -2030,6 +2045,14 @@ function connect() {
   };
 }
 window.addEventListener('online', () => connect());
+window.addEventListener('beforeunload', () => {
+  if (wsRetryTimer) clearTimeout(wsRetryTimer);
+  wsRetryTimer = null;
+  const socket = ws;
+  ws = null;
+  try { socket?.close(1000, 'workstation_shutdown'); } catch (_) {}
+  disposeViewMedia();
+});
 
 function updateHealth() {
   if ($('#ws')) {
@@ -2524,8 +2547,8 @@ async function testVisualOnGreenWithProgress() {
     await new Promise(r => setTimeout(r, 16));
     if (isCancelled) return;
 
-    const snap = livePublishSnapshot(true);
-    snap.previewMode = true;
+    const snap = livePublishSnapshot('cycle');
+    if (!snap.playlist.length) throw new Error('No enabled Visuals are available for Green cycle testing');
     setStep('step2', 'done', `✓ 2. Canonical layout snapshot generated (v${state.layoutVersion || 1})`);
 
     // Step 3 & 4: Fast Media Sync & Realtime Layout Broadcast
@@ -2687,7 +2710,7 @@ function buildAppShell() {
   $('#local').onclick = () => render('Visual Workspace');
   $('#compare').onclick = () => openStagingBrowser(CANONICAL_GREEN_URL);
 
-  const publishLiveWorkspace = async (preview = false) => {
+  const publishLiveWorkspace = async (mode = 'cycle') => {
     await saveDraft(false);
     isPublishing = true;
     updateHealth();
@@ -2696,13 +2719,13 @@ function buildAppShell() {
       // Layout/media publishing is a realtime workstation operation. Cloudflare
       // Pages deploys are reserved for Green application CODE updates, not for
       // everyday show-control changes.
-      const r = await invoke('publish_layout_fast', { payload: { state: livePublishSnapshot(preview), jobId } });
+      const r = await invoke('publish_layout_fast', { payload: { state: livePublishSnapshot(mode), jobId } });
       const p = r.phases || {};
       activity('Layout snapshot', p.snapshot || 'PASS');
       activity('Media sync', p.mediaUpload || 'PASS');
       activity('Realtime publish', `${p.realtimePublish || 'PASS'} · HTTP ${r.realtimeHttpStatus || '?'} · ${Number(r.payloadBytes || 0).toLocaleString()} bytes`);
       activity('PUBLISHED LAYOUT', `${r.layoutRevision || 'unknown'} ${r.layoutHash || ''}`);
-      if (!preview) {
+      if (mode !== 'single') {
         state.publishedVersion = state.layoutVersion;
         state.lastPublishedHash = r.layoutHash || '';
         state.lastPublishedAt = new Date().toISOString();
@@ -2721,7 +2744,7 @@ function buildAppShell() {
     $('#publish').disabled = true;
     $('#publish').textContent = 'Publishing…';
     try {
-      const r = await publishLiveWorkspace(false);
+      const r = await publishLiveWorkspace('cycle');
       const p = r.phases || {};
       alert(`LAYOUT SNAPSHOT: PASS
 MEDIA SYNC: ${p.mediaUpload || 'PASS'}
@@ -2744,13 +2767,13 @@ Green staging was updated through Realtime. The status pill will change to RENDE
 }
 
 // Startup Sequence
-let info = { version: '0.1.42' };
+let info = { version: '0.1.43' };
 try {
   info = await invoke('app_info');
 } catch (e) {
-  info = { version: '0.1.42' };
+  info = { version: '0.1.43' };
 }
-appVersion = info.version || '0.1.42';
+appVersion = info.version || '0.1.43';
 buildInfo = info;
 
 try {

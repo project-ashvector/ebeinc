@@ -157,7 +157,7 @@ fn validate_staging_url(url: &str) -> Result<(), String> {
 #[tauri::command]
 fn get_visual_routing() -> Result<Value, String> {
     let output = Command::new("curl")
-        .args(["-fsS", "-m", "5", "-A", "ALLTHINGS140-Workstation/0.1.42", "https://allthings140radio.online/api/visual-routing"])
+        .args(["-fsS", "-m", "5", "-A", "ALLTHINGS140-Workstation/0.1.43", "https://allthings140radio.online/api/visual-routing"])
         .output();
     if let Ok(out) = output {
         if out.status.success() {
@@ -195,7 +195,7 @@ fn set_visual_routing(chat: Option<String>, visuals: Option<String>, reason: Opt
     cmd.args([
         "-fsS",
         "-m", "8",
-        "-A", "ALLTHINGS140-Workstation/0.1.42",
+        "-A", "ALLTHINGS140-Workstation/0.1.43",
         "-X", "POST",
         "-H", &format!("@{}", header_path.display()),
         "--data-binary", "@-",

@@ -42,7 +42,7 @@ let history = [];
 let future = [];
 let editorZoom = 1;
 let snapEnabled = true;
-let appVersion = '0.1.42';
+let appVersion = '0.1.43';
 let buildInfo = { gitCommit: 'unknown', buildUnix: '0' };
 let mediaLibrary = [];
 const layerLibraries = new Map();
@@ -2744,13 +2744,13 @@ Green staging was updated through Realtime. The status pill will change to RENDE
 }
 
 // Startup Sequence
-let info = { version: '0.1.42' };
+let info = { version: '0.1.43' };
 try {
   info = await invoke('app_info');
 } catch (e) {
-  info = { version: '0.1.42' };
+  info = { version: '0.1.43' };
 }
-appVersion = info.version || '0.1.42';
+appVersion = info.version || '0.1.43';
 buildInfo = info;
 
 try {

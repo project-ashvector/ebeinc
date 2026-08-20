@@ -10,7 +10,7 @@ const green = fs.readFileSync('visuals-green/stage.js','utf8');
 const pkg = JSON.parse(fs.readFileSync('visuals-app/package.json','utf8'));
 const tauri = JSON.parse(fs.readFileSync('visuals-app/src-tauri/tauri.conf.json','utf8'));
 
-assert((['0.1.42','0.1.41','0.1.40','0.1.39','0.1.38'].includes(pkg.version)) && tauri.version === pkg.version && main.includes(`appVersion = '${pkg.version}'`), `workstation version is synchronized at v${pkg.version}`);
+assert((['0.1.43','0.1.42','0.1.41','0.1.40','0.1.39','0.1.38'].includes(pkg.version)) && tauri.version === pkg.version && main.includes(`appVersion = '${pkg.version}'`), `workstation version is synchronized at v${pkg.version}`);
 const pkgLock = JSON.parse(fs.readFileSync('visuals-app/package-lock.json','utf8'));
 const cargoLock = fs.readFileSync('visuals-app/src-tauri/Cargo.lock','utf8');
 assert(pkgLock.version === pkg.version && pkgLock.packages[''].version === pkg.version && cargoLock.includes(`name = "allthings140radio-visuals"\nversion = "${pkg.version}"`), 'npm/Cargo lock metadata matches workstation release version');
@@ -20,7 +20,7 @@ assert(!main.includes('Mark as Stage Base'), 'custom media cannot be promoted in
 
 // v0.1.38 workstation smoothness / publishing guardrails
 assert(main.includes('function compactPlaylistEntry') && !main.includes('const snapshot = structuredClone(state);'), 'publish snapshot is deliberately compact instead of cloning all workstation state');
-assert(main.includes("playlist: preview ? [] : (state.playlist || []).map(compactPlaylistEntry)"), 'preview publish omits the full playlist while non-preview uses compact playlist entries');
+assert(main.includes("playlist: mode === 'single' ? [] : orderedCyclePlaylist()"), 'single-media diagnostics stay compact while Green cycle tests retain the complete ordered playlist');
 assert(main.includes("invoke('publish_layout_fast'") && main.includes('Publish Layout to Green'), 'normal workstation layout publish uses fast realtime path');
 assert(!main.includes("invoke('publish_staging', { state: livePublishSnapshot(preview) })"), 'normal layout publish no longer redeploys Cloudflare Pages');
 assert(main.includes('clearVideoSource(fullVideo)') && main.includes('slices.forEach(clearVideoSource)'), 'workstation releases hidden/unused Stage decoder sources');
@@ -28,7 +28,7 @@ assert(main.includes('Gateway stored layout') && main.includes('but Green render
 assert(main.includes('payloadBytes') && main.includes('realtimeHttpStatus'), 'Green test visibly reports realtime payload bytes and HTTP status');
 
 // Publisher contract
-assert(rust.includes('let playlist_contract = if is_preview { json!([]) }'), 'preview realtime layout omits full workstation playlist');
+assert(rust.includes('let playlist_contract = if is_preview { json!([]) }'), 'explicit single-media realtime diagnostics omit the full workstation playlist');
 assert(rust.includes('MAX_LAYOUT_BYTES: usize = 128 * 1024'), 'workstation guards realtime payload size');
 assert(rust.includes('runtime_media_extension'), 'staged media keeps correct runtime extension');
 assert(rust.includes('payloadBytes'), 'publisher reports actual payload size');

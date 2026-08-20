@@ -1,6 +1,6 @@
 [package]
 name="allthings140radio-visuals"
-version="0.1.42"
+version="0.1.43"
 description="ALLTHINGS140Radio Visuals show-control workstation"
 authors= ["ALLTHINGS140Radio"]
 edition="2021"
