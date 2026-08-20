@@ -39,6 +39,7 @@
   let activeIndex = 0;
   let playlist = [];
   let playlistIndex = 0;
+  let failedVisualIds = new Set();
   let consecutiveFailures = 0;
   let layout = null;
   let ws = null;
@@ -269,6 +270,7 @@
     if (Array.isArray(data.playlist)) {
       playlist = data.playlist.filter(item => item && item.url && item.enabled !== false);
       playlistIndex = 0;
+      failedVisualIds = new Set();
     }
     if (incomingHash) lastAppliedLayoutHash = incomingHash;
     fitCompositionCanvas();
@@ -788,6 +790,15 @@ Track: ${currentStationStatus?.current_title || 'LIVE RADIO'} (Seq: ${currentSta
   }
 
   function handleVisualFailure(item, reason) {
+    const failedId = item?.id || item?.assetId;
+    if (failedId && failedVisualIds.has(failedId)) return;
+    if (failedId) {
+      failedVisualIds.add(failedId);
+      // Quarantine the unusable asset for this layout revision. This makes the
+      // next ordered lookup advance beyond it and also collapses duplicate
+      // HTMLMediaElement error + rejected play() notifications into one retry.
+      playlist = playlist.filter(candidate => (candidate.id || candidate.assetId) !== failedId);
+    }
     consecutiveFailures++;
     log('visual_failed', { id: item?.id, reason, consecutiveFailures });
 
