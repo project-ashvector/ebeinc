@@ -577,7 +577,11 @@ Track: ${currentStationStatus?.current_title || 'LIVE RADIO'} (Seq: ${currentSta
     return playlist[index];
   }
 
-  function waitForDecodedFrame(video, timeoutMs = 4000) {
+  // Hosted source MP4s are immutable originals and some keep their `moov`
+  // metadata at EOF. A four-second budget falsely classified valid 25-45 MB
+  // files as broken on a cold CDN path. Keep the wait bounded, but allow the
+  // browser enough time to range-fetch metadata and decode the first frame.
+  function waitForDecodedFrame(video, timeoutMs = 15000) {
     if (!video) return Promise.reject(new Error('missing video buffer'));
     return new Promise((resolve, reject) => {
       let settled = false;
