@@ -29,6 +29,16 @@
   let accessToken = null;
   let termsAccepted = false;
 
+  function updatePostingUi() {
+    if (!identity.signedIn) {
+      messageInput.placeholder = 'SIGN IN TO JOIN GREEN ROOM';
+      messageForm.querySelector('button')?.replaceChildren(document.createTextNode('SIGN IN TO POST'));
+      return;
+    }
+    messageInput.placeholder = termsAccepted ? 'Say something…' : 'ACCEPT TERMS TO POST';
+    messageForm.querySelector('button')?.replaceChildren(document.createTextNode(termsAccepted ? 'SEND' : 'ACCEPT TERMS'));
+  }
+
   const colorFromAvatar = avatar => ({
     'orb-purple': 'purple',
     'orb-cyan': 'cyan',
@@ -141,16 +151,17 @@
       } else if (data.type === 'auth_state') {
         identity = { signedIn: true, userId: data.userId, username: data.username, avatarUrl: data.avatarPath || null, accountStatus: data.accountStatus };
         termsAccepted = false;
+        updatePostingUi();
         nameInput.value = data.username || nameInput.value;
         setStatus('SIGNED IN — ACCEPT TERMS TO POST', 'online');
         send('post_policy');
       } else if (data.type === 'post_policy') {
         termsAccepted = Boolean(data.allowed);
-        if (termsAccepted) setStatus('CHAT LIVE', 'online');
+        if (termsAccepted) { setStatus('CHAT LIVE', 'online'); updatePostingUi(); }
         else if (data.reason === 'terms_acceptance_required') showTermsGate();
         else setStatus(data.reason === 'sign_in_required' ? 'SIGN IN TO JOIN GREEN ROOM' : 'POSTING RESTRICTED', 'error');
       } else if (data.type === 'terms_accepted') {
-        termsAccepted = true; setStatus('CHAT LIVE', 'online');
+        termsAccepted = true; setStatus('CHAT LIVE', 'online'); updatePostingUi();
       } else if (data.type === 'report_submitted') {
         showNotice('Report submitted to moderation.');
       } else if (data.type === 'blocked') {
@@ -221,4 +232,5 @@
   });
 
   connect();
+  updatePostingUi();
 })();
