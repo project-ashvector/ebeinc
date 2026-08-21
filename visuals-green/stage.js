@@ -110,12 +110,15 @@
     clearTimeout(rendererReadyTimer);
     rendererReadyTimer = null;
     if (!C.legacyFallbackEnabled || roomVisualMode !== 'new') return;
+    // Cold immutable source MP4s may legitimately consume the full 15-second
+    // first-frame budget. Keep the safety timer above that bounded decoder
+    // window so valid media cannot be preempted by its own fallback watchdog.
     rendererReadyTimer = setTimeout(() => {
       rendererReadyTimer = null;
       if (roomVisualMode === 'new' && !rendererMediaReady().ready) {
         engageAutomaticLegacyFallback('renderer_not_ready');
       }
-    }, 12000);
+    }, 25000);
   }
 
   function pauseCompositorMedia() {

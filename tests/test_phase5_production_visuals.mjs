@@ -24,6 +24,7 @@ check(cfg.includes('routingUrl:"/api/visuals-routing"'),'public Visuals reads on
 check(live.includes('../room/stage.js?v=2.5.0'),'public Visuals uses the shared reviewed renderer engine');
 check(live.includes('@media(max-width:680px)') && live.includes('.energy{min-width:0') && live.includes('.avatar small{display:none}'),'mobile viewer bounds fixed-size overlays inside the canonical canvas');
 check(roomEngine===greenEngine,'Green and public renderers remain byte-identical');
+check(roomEngine.includes('}, 25000);') && roomEngine.includes('full 15-second'),'fallback watchdog cannot preempt the bounded cold-media decode budget');
 check(legacy.includes('assets/visuals-desktop-v8/index.m3u8'),'legacy fallback preserves the Phase 2 desktop HLS');
 check(legacy.includes('phone-visuals-authoritative-v1.mp4'),'legacy fallback preserves the separate mobile Visuals asset');
 check(legacyRoute===legacy,'routed legacy document is byte-identical to the Phase 2 Visuals page');
