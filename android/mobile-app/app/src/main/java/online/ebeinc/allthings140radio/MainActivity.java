@@ -53,6 +53,7 @@ import java.util.concurrent.Executors;
  * Primary audio is continuously managed by RadioService.
  * Navigation between Radio, Green Room Chat, and Settings never interrupts playback.
  */
+@androidx.media3.common.util.UnstableApi
 public final class MainActivity extends Activity {
     private static final String LIVE_MEDIA_ID = "allthings140_live";
     private static final long STATUS_REFRESH_MS = 15_000L;
@@ -98,6 +99,7 @@ public final class MainActivity extends Activity {
     private ImageButton btnSendMessage;
     private ChatAdapter chatAdapter;
     private ChatClient chatClient;
+    private SupabaseAuthClient authClient;
 
     // Media & Status
     private ListenableFuture<MediaController> controllerFuture;
@@ -156,6 +158,7 @@ public final class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        authClient = new SupabaseAuthClient(this);
 
         initViews();
         setupNavigation();
@@ -275,6 +278,7 @@ public final class MainActivity extends Activity {
         recyclerChatMessages.setAdapter(chatAdapter);
 
         chatClient = new ChatClient();
+        chatClient.setAccessToken(authClient.accessToken());
         String savedName = prefs.getString(PREF_CHAT_NAME, "");
         String savedColor = prefs.getString(PREF_CHAT_COLOR, "purple");
         chatClient.setProfile(savedName, savedColor);
@@ -330,6 +334,8 @@ public final class MainActivity extends Activity {
             public void onErrorNotice(String message) {
                 Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
             }
+
+            @Override public void onTermsRequired() { showTermsGate(); }
         });
 
         btnSendMessage.setOnClickListener(v -> submitChatMessage());
@@ -363,7 +369,7 @@ public final class MainActivity extends Activity {
         if (text.isEmpty()) return;
 
         String currentName = prefs.getString(PREF_CHAT_NAME, "");
-        if (currentName.isEmpty()) {
+        if (currentName.isEmpty() && !chatClient.isAuthenticated()) {
             showProfileDialog();
             return;
         }
@@ -444,17 +450,29 @@ public final class MainActivity extends Activity {
                         cm.setPrimaryClip(clip);
                         Toast.makeText(this, "Copied to clipboard", Toast.LENGTH_SHORT).show();
                     } else if (which == 1) {
+                        chatClient.sendReport(msg.id, "other");
                         chatAdapter.reportMessage(msg.id);
                         Toast.makeText(this, R.string.chat_msg_reported, Toast.LENGTH_LONG).show();
                     } else if (which == 2) {
+                        if (chatClient.isAuthenticated() && !msg.senderId.isEmpty()) chatClient.sendBlock(msg.senderId);
                         String lowerName = msg.name.trim().toLowerCase(java.util.Locale.ROOT);
                         Set<String> set = new HashSet<>(prefs.getStringSet(PREF_BLOCKED_USERS, new HashSet<>()));
                         set.add(lowerName);
                         prefs.edit().putStringSet(PREF_BLOCKED_USERS, set).apply();
                         chatAdapter.blockUser(msg.name);
+                        chatAdapter.blockUserId(msg.senderId);
                         Toast.makeText(this, R.string.chat_user_blocked, Toast.LENGTH_LONG).show();
                     }
                 })
+                .show();
+    }
+
+    private void showTermsGate() {
+        new AlertDialog.Builder(this)
+                .setTitle("Green Room Terms")
+                .setMessage("Read the current Community Rules before posting.")
+                .setNegativeButton("NOT NOW", (d, w) -> d.dismiss())
+                .setPositiveButton("I AGREE — ENTER GREEN ROOM", (d, w) -> chatClient.sendTermsAccept())
                 .show();
     }
 
@@ -473,6 +491,11 @@ public final class MainActivity extends Activity {
 
     @Override protected void onResume() {
         super.onResume();
+        if (chatClient != null && !authClient.accessToken().equals(chatClient.getAccessToken())) {
+            chatClient.setAccessToken(authClient.accessToken());
+            if (chatClient.isConnected()) chatClient.disconnect();
+            if (currentTab == Tab.CHAT) chatClient.connect();
+        }
         if (visualsVideoView != null && currentTab == Tab.RADIO) {
             visualsVideoView.startPlayback();
         }

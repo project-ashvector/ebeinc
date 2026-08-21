@@ -36,6 +36,8 @@ public final class ChatClient {
         void onChatCleared();
         void onMessageDeleted(String messageId);
         void onErrorNotice(String message);
+        default void onTermsRequired() { }
+        default void onAuthenticated(String userId, String username) { }
     }
 
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -48,6 +50,7 @@ public final class ChatClient {
 
     private String currentName = "";
     private String currentColor = "purple";
+    private String accessToken = "";
 
     public ChatClient() {
         httpClient = new OkHttpClient.Builder()
@@ -73,6 +76,13 @@ public final class ChatClient {
         }
     }
 
+    public void setAccessToken(String token) {
+        accessToken = token != null ? token.trim() : "";
+    }
+
+    public boolean isAuthenticated() { return !accessToken.isEmpty(); }
+    public String getAccessToken() { return accessToken; }
+
     public void connect() {
         isExplicitlyClosed = false;
         if (webSocket != null) return;
@@ -91,7 +101,9 @@ public final class ChatClient {
                 mainHandler.post(() -> {
                     reconnectDelayMs = 1000L;
                     notifyState("CHAT LIVE", true);
-                    if (!currentName.isEmpty()) {
+                    if (!accessToken.isEmpty()) {
+                        sendAuth(accessToken);
+                    } else if (!currentName.isEmpty()) {
                         sendJoin(currentName, currentColor);
                     }
                 });
@@ -158,6 +170,39 @@ public final class ChatClient {
         }
     }
 
+    private void sendAuth(String token) {
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("type", "auth");
+            obj.put("accessToken", token);
+            webSocket.send(obj.toString());
+        } catch (Exception e) { Log.e(TAG, "Failed to authenticate chat", e); }
+    }
+
+    public void sendTermsAccept() { sendSimple("terms_accept"); }
+
+    public void sendReport(String messageId, String reason) {
+        try {
+            JSONObject obj = new JSONObject(); obj.put("type", "report");
+            obj.put("messageId", messageId); obj.put("reason", reason);
+            if (webSocket != null) webSocket.send(obj.toString());
+        } catch (Exception e) { Log.e(TAG, "Failed to report message", e); }
+    }
+
+    public void sendBlock(String userId) { sendUserAction("block", userId); }
+    public void sendUnblock(String userId) { sendUserAction("unblock", userId); }
+
+    private void sendSimple(String type) {
+        if (webSocket != null) webSocket.send("{\"type\":\"" + type + "\"}");
+    }
+
+    private void sendUserAction(String type, String userId) {
+        try {
+            JSONObject obj = new JSONObject(); obj.put("type", type); obj.put("userId", userId);
+            if (webSocket != null) webSocket.send(obj.toString());
+        } catch (Exception e) { Log.e(TAG, "Failed to send " + type, e); }
+    }
+
     public void sendMessage(String text) {
         if (webSocket == null || text == null || text.trim().isEmpty()) return;
         try {
@@ -205,6 +250,8 @@ public final class ChatClient {
                     int count = data.optInt("count", 0);
                     String assignedName = data.optString("name", "");
                     listener.onHistoryLoaded(list, count, assignedName);
+                } else if ("auth_state".equals(type)) {
+                    listener.onAuthenticated(data.optString("userId", ""), data.optString("username", ""));
                 } else if ("message".equals(type)) {
                     JSONObject m = data.optJSONObject("message");
                     if (m != null) {
@@ -217,15 +264,23 @@ public final class ChatClient {
                     JSONObject reacts = data.optJSONObject("reactions");
                     Map<String, Integer> map = new HashMap<>();
                     if (reacts != null) {
-                        reacts.keys().forEachRemaining(k -> map.put(k, reacts.optInt(k, 0)));
+                        java.util.Iterator<String> keys = reacts.keys();
+                        while (keys.hasNext()) {
+                            String key = keys.next();
+                            map.put(key, reacts.optInt(key, 0));
+                        }
                     }
                     listener.onReactionsUpdate(trackId, map);
                 } else if ("cleared".equals(type)) {
                     listener.onChatCleared();
                 } else if ("deleted".equals(type)) {
                     listener.onMessageDeleted(data.optString("id", ""));
+                } else if ("expired".equals(type)) {
+                    listener.onMessageDeleted(data.optString("id", ""));
                 } else if ("error".equals(type)) {
-                    listener.onErrorNotice(data.optString("message", "Error"));
+                    String message = data.optString("message", "Error");
+                    if (message.contains("Accept the current Green Room Terms")) listener.onTermsRequired();
+                    listener.onErrorNotice(message);
                 }
             });
         } catch (Exception e) {

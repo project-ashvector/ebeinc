@@ -14,6 +14,7 @@ import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.EditText;
 
 import org.json.JSONObject;
 
@@ -41,6 +42,8 @@ public final class SettingsActivity extends Activity {
     private ProgressBar updateProgress;
     private Button checkUpdates;
     private Button openPlay;
+    private SupabaseAuthClient authClient;
+    private TextView accountState;
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,9 +58,13 @@ public final class SettingsActivity extends Activity {
         updateProgress = findViewById(R.id.progressUpdate);
         checkUpdates = findViewById(R.id.btnCheckUpdates);
         openPlay = findViewById(R.id.btnOpenPlay);
+        authClient = new SupabaseAuthClient(this);
+        accountState = findViewById(R.id.txtAccountState);
         ImageButton back = findViewById(R.id.btnBack);
         Button privacy = findViewById(R.id.btnPrivacy);
         Button website = findViewById(R.id.btnWebsiteSettings);
+        Button terms = findViewById(R.id.btnTerms);
+        Button deleteWeb = findViewById(R.id.btnDeleteAccountWeb);
 
         applyWindowInsets();
         displayAppMetadata();
@@ -66,7 +73,39 @@ public final class SettingsActivity extends Activity {
         checkUpdates.setOnClickListener(v -> performUpdateCheck());
         openPlay.setOnClickListener(v -> openGooglePlay());
         privacy.setOnClickListener(v -> startActivity(new Intent(this, PrivacyActivity.class)));
+        terms.setOnClickListener(v -> openExternal("https://allthings140radio.online/terms/"));
+        deleteWeb.setOnClickListener(v -> openExternal("https://allthings140radio.online/delete-account/"));
         website.setOnClickListener(v -> openExternal("https://allthings140radio.online/"));
+        findViewById(R.id.btnAccountSignIn).setOnClickListener(v -> authenticate(false));
+        findViewById(R.id.btnAccountSignUp).setOnClickListener(v -> authenticate(true));
+        findViewById(R.id.btnAccountReset).setOnClickListener(v -> {
+            String email = ((EditText) findViewById(R.id.editAccountEmail)).getText().toString().trim();
+            if (email.isEmpty()) { Toast.makeText(this, "Enter your email first.", Toast.LENGTH_SHORT).show(); return; }
+            authClient.resetPassword(email, (ok, msg) -> mainHandler.post(() -> Toast.makeText(this, msg, Toast.LENGTH_LONG).show()));
+        });
+        findViewById(R.id.btnAccountSignOut).setOnClickListener(v -> { authClient.signOut(); refreshAccountState(); });
+        findViewById(R.id.btnAccountDelete).setOnClickListener(v -> confirmDelete());
+        refreshAccountState();
+    }
+
+    private void authenticate(boolean signUp) {
+        String email = ((EditText) findViewById(R.id.editAccountEmail)).getText().toString().trim();
+        String password = ((EditText) findViewById(R.id.editAccountPassword)).getText().toString();
+        if (email.isEmpty() || password.length() < 8) { Toast.makeText(this, "Enter a valid email and 8+ character password.", Toast.LENGTH_SHORT).show(); return; }
+        SupabaseAuthClient.Callback callback = (ok, message) -> mainHandler.post(() -> { Toast.makeText(this, message, Toast.LENGTH_LONG).show(); if (ok) refreshAccountState(); });
+        if (signUp) authClient.signUp(email, password, callback); else authClient.signIn(email, password, callback);
+    }
+
+    private void confirmDelete() {
+        if (!authClient.signedIn()) { Toast.makeText(this, "Sign in first.", Toast.LENGTH_SHORT).show(); return; }
+        new android.app.AlertDialog.Builder(this).setTitle("Delete account?")
+                .setMessage("This permanently removes your ALLTHINGS140 account and profile.")
+                .setNegativeButton("CANCEL", null)
+                .setPositiveButton("DELETE", (d, w) -> authClient.deleteAccount((ok, msg) -> mainHandler.post(() -> { Toast.makeText(this, msg, Toast.LENGTH_LONG).show(); refreshAccountState(); }))).show();
+    }
+
+    private void refreshAccountState() {
+        if (accountState != null) accountState.setText(authClient.signedIn() ? "SIGNED IN — " + authClient.userId() : "SIGNED OUT — LISTENING DOES NOT REQUIRE AN ACCOUNT");
     }
 
     private void displayAppMetadata() {

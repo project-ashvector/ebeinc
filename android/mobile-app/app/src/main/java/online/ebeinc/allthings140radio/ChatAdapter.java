@@ -50,6 +50,13 @@ public final class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageV
         }
     }
 
+    public void blockUserId(String userId) {
+        if (userId != null && !userId.trim().isEmpty()) {
+            blockedUsers.add("id:" + userId.trim());
+            filterMessages();
+        }
+    }
+
     public void reportMessage(String messageId) {
         if (messageId != null) {
             reportedMessageIds.add(messageId);
@@ -81,7 +88,10 @@ public final class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageV
                 break;
             }
         }
-        allMessages.removeIf(m -> messageId.equals(m.id));
+        java.util.Iterator<ChatMessage> iterator = allMessages.iterator();
+        while (iterator.hasNext()) {
+            if (messageId.equals(iterator.next().id)) iterator.remove();
+        }
     }
 
     public void clearMessages() {
@@ -94,7 +104,7 @@ public final class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageV
         if (reportedMessageIds.contains(m.id)) return false;
         if (m.isNotice) return true;
         String lowerName = m.name.trim().toLowerCase(java.util.Locale.ROOT);
-        return !blockedUsers.contains(lowerName);
+        return !blockedUsers.contains(lowerName) && !blockedUsers.contains("id:" + m.senderId);
     }
 
     private void filterMessages() {

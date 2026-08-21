@@ -209,6 +209,7 @@ public final class RadioSiteActivity extends Activity {
         else finish();
     }
 
+    @android.annotation.SuppressLint("GestureBackNavigation")
     @SuppressWarnings("deprecation")
     @Override public void onBackPressed() {
         if (Build.VERSION.SDK_INT < 33) handleBack();
