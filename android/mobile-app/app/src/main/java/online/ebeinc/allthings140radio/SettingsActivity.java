@@ -94,6 +94,14 @@ public final class SettingsActivity extends Activity {
             pick.setType("image/*");
             startActivityForResult(pick, 1401);
         });
+        findViewById(R.id.btnAccountSaveProfile).setOnClickListener(v -> {
+            if (!authClient.signedIn()) { Toast.makeText(this, "Sign in first.", Toast.LENGTH_SHORT).show(); return; }
+            String username = ((EditText) findViewById(R.id.editAccountUsername)).getText().toString().trim();
+            authClient.updateUsername(username, (ok, msg) -> mainHandler.post(() -> {
+                Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+                if (ok) refreshAccountState();
+            }));
+        });
         refreshAccountState();
     }
 
@@ -130,6 +138,10 @@ public final class SettingsActivity extends Activity {
 
     private void refreshAccountState() {
         if (accountState != null) accountState.setText(authClient.signedIn() ? "SIGNED IN — " + authClient.userId() : "SIGNED OUT — LISTENING DOES NOT REQUIRE AN ACCOUNT");
+        if (authClient.signedIn()) authClient.loadProfile((ok, username, avatarPath) -> mainHandler.post(() -> {
+            EditText field = findViewById(R.id.editAccountUsername);
+            if (ok && field != null && !username.isEmpty()) field.setText(username);
+        }));
     }
 
     private void displayAppMetadata() {

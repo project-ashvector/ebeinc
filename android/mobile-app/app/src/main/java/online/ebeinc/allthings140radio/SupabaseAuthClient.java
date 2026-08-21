@@ -19,6 +19,7 @@ import okhttp3.Response;
 /** Small client-safe Supabase Auth/profile adapter. Privileged keys never belong here. */
 public final class SupabaseAuthClient {
     public interface Callback { void complete(boolean ok, String message); }
+    public interface ProfileCallback { void complete(boolean ok, String username, String avatarPath); }
     public static final String TERMS_VERSION = "green-room-2026-08-21-v1";
     private static final String URL = "https://dtvnlpgtmrbnpecsapsv.supabase.co";
     private static final String KEY = "sb_publishable_rSf3FiaFsk2zZ37GU0zmzA_2cNQmVJQ";
@@ -105,6 +106,26 @@ public final class SupabaseAuthClient {
                     else callback.complete(false, "Username was rejected by the server.");
                 }
             } catch (Exception e) { callback.complete(false, "Profile update failed."); }
+        }).start();
+    }
+
+    public void loadProfile(ProfileCallback callback) {
+        if (!signedIn()) { callback.complete(false, "", ""); return; }
+        new Thread(() -> {
+            try {
+                Request request = new Request.Builder().url(URL + "/rest/v1/profiles?id=eq." + userId() + "&select=username,avatar_path")
+                        .get().header("apikey", KEY).header("Authorization", "Bearer " + accessToken()).build();
+                try (Response response = client.newCall(request).execute()) {
+                    if (!response.isSuccessful() || response.body() == null) { callback.complete(false, "", ""); return; }
+                    org.json.JSONArray rows = new org.json.JSONArray(response.body().string());
+                    if (rows.length() == 0) { callback.complete(false, "", ""); return; }
+                    JSONObject row = rows.getJSONObject(0);
+                    String name = row.optString("username", "");
+                    String avatar = row.optString("avatar_path", "");
+                    prefs.edit().putString("username", name).putString("avatar_path", avatar).apply();
+                    callback.complete(true, name, avatar);
+                }
+            } catch (Exception e) { callback.complete(false, "", ""); }
         }).start();
     }
 
