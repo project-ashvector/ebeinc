@@ -6,7 +6,9 @@
   const ALERTS_URL = "/api/public/alerts";
 
   const $ = s => document.querySelector(s);
-  const audio = $("#audio");
+  const audio = window.top !== window && window.top.AT140Radio
+    ? window.top.AT140Radio.client(window)
+    : $("#audio");
   const heroPlay = $("#heroPlay");
   const miniPlay = $("#miniPlay");
   const miniPlayer = $("#miniPlayer");
@@ -36,7 +38,9 @@
   const motionToggle = $("#motionToggle");
 
   let latest = null;
-  let desiredPlay = false;
+  let desiredPlay = window.top !== window && window.top.AT140Radio
+    ? window.top.AT140Radio.desiredPlay
+    : false;
   let streamUrl = "";
   let reconnectTimer = null;
   let reconnectAttempts = 0;

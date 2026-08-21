@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script src="/persistent-route.js?v=1.0.0"></script>
 <base href="../">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#050309">
@@ -17,7 +18,7 @@
 <link rel="icon" href="assets/allthings140-logo-64.png?v=0.4.22" sizes="64x64" type="image/png">
 <link rel="apple-touch-icon" href="assets/allthings140-logo-512.png?v=0.4.21">
 <link rel="manifest" href="manifest.webmanifest?v=0.4.21">
-<link rel="stylesheet" href="styles.css?v=2.1.0">
+<link rel="stylesheet" href="styles.css?v=2.1.1">
 <link rel="stylesheet" href="support.css?v=1.1.0">
 <style>
 .roadmap-page{
@@ -450,7 +451,9 @@
 <script>
 (() => {
   "use strict";
-  const audio = document.getElementById("audio");
+  const audio = window.top !== window && window.top.AT140Radio
+    ? window.top.AT140Radio.client(window)
+    : document.getElementById("audio");
   const miniPlay = document.getElementById("miniPlay");
   const miniTitle = document.getElementById("miniTitle");
   const miniArtist = document.getElementById("miniArtist");
@@ -463,7 +466,9 @@
 
   const statusUrls = ["/api/public/status", "https://status.ebeinc.online/api/public/status"];
   let streamUrl = "";
-  let desiredPlay = false;
+  let desiredPlay = window.top !== window && window.top.AT140Radio
+    ? window.top.AT140Radio.desiredPlay
+    : false;
   let isResolving = false;
   let reconnectTimer = null;
   let reconnectAttempts = 0;

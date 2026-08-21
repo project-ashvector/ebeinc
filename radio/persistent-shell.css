@@ -1,0 +1,5 @@
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#050309}
+#routeFrame{display:block;width:100%;height:100%;border:0;background:#050309}
+#routeStatus{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:24px;background:#050309ee;color:#fff;font:700 14px/1.5 system-ui,sans-serif;text-align:center}
+#routeStatus[hidden]{display:none}
+#routeStatus button,#routeStatus a{display:inline-block;margin:12px 6px 0;padding:10px 16px;border:1px solid #b85cff;background:#180725;color:#fff;text-decoration:none;cursor:pointer}

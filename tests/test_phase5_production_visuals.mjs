@@ -15,7 +15,7 @@ const greenEngine=read('visuals-green/stage.js');
 const legacy=read('radio/visuals/index.html');
 const legacyRoute=read('radio/visuals/legacy.html');
 
-check(worker.includes('state.visuals === "new" ? "/visuals/live.html" : "/visuals/legacy.html"'),'edge routing selects immutable live or non-index legacy Visuals documents');
+check(worker.includes('state.visuals === "new" ? "/visuals/live" : "/visuals/legacy"'),'edge routing selects extensionless immutable live or non-index legacy Visuals documents');
 check(worker.includes('X-AT140-Visuals-Mode'),'production responses expose the selected Visuals mode');
 check(worker.includes('handlePublicVisualsRoutingGet'),'Visuals has a read-only adapter for its independent KV selector');
 check(worker.includes('isPublicHost ? state.visuals : "new"'),'Cloudflare preview hosts force only the preview renderer into compositor mode');
@@ -29,5 +29,5 @@ check(legacy.includes('assets/visuals-desktop-v8/index.m3u8'),'legacy fallback p
 check(legacy.includes('phone-visuals-authoritative-v1.mp4'),'legacy fallback preserves the separate mobile Visuals asset');
 check(legacyRoute===legacy,'routed legacy document is byte-identical to the Phase 2 Visuals page');
 check(read('radio/sw.js')===read('radio/sw-v47.js'),'service worker entry files remain synchronized');
-check(read('radio/sw.js').includes('allthings140-radio-v61'),'service worker cache namespace advances for the production cutover');
+check(read('radio/sw.js').includes('allthings140-radio-v62'),'service worker cache namespace includes the later persistent-radio shell revision');
 console.log(`${passed}/${passed} Phase 5 production Visuals checks passed`);

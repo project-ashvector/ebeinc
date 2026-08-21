@@ -1,11 +1,16 @@
-const CACHE = "allthings140-radio-v61";
+const CACHE = "allthings140-radio-v62";
 const SHELL = [
   "./",
   "index.html",
-  "styles.css?v=2.1.0",
+  "styles.css?v=2.1.1",
   "support.css?v=1.1.0",
   "app.js?v=2.0.1",
   "support.js?v=1.1.0",
+  "persistent-shell.html",
+  "persistent-shell.css?v=1.0.0",
+  "persistent-shell.js?v=1.0.0",
+  "persistent-route.js?v=1.0.0",
+  "persistent-audio-adapter.js?v=1.0.0",
   "manifest.webmanifest",
   "assets/allthings140-logo-64.png",
   "assets/allthings140-logo-192.webp",
@@ -75,6 +80,9 @@ self.addEventListener("fetch", event => {
 
   const networkFirst =
     url.pathname.endsWith("/app.js") ||
+    url.pathname.endsWith("/persistent-shell.js") ||
+    url.pathname.endsWith("/persistent-route.js") ||
+    url.pathname.endsWith("/persistent-audio-adapter.js") ||
     url.pathname.endsWith("/sw-v47.js") ||
     url.pathname.endsWith("/sw.js") ||
     url.pathname.includes("/room/stage.js") ||

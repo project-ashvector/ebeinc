@@ -224,9 +224,10 @@ async function handlePublicVisualsRoutingGet(request, env) {
 
 async function servePublicVisuals(request, env) {
   const state = await readRoutingState(env);
-  // Do not internally fetch an index.html asset here: Pages canonicalizes it
-  // back to /visuals/, which would recurse through this routing decision.
-  const target = state.visuals === "new" ? "/visuals/live.html" : "/visuals/legacy.html";
+  // Use extensionless Pages asset routes. Fetching the .html paths produces a
+  // 308 canonical redirect that leaks the internal asset URL to the listener.
+  // index.html remains intentionally avoided because it recurses to /visuals/.
+  const target = state.visuals === "new" ? "/visuals/live" : "/visuals/legacy";
   const assetUrl = new URL(request.url);
   assetUrl.pathname = target;
   const response = await env.ASSETS.fetch(new Request(assetUrl, request));

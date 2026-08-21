@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script src="/persistent-route.js?v=1.0.0"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#000000">
 <meta name="description" content="AllThings140Radio Live Visuals — Synchronized 24/7 dubstep visual transmission.">
@@ -74,7 +75,9 @@ video#visualVideo{position:fixed;inset:0;width:100%;height:100dvh;object-fit:con
 (() => {
   "use strict";
   const button = document.getElementById("listenLive");
-  const audio = document.getElementById("liveAudio");
+  const audio = window.top !== window && window.top.AT140Radio
+    ? window.top.AT140Radio.client(window)
+    : document.getElementById("liveAudio");
   const video = document.getElementById("visualVideo");
   const nowCard = document.getElementById("nowPlayingCard");
   const nowLabel = document.getElementById("nowPlayingLabel");
@@ -83,7 +86,9 @@ video#visualVideo{position:fixed;inset:0;width:100%;height:100dvh;object-fit:con
   const statusUrls = ["/api/public/status", "https://status.ebeinc.online/api/public/status"];
 
   let streamUrl = "";
-  let wantsLive = false;
+  let wantsLive = window.top !== window && window.top.AT140Radio
+    ? window.top.AT140Radio.desiredPlay
+    : false;
   let reconnectTimer = 0;
   let reconnectAttempts = 0;
   let resolving = false;

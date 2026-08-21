@@ -4,6 +4,18 @@
 /app.js
   Cache-Control: no-store, no-cache, must-revalidate
 
+/persistent-shell.html
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/persistent-shell.js
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/persistent-route.js
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/persistent-audio-adapter.js
+  Cache-Control: no-store, no-cache, must-revalidate
+
 /sw.js
   Cache-Control: no-store, no-cache, must-revalidate
 
@@ -34,4 +46,4 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
   Access-Control-Allow-Origin: https://allthings140-visuals-green.pages.dev
-  Content-Security-Policy: default-src 'self'; media-src 'self' https://allthings140radio.online https://visuals-media-staging.allthings140radio.online https://stream.ebeinc.online blob:; connect-src 'self' https://status.ebeinc.online https://visuals-realtime-staging.allthings140radio.online wss://visuals-realtime-staging.allthings140radio.online wss://chat.ebeinc.online ws://127.0.0.1:*; img-src 'self' data: https://allthings140radio.online; style-src 'self' 'unsafe-inline'; script-src 'self'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; media-src 'self' https://allthings140radio.online https://visuals-media-staging.allthings140radio.online https://stream.ebeinc.online blob:; connect-src 'self' https://status.ebeinc.online https://visuals-realtime-staging.allthings140radio.online wss://visuals-realtime-staging.allthings140radio.online wss://chat.ebeinc.online ws://127.0.0.1:*; img-src 'self' data: https://allthings140radio.online; style-src 'self' 'unsafe-inline'; script-src 'self'; frame-ancestors 'self'
