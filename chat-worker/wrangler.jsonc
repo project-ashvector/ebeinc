@@ -5,6 +5,10 @@
   "compatibility_date": "2026-08-06",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
+  "vars": {
+    "SUPABASE_URL": "https://dtvnlpgtmrbnpecsapsv.supabase.co",
+    "SUPABASE_PUBLIC_KEY": "sb_publishable_rSf3FiaFsk2zZ37GU0zmzA_2cNQmVJQ"
+  },
   "routes": [
     { "pattern": "chat.ebeinc.online", "custom_domain": true }
   ],

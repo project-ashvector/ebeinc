@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Delete ALLTHINGS140 Account</title>
+  <style>
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;max-width:760px;margin:40px auto;padding:0 20px;line-height:1.68;background:#0a0610;color:#f3eef7}
+    h1,h2{color:#d87aff} a{color:#ff6a1a}.warn{padding:12px 14px;background:#241126;border-radius:10px}
+  </style>
+</head>
+<body>
+<h1>Delete your ALLTHINGS140 account</h1>
+<p>ALLTHINGS140 account holders can request deletion of their account and associated personal account data.</p>
+
+<div class="warn"><strong>Important:</strong> this page submits an authenticated deletion request. A secure server-side processor completes destructive Auth, profile, avatar, and related-data cleanup; the browser never receives a privileged key.</div>
+
+<h2>How to request deletion</h2>
+<ol>
+<li><a href="https://allthings140radio.online/?account=signin">Sign in to your ALLTHINGS140 account</a> in this browser.</li>
+<li>Open your Profile or Account settings.</li>
+<li>Select the account deletion option.</li>
+<li>Confirm the deletion request below.</li>
+</ol>
+
+<button id="requestDeletion" type="button">REQUEST ACCOUNT DELETION</button>
+<p id="result" role="status"></p>
+
+<p>The request removes or de-identifies applicable authentication, profile, avatar, and other associated personal account data. Limited records may be retained where reasonably necessary for security, abuse prevention, legal obligations, or dispute handling.</p>
+
+<h2>Need help?</h2>
+<p>Use the contact methods published at <a href="https://allthings140radio.online/">https://allthings140radio.online/</a>.</p>
+
+<p><a href="https://allthings140radio.online/privacy">Privacy Policy</a></p>
+<script src="/vendor-supabase-2.112.3.min.js"></script><script src="/supabase-config.js"></script>
+<script>
+(() => { const button = document.getElementById('requestDeletion'), result = document.getElementById('result'); button.addEventListener('click', async () => { button.disabled = true; result.textContent = 'Checking your signed-in session…'; try { const cfg = window.AT140SupabaseConfig, client = window.supabase.createClient(cfg.url, cfg.publishableKey, { auth: { persistSession: true, autoRefreshToken: true } }); const { data } = await client.auth.getSession(); if (!data.session) { result.textContent = 'Please sign in first, then return to this page.'; return; } if (!confirm('Submit an account-deletion request? This action is intended to be permanent.')) return; const { error } = await client.rpc('request_my_account_deletion'); result.textContent = error ? 'The request could not be submitted. Please try again while signed in.' : 'Deletion request submitted. The secure processor will complete the account cleanup.'; } catch (_) { result.textContent = 'The request could not be submitted.'; } finally { button.disabled = false; } }); })();
+</script>
+</body>
+</html>

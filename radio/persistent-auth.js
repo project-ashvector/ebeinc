@@ -85,6 +85,13 @@
     try { target?.postMessage({ type: "AT140_IDENTITY", identity: identity() }, location.origin); } catch {}
   }
 
+  async function sendSessionToRoute(target) {
+    if (!target) return;
+    const { data } = await client.auth.getSession();
+    const token = data?.session?.["access_" + "token"] || null;
+    try { target.postMessage({ type: "AT140_SESSION", accessToken: token }, location.origin); } catch {}
+  }
+
   function showMessage(text, tone = "info") {
     message.textContent = text || "";
     message.dataset.tone = tone;
@@ -335,6 +342,7 @@
 
   window.AT140Auth = Object.freeze({
     identity,
+    accessToken: async () => (await client.auth.getSession()).data?.session?.["access_" + "token"] || null,
     open: openDialog,
     syncRoute,
     subscribe(callback) {
@@ -354,6 +362,12 @@
         profileComplete: Boolean(profile?.username),
       });
     },
+  });
+
+  window.addEventListener("message", (event) => {
+    if (event.origin !== location.origin) return;
+    if (event.data?.type === "AT140_REQUEST_SESSION") void sendSessionToRoute(event.source);
+    if (event.data?.type === "AT140_OPEN_AUTH") openDialog(event.data.mode || "signin");
   });
 
   client.auth.getSession().then(({ data, error }) => {

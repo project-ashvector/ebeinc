@@ -25,6 +25,9 @@
   let reconnectDelay = 1000;
   let stopped = false;
   let joined = false;
+  let identity = { signedIn: false };
+  let accessToken = null;
+  let termsAccepted = false;
 
   const colorFromAvatar = avatar => ({
     'orb-purple': 'purple',
@@ -42,6 +45,10 @@
 
   function send(type, extra = {}) {
     if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type, ...extra }));
+  }
+
+  function requestSession() {
+    try { window.parent.postMessage({ type: 'AT140_REQUEST_SESSION' }, location.origin); } catch (_) {}
   }
 
   function sendJoin() {
@@ -65,6 +72,7 @@
     const li = document.createElement('li');
     li.id = id;
     li.dataset.messageId = msg.id || '';
+    li.dataset.senderId = msg.senderId || '';
     const b = document.createElement('b');
     b.textContent = `${msg.name || 'Listener'}${msg.verified ? ' ✓' : ''} `;
     const time = document.createElement('time');
@@ -72,6 +80,15 @@
     const text = document.createElement('span');
     text.textContent = msg.text;
     li.append(b, time, document.createElement('br'), text);
+    if (identity.signedIn && msg.senderId && msg.senderId !== identity.userId) {
+      const actions = document.createElement('span');
+      actions.className = 'chat-message-actions';
+      const report = document.createElement('button'); report.type = 'button'; report.textContent = 'REPORT';
+      report.addEventListener('click', () => { const reason = prompt('Report reason (harassment, hate, sexual, threat, spam, scam, privacy, copyright, other):', 'other'); if (reason) send('report', { messageId: msg.id, reason: reason.toLowerCase().trim() }); });
+      const block = document.createElement('button'); block.type = 'button'; block.textContent = 'BLOCK';
+      block.addEventListener('click', () => { if (confirm(`Block ${msg.name || 'this listener'}?`)) send('block', { userId: msg.senderId }); });
+      actions.append(' ', report, ' ', block); li.append(actions);
+    }
     list.append(li);
     while (list.children.length > 60) list.firstElementChild?.remove();
     list.scrollTop = list.scrollHeight;
@@ -96,6 +113,7 @@
       reconnectDelay = 1000;
       setStatus('CHAT LIVE', 'online');
       sendJoin();
+      requestSession();
     });
 
     socket.addEventListener('message', event => {
@@ -106,6 +124,26 @@
         (data.messages || []).forEach(addMessage);
       } else if (data.type === 'message') {
         addMessage(data.message);
+      } else if (data.type === 'auth_state') {
+        identity = { signedIn: true, userId: data.userId, username: data.username, avatarUrl: data.avatarPath || null, accountStatus: data.accountStatus };
+        termsAccepted = false;
+        nameInput.value = data.username || nameInput.value;
+        setStatus('SIGNED IN — ACCEPT TERMS TO POST', 'online');
+        send('post_policy');
+      } else if (data.type === 'post_policy') {
+        termsAccepted = Boolean(data.allowed);
+        if (termsAccepted) setStatus('CHAT LIVE', 'online');
+        else if (data.reason === 'terms_acceptance_required') {
+          if (confirm('Read and accept the current Green Room Terms to post?')) { window.open('/terms/', '_blank', 'noopener'); send('terms_accept'); }
+        } else setStatus(data.reason === 'sign_in_required' ? 'SIGN IN TO JOIN GREEN ROOM' : 'POSTING RESTRICTED', 'error');
+      } else if (data.type === 'terms_accepted') {
+        termsAccepted = true; setStatus('CHAT LIVE', 'online');
+      } else if (data.type === 'report_submitted') {
+        showNotice('Report submitted to moderation.');
+      } else if (data.type === 'blocked') {
+        [...list.children].find(el => el.dataset.senderId === String(data.userId))?.remove(); showNotice('Listener blocked.');
+      } else if (data.type === 'expired') {
+        [...list.children].find(el => el.dataset.messageId === String(data.id))?.remove();
       } else if (data.type === 'joined') {
         joined = true;
         setStatus('CHAT LIVE', 'online');
@@ -143,6 +181,8 @@
 
   messageForm.addEventListener('submit', event => {
     event.preventDefault();
+    if (!identity.signedIn) { showNotice('Sign in to join Green Room.'); window.parent.postMessage({ type: 'AT140_OPEN_AUTH', mode: 'signin' }, location.origin); return; }
+    if (!termsAccepted) { send('post_policy'); showNotice('Accept the current Green Room Terms before posting.'); return; }
     const text = messageInput.value.trim();
     if (!text) return;
     if (!joined) sendJoin();
@@ -159,6 +199,12 @@
     stopped = true;
     clearTimeout(reconnectTimer);
     socket?.close(1000, 'Page closed');
+  });
+
+  window.addEventListener('message', event => {
+    if (event.origin !== location.origin || event.data?.type !== 'AT140_SESSION') return;
+    accessToken = event.data.accessToken || null;
+    if (accessToken) send('auth', { accessToken });
   });
 
   connect();
