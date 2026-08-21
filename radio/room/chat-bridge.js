@@ -103,6 +103,20 @@
     list.scrollTop = list.scrollHeight;
   }
 
+  function showTermsGate() {
+    const li = document.createElement('li');
+    li.className = 'chat-notice terms-gate';
+    const copy = document.createElement('span');
+    copy.textContent = 'Read the current Green Room Terms before posting.';
+    const link = document.createElement('a'); link.href = '/terms/'; link.target = '_blank'; link.rel = 'noopener'; link.textContent = ' OPEN TERMS';
+    const agree = document.createElement('button'); agree.type = 'button'; agree.textContent = 'I AGREE — ENTER GREEN ROOM';
+    const notNow = document.createElement('button'); notNow.type = 'button'; notNow.textContent = 'NOT NOW';
+    agree.addEventListener('click', () => { send('terms_accept'); agree.disabled = true; });
+    notNow.addEventListener('click', () => li.remove());
+    li.append(copy, link, document.createElement('br'), agree, ' ', notNow);
+    list.append(li); list.scrollTop = list.scrollHeight;
+  }
+
   function connect() {
     if (stopped || socket?.readyState === WebSocket.CONNECTING || socket?.readyState === WebSocket.OPEN) return;
     setStatus('CHAT CONNECTING', 'connecting');
@@ -133,9 +147,8 @@
       } else if (data.type === 'post_policy') {
         termsAccepted = Boolean(data.allowed);
         if (termsAccepted) setStatus('CHAT LIVE', 'online');
-        else if (data.reason === 'terms_acceptance_required') {
-          if (confirm('Read and accept the current Green Room Terms to post?')) { window.open('/terms/', '_blank', 'noopener'); send('terms_accept'); }
-        } else setStatus(data.reason === 'sign_in_required' ? 'SIGN IN TO JOIN GREEN ROOM' : 'POSTING RESTRICTED', 'error');
+        else if (data.reason === 'terms_acceptance_required') showTermsGate();
+        else setStatus(data.reason === 'sign_in_required' ? 'SIGN IN TO JOIN GREEN ROOM' : 'POSTING RESTRICTED', 'error');
       } else if (data.type === 'terms_accepted') {
         termsAccepted = true; setStatus('CHAT LIVE', 'online');
       } else if (data.type === 'report_submitted') {
