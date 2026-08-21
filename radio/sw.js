@@ -1,4 +1,4 @@
-const CACHE = "allthings140-radio-v62";
+const CACHE = "allthings140-radio-v63";
 const SHELL = [
   "./",
   "index.html",
@@ -7,8 +7,11 @@ const SHELL = [
   "app.js?v=2.0.1",
   "support.js?v=1.1.0",
   "persistent-shell.html",
-  "persistent-shell.css?v=1.0.0",
+  "persistent-shell.css?v=2.0.0",
   "persistent-shell.js?v=1.0.0",
+  "vendor-supabase-2.112.3.min.js",
+  "supabase-config.js?v=1.0.0",
+  "persistent-auth.js?v=1.0.0",
   "persistent-route.js?v=1.0.0",
   "persistent-audio-adapter.js?v=1.0.0",
   "manifest.webmanifest",
@@ -81,6 +84,8 @@ self.addEventListener("fetch", event => {
   const networkFirst =
     url.pathname.endsWith("/app.js") ||
     url.pathname.endsWith("/persistent-shell.js") ||
+    url.pathname.endsWith("/persistent-auth.js") ||
+    url.pathname.endsWith("/supabase-config.js") ||
     url.pathname.endsWith("/persistent-route.js") ||
     url.pathname.endsWith("/persistent-audio-adapter.js") ||
     url.pathname.endsWith("/sw-v47.js") ||

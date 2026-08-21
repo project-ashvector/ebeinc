@@ -6,9 +6,19 @@
 
 /persistent-shell.html
   Cache-Control: no-store, no-cache, must-revalidate
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-src 'self'; frame-ancestors 'self'; media-src 'self' https://stream.ebeinc.online; connect-src 'self' https://dtvnlpgtmrbnpecsapsv.supabase.co wss://dtvnlpgtmrbnpecsapsv.supabase.co; img-src 'self' data: blob: https://dtvnlpgtmrbnpecsapsv.supabase.co; style-src 'self'; script-src 'self'; form-action 'self'
 
 /persistent-shell.js
   Cache-Control: no-store, no-cache, must-revalidate
+
+/persistent-auth.js
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/supabase-config.js
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/vendor-supabase-2.112.3.min.js
+  Cache-Control: public, max-age=31536000, immutable
 
 /persistent-route.js
   Cache-Control: no-store, no-cache, must-revalidate

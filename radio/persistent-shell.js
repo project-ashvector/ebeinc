@@ -149,6 +149,7 @@
     if (!win || !doc) return showError(location.href);
     currentClient = win;
     authority.client(win);
+    window.AT140Auth?.syncRoute(win);
     status.hidden = true;
     document.title = doc.title || "AllThings140Radio";
     dispatch(audio.paused ? "pause" : "playing");

@@ -7,12 +7,79 @@
 <meta name="description" content="AllThings140Radio — persistent 24/7 heavy bass transmission.">
 <title>AllThings140Radio</title>
 <link rel="icon" href="/assets/allthings140-logo-64.png" sizes="64x64" type="image/png">
-<link rel="stylesheet" href="/persistent-shell.css?v=1.0.0">
+<link rel="stylesheet" href="/persistent-shell.css?v=2.0.0">
 </head>
 <body>
 <iframe id="routeFrame" title="AllThings140Radio page"></iframe>
 <div id="routeStatus" role="status">LOADING TRANSMISSION…</div>
 <audio id="siteRadio" preload="none"></audio>
+<aside id="accountShell" aria-label="ALLTHINGS140 account">
+  <button id="accountTrigger" type="button" aria-haspopup="dialog">
+    <span id="accountTriggerAvatar" class="account-avatar" aria-hidden="true">AT</span>
+    <span id="accountTriggerLabel">ACCOUNT</span>
+  </button>
+</aside>
+<dialog id="accountDialog" aria-labelledby="accountTitle">
+  <div class="account-panel">
+    <header>
+      <div><span class="account-kicker">UNIVERSAL IDENTITY</span><h1 id="accountTitle">ALLTHINGS140 ACCOUNT</h1></div>
+      <button id="accountClose" class="account-close" type="button" aria-label="Close account panel">×</button>
+    </header>
+    <p id="accountMessage" class="account-message" role="status" hidden></p>
+    <section id="accountSignedOut">
+      <div class="auth-tabs" role="tablist" aria-label="Account access">
+        <button type="button" data-auth-tab="signin" aria-selected="true">SIGN IN</button>
+        <button type="button" data-auth-tab="signup" aria-selected="false">CREATE ACCOUNT</button>
+        <button type="button" data-auth-tab="reset" aria-selected="false">RESET PASSWORD</button>
+      </div>
+      <div id="authForms">
+        <form id="signInForm" data-auth-section="signin">
+          <label>Email<input name="email" type="email" autocomplete="email" required></label>
+          <label>Password<input name="password" type="password" autocomplete="current-password" minlength="8" required></label>
+          <button class="account-primary" type="submit">SIGN IN</button>
+        </form>
+        <form id="signUpForm" data-auth-section="signup" hidden>
+          <label>Email<input name="email" type="email" autocomplete="email" required></label>
+          <label>Password<input name="password" type="password" autocomplete="new-password" minlength="8" required></label>
+          <small>Use at least 8 characters with letters and numbers. Email verification is required.</small>
+          <button class="account-primary" type="submit">CREATE ACCOUNT</button>
+        </form>
+        <form id="resetForm" data-auth-section="reset" hidden>
+          <label>Email<input name="email" type="email" autocomplete="email" required></label>
+          <button class="account-primary" type="submit">SEND RESET LINK</button>
+        </form>
+        <form id="recoveryForm" data-auth-section="recovery" hidden>
+          <label>New password<input name="password" type="password" autocomplete="new-password" minlength="8" required></label>
+          <button class="account-primary" type="submit">UPDATE PASSWORD</button>
+        </form>
+      </div>
+      <div class="oauth-divider"><span>OR</span></div>
+      <button id="googleAuth" class="oauth-button" type="button">CONTINUE WITH GOOGLE <small>CONFIG REQUIRED</small></button>
+      <button id="soundCloudAuth" class="oauth-button" type="button">CONTINUE WITH SOUNDCLOUD <small>FOUNDATION ONLY</small></button>
+    </section>
+    <section id="accountSignedIn" hidden>
+      <div class="profile-heading">
+        <span id="profileAvatar" class="profile-avatar" aria-hidden="true">AT</span>
+        <div><h2 id="profileUsername">Profile</h2><p id="profileIdentity"></p></div>
+      </div>
+      <form id="profileForm">
+        <label>Username<input id="profileUsernameInput" name="username" type="text" minlength="3" maxlength="24" pattern="[A-Za-z0-9_]+" autocomplete="username" required></label>
+        <small id="profileCooldown"></small>
+        <label>Profile picture<input id="profileAvatarInput" name="avatar" type="file" accept="image/jpeg,image/png,image/webp"></label>
+        <small>JPEG, PNG, or WebP. Images are normalized to a 512×512 WebP and limited to 2 MB.</small>
+        <div class="profile-grid"><span>ACCOUNT STATUS</span><strong id="profileStatus">ACTIVE</strong><span>TERMS</span><strong id="profileTermsState">PENDING</strong></div>
+        <button class="account-primary" type="submit">SAVE PROFILE</button>
+      </form>
+      <div class="account-actions">
+        <button id="accountSignOut" type="button">SIGN OUT</button>
+        <button id="requestDeletion" type="button">REQUEST ACCOUNT DELETION</button>
+      </div>
+    </section>
+  </div>
+</dialog>
 <script src="/persistent-shell.js?v=1.0.0"></script>
+<script src="/vendor-supabase-2.112.3.min.js"></script>
+<script src="/supabase-config.js?v=1.0.0"></script>
+<script src="/persistent-auth.js?v=1.0.0"></script>
 </body>
 </html>

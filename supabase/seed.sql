@@ -1,0 +1,2 @@
+-- Deliberately empty. Reserved identities and protected defaults are versioned
+-- in the migration so local and hosted environments behave identically.
