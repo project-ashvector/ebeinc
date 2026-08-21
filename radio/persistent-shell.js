@@ -7,6 +7,7 @@
   const frame = document.getElementById("routeFrame");
   const status = document.getElementById("routeStatus");
   const audio = document.getElementById("siteRadio");
+  const accountShell = document.getElementById("accountShell");
   const savedVolumeRaw = localStorage.getItem("allthings140-volume");
   const savedVolume = Number(savedVolumeRaw);
   if (savedVolumeRaw !== null && Number.isFinite(savedVolume) && savedVolume >= 0 && savedVolume <= 1) audio.volume = savedVolume;
@@ -149,6 +150,7 @@
     if (!win || !doc) return showError(location.href);
     currentClient = win;
     authority.client(win);
+    syncRouteLayout();
     window.AT140Auth?.syncRoute(win);
     status.hidden = true;
     document.title = doc.title || "AllThings140Radio";
@@ -173,6 +175,20 @@
     if (url.hash) requestAnimationFrame(() => doc.getElementById(url.hash.slice(1))?.scrollIntoView());
     else win.scrollTo(0, 0);
   }
+
+  function syncRouteLayout() {
+    const doc = frame.contentDocument;
+    if (!doc?.documentElement) return;
+    const wide = window.innerWidth > 680;
+    const accountWidth = accountShell?.getBoundingClientRect().width || 0;
+    doc.documentElement.style.setProperty("--persistent-account-clearance", wide ? `${Math.ceil(accountWidth + 24)}px` : "12px");
+  }
+
+  const accountResizeObserver = typeof ResizeObserver === "function" && accountShell
+    ? new ResizeObserver(syncRouteLayout)
+    : null;
+  accountResizeObserver?.observe(accountShell);
+  addEventListener("resize", syncRouteLayout, { passive: true });
 
   function navigate(input, options = {}) {
     const url = publicUrl(input);

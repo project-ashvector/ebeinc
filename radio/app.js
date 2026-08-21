@@ -528,6 +528,13 @@
     { threshold: 0.1 }
   ).observe($("#listen"));
 
+  const updatePersistentPlayerHeight = () => {
+    const height = miniPlayer.getBoundingClientRect().height;
+    if (height > 0) document.documentElement.style.setProperty("--persistent-player-height", `${Math.ceil(height)}px`);
+  };
+  updatePersistentPlayerHeight();
+  if (typeof ResizeObserver === "function") new ResizeObserver(updatePersistentPlayerHeight).observe(miniPlayer);
+
   // Navigation Menu Toggle
   const navMenu = $(".nav-menu");
   const navToggle = $("#navToggle");

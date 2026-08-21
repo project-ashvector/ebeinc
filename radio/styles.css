@@ -791,6 +791,7 @@ h1 span{
   box-shadow:0 12px 40px rgba(0,0,0,0.8),0 0 20px rgba(126,37,187,0.25);
 }
 .mini-player[hidden]{display:none}
+body.mini-visible{padding-bottom:calc(var(--persistent-player-height, 80px) + env(safe-area-inset-bottom) + 24px)}
 .mini-player>button,.mini-player>.mini-room-link{
   height:38px;
   border:1px solid rgba(184,92,255,0.5);
