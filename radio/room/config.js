@@ -1,7 +1,9 @@
 window.AT140_GREEN_CONFIG={
   environment:"live",
   realtimeUrl:"wss://visuals-realtime-staging.allthings140radio.online/ws?environment=live",
-  chatUrl:"wss://chat.ebeinc.online/ws",
+  chatUrl:location.hostname.endsWith(".ebeinc-uqt.pages.dev")
+    ? "wss://allthings140-live-chat-phase-c.ebmarahofficial.workers.dev/ws"
+    : "wss://chat.ebeinc.online/ws",
   realtimeStateUrl:"https://visuals-realtime-staging.allthings140radio.online/visuals-state?environment=live",
   realtimeLayoutUrl:"https://visuals-realtime-staging.allthings140radio.online/layout-state?environment=live",
   rendererAckUrl:"https://visuals-realtime-staging.allthings140radio.online/renderer-ack",

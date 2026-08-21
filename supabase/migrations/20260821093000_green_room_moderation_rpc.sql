@@ -11,7 +11,7 @@ language plpgsql security definer set search_path = public, pg_temp
 as $$
 begin
   if not public.green_room_is_moderator() then raise exception using errcode = '42501', message = 'moderator_required'; end if;
-  return query select r from public.green_room_reports r where (p_status is null or r.status = p_status) order by r.created_at desc limit 200;
+  return query select * from public.green_room_reports r where (p_status is null or r.status = p_status) order by r.created_at desc limit 200;
 end;
 $$;
 
