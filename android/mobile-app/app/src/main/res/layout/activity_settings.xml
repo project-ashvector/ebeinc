@@ -192,6 +192,15 @@
                     android:textColor="@color/white"
                     android:textColorHint="@color/muted" />
                 <Button
+                    android:id="@+id/btnAccountAvatar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="50dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/button_cyber"
+                    android:text="UPLOAD AVATAR"
+                    android:textColor="@color/white" />
+                <Button
                     android:id="@+id/btnAccountSignIn"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

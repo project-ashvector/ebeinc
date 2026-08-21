@@ -6,6 +6,8 @@ import android.content.SharedPreferences;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.MediaType;
@@ -81,6 +83,36 @@ public final class SupabaseAuthClient {
             } catch (Exception e) { callback.complete(false, "Profile update failed."); }
         }).start();
     }
+
+    /** Uploads one user-owned avatar object at the canonical UUID/avatar path. */
+    public void uploadAvatar(UriSource source, String mimeType, Callback callback) {
+        new Thread(() -> {
+            try {
+                byte[] bytes = source.read();
+                if (bytes.length == 0 || bytes.length > 2 * 1024 * 1024) { callback.complete(false, "Avatar must be a non-empty image under 2 MiB."); return; }
+                String type = mimeType == null ? "" : mimeType.toLowerCase(java.util.Locale.US);
+                if (!("image/jpeg".equals(type) || "image/png".equals(type) || "image/webp".equals(type))) { callback.complete(false, "Choose a JPEG, PNG, or WebP image."); return; }
+                String path = userId() + "/avatar";
+                Request upload = new Request.Builder().url(URL + "/storage/v1/object/avatars/" + path)
+                        .put(RequestBody.create(bytes, MediaType.parse(type)))
+                        .header("apikey", KEY).header("Authorization", "Bearer " + accessToken())
+                        .header("x-upsert", "true").build();
+                try (Response response = client.newCall(upload).execute()) {
+                    if (!response.isSuccessful()) { callback.complete(false, "Avatar upload was rejected."); return; }
+                }
+                JSONObject profile = new JSONObject().put("avatar_path", path);
+                Request update = new Request.Builder().url(URL + "/rest/v1/profiles?id=eq." + userId())
+                        .patch(RequestBody.create(profile.toString(), MediaType.parse("application/json")))
+                        .header("apikey", KEY).header("Authorization", "Bearer " + accessToken())
+                        .header("Prefer", "return=minimal").build();
+                try (Response response = client.newCall(update).execute()) {
+                    callback.complete(response.isSuccessful(), response.isSuccessful() ? "Avatar saved." : "Avatar profile update failed.");
+                }
+            } catch (Exception e) { callback.complete(false, "Avatar upload failed."); }
+        }).start();
+    }
+
+    public interface UriSource { byte[] read() throws Exception; }
 
     public void deleteAccount(Callback callback) {
         new Thread(() -> {

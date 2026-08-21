@@ -25,6 +25,8 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 
 public final class SettingsActivity extends Activity {
     private static final String STATUS_API_URL = "https://status.ebeinc.online/api/public/status";
@@ -85,7 +87,29 @@ public final class SettingsActivity extends Activity {
         });
         findViewById(R.id.btnAccountSignOut).setOnClickListener(v -> { authClient.signOut(); refreshAccountState(); });
         findViewById(R.id.btnAccountDelete).setOnClickListener(v -> confirmDelete());
+        findViewById(R.id.btnAccountAvatar).setOnClickListener(v -> {
+            if (!authClient.signedIn()) { Toast.makeText(this, "Sign in first.", Toast.LENGTH_SHORT).show(); return; }
+            Intent pick = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            pick.addCategory(Intent.CATEGORY_OPENABLE);
+            pick.setType("image/*");
+            startActivityForResult(pick, 1401);
+        });
         refreshAccountState();
+    }
+
+    @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode != 1401 || resultCode != RESULT_OK || data == null || data.getData() == null) return;
+        Uri uri = data.getData();
+        String mime = getContentResolver().getType(uri);
+        authClient.uploadAvatar(() -> {
+            try (InputStream in = getContentResolver().openInputStream(uri); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                if (in == null) return new byte[0];
+                byte[] buf = new byte[8192]; int n;
+                while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
+                return out.toByteArray();
+            }
+        }, mime, (ok, msg) -> mainHandler.post(() -> Toast.makeText(this, msg, Toast.LENGTH_LONG).show()));
     }
 
     private void authenticate(boolean signUp) {
