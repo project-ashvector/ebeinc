@@ -335,9 +335,15 @@
     else closeDialog();
   });
   document.getElementById("requestDeletion").addEventListener("click", async () => {
-    if (!confirm("Queue a secure account-deletion request? Your account is not deleted immediately.")) return;
-    const { error } = await client.rpc("request_my_account_deletion");
-    showMessage(error ? "Deletion request could not be queued." : "Deletion request queued for secure server processing.", error ? "error" : "success");
+    if (!confirm("Submit an account-deletion request? This is intended to be permanent.")) return;
+    const { data } = await client.auth.getSession();
+    const token = data?.session?.["access_" + "token"];
+    try {
+      const response = await fetch(`${config.url}/functions/v1/delete-account`, { method: "POST", headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" } });
+      const body = await response.json().catch(() => ({}));
+      showMessage(response.ok && body.deleted ? "Account deletion completed." : "Account deletion is temporarily unavailable; please try again later.", response.ok && body.deleted ? "success" : "error");
+      if (response.ok && body.deleted) await client.auth.signOut();
+    } catch (_) { showMessage("Account deletion is temporarily unavailable; please try again later.", "error"); }
   });
 
   window.AT140Auth = Object.freeze({
