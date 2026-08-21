@@ -491,6 +491,14 @@ public final class MainActivity extends Activity {
 
     @Override protected void onResume() {
         super.onResume();
+        if (authClient != null && authClient.signedIn()) {
+            authClient.refreshSession((ok, message) -> {
+                if (ok && chatClient != null) runOnUiThread(() -> {
+                    chatClient.setAccessToken(authClient.accessToken());
+                    chatClient.connect();
+                });
+            });
+        }
         if (chatClient != null && !authClient.accessToken().equals(chatClient.getAccessToken())) {
             chatClient.setAccessToken(authClient.accessToken());
             if (chatClient.isConnected()) chatClient.disconnect();

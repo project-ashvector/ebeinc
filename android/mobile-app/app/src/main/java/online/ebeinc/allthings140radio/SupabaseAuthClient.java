@@ -32,6 +32,30 @@ public final class SupabaseAuthClient {
     public String username() { return prefs.getString("username", ""); }
     public boolean signedIn() { return !accessToken().isEmpty(); }
 
+    /** Refreshes a persisted Supabase session without exposing credentials to the UI. */
+    public void refreshSession(Callback callback) {
+        String refresh = prefs.getString("refresh_token", "");
+        if (refresh.isEmpty()) { callback.complete(false, "No refresh session."); return; }
+        new Thread(() -> {
+            try {
+                JSONObject body = new JSONObject().put("refresh_token", refresh);
+                Request request = new Request.Builder().url(URL + "/auth/v1/token?grant_type=refresh_token")
+                        .post(RequestBody.create(body.toString(), MediaType.parse("application/json")))
+                        .header("apikey", KEY).header("Content-Type", "application/json").build();
+                try (Response response = client.newCall(request).execute()) {
+                    String text = response.body() == null ? "" : response.body().string();
+                    if (!response.isSuccessful()) { callback.complete(false, "Session refresh failed."); return; }
+                    JSONObject data = new JSONObject(text);
+                    JSONObject user = data.optJSONObject("user");
+                    prefs.edit().putString("access_token", data.optString("access_token", accessToken()))
+                            .putString("refresh_token", data.optString("refresh_token", refresh))
+                            .putString("user_id", user == null ? userId() : user.optString("id", userId())).apply();
+                    callback.complete(true, "Session restored.");
+                }
+            } catch (Exception e) { callback.complete(false, "Session refresh failed."); }
+        }).start();
+    }
+
     public void signIn(String email, String password, Callback callback) { auth("token?grant_type=password", email, password, callback); }
     public void signUp(String email, String password, Callback callback) { auth("signup", email, password, callback); }
     public void resetPassword(String email, Callback callback) {
