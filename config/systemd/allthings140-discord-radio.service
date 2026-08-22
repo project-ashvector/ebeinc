@@ -1,0 +1,26 @@
+[Unit]
+Description=ALLTHINGS140 Radio Discord voice relay
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=allthings140-discord
+Group=allthings140-discord
+WorkingDirectory=/opt/allthings140-discord-radio
+EnvironmentFile=/etc/allthings140radio/discord-bot.env
+ExecStart=/usr/bin/node /opt/allthings140-discord-radio/index.js
+Restart=always
+RestartSec=10
+TimeoutStopSec=20
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/allthings140-discord
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+LimitNOFILE=4096
+SyslogIdentifier=allthings140-discord-radio
+
+[Install]
+WantedBy=multi-user.target
