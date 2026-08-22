@@ -294,9 +294,7 @@ public final class MainActivity extends Activity {
             @Override
             public void onHistoryLoaded(List<ChatMessage> messages, int presenceCount, String assignedName) {
                 chatAdapter.setMessages(messages);
-                if (messages.size() > 0) {
-                    recyclerChatMessages.scrollToPosition(chatAdapter.getItemCount() - 1);
-                }
+                scrollChatToEndIfNeeded(false);
                 updatePresenceUi(presenceCount);
                 if (savedName.isEmpty() && !assignedName.isEmpty()) {
                     prefs.edit().putString(PREF_CHAT_NAME, assignedName).apply();
@@ -307,7 +305,7 @@ public final class MainActivity extends Activity {
             @Override
             public void onNewMessage(ChatMessage message) {
                 chatAdapter.addMessage(message);
-                recyclerChatMessages.smoothScrollToPosition(chatAdapter.getItemCount() - 1);
+                scrollChatToEndIfNeeded(true);
             }
 
             @Override
@@ -356,6 +354,15 @@ public final class MainActivity extends Activity {
         findViewById(R.id.btnReactHeart).setOnClickListener(v -> sendQuickReaction("heart"));
         findViewById(R.id.btnReactBolt).setOnClickListener(v -> sendQuickReaction("bolt"));
         findViewById(R.id.btnReactBass).setOnClickListener(v -> sendQuickReaction("bass"));
+    }
+
+    private void scrollChatToEndIfNeeded(boolean smooth) {
+        if (recyclerChatMessages == null || chatAdapter == null) return;
+        int count = chatAdapter.getItemCount();
+        if (count <= 0) return;
+        int last = count - 1;
+        if (smooth) recyclerChatMessages.smoothScrollToPosition(last);
+        else recyclerChatMessages.scrollToPosition(last);
     }
 
     private void updatePresenceUi(int count) {
