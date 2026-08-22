@@ -24,6 +24,7 @@ Date: 2026-08-22
 - Voice join: PASS — joined Listen Party.
 - Audio player: PASS — reached `playing`.
 - Health endpoint: PASS — `http://127.0.0.1:18401/health` reported Discord ready, voice ready, stream connected, audio playing, and zero reconnects during the smoke test.
+- Voice teardown hardening: PASS — FFmpeg stdout teardown is handled and voice state transitions schedule bounded recovery; a post-fix 45-second voice/FFmpeg run reached `playing` with no fatal exception.
 - Existing website/broadcast infrastructure: not modified.
 
 ## Reliability
@@ -40,10 +41,11 @@ Listen Party operation. The production systemd unit is prepared at:
 
 `/home/ebmarah/Projects/AllThings140Radio/config/systemd/allthings140-discord-radio.service`
 
-An always-on Oracle/Tailscale host was not accessible from this workstation,
-so boot persistence has not yet been installed. Install the unit on the
-always-on host with the README instructions before treating reboot recovery as
-complete.
+An always-on Oracle/Tailscale host was not accessible from this workstation:
+the local Tailscale daemon is stopped and `tailscale ssh` cannot yet verify the
+Oracle host key. Boot persistence has therefore not been installed. Install
+the unit on the always-on host with the README instructions before treating
+reboot recovery as complete.
 
 ## Operations
 
@@ -54,4 +56,3 @@ sudo systemctl restart allthings140-discord-radio.service
 sudo systemctl stop allthings140-discord-radio.service
 sudo systemctl start allthings140-discord-radio.service
 ```
-
