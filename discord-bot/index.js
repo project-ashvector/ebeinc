@@ -56,6 +56,7 @@ function startFfmpeg() {
   const child = spawn(ffmpegPath, ['-hide_banner', '-loglevel', 'warning', '-nostdin', '-reconnect', '1', '-reconnect_streamed', '1', '-reconnect_at_eof', '1', '-reconnect_delay_max', '10', '-i', radioUrl, '-vn', '-sn', '-dn', '-f', 's16le', '-ar', '48000', '-ac', '2', 'pipe:1'], { stdio: ['ignore', 'pipe', 'pipe'] });
   ffmpeg = child; state.ffmpegPid = child.pid; let bytes = 0;
   child.stdout.on('data', (chunk) => { bytes += chunk.length; state.lastAudioAt = Date.now(); state.lastStreamAt = Date.now(); });
+  child.stdout.on('error', (error) => { setError(`ffmpeg stdout: ${error.message}`); if (!state.deliberateStop) scheduleReconnect('ffmpeg-stdout'); });
   child.stderr.on('data', (chunk) => { const line = chunk.toString().trim(); if (line) log('ffmpeg', line.slice(0, 300)); });
   child.on('error', (error) => setError(`ffmpeg: ${error.message}`));
   child.on('close', (code, signal) => { if (ffmpeg === child) { ffmpeg = null; state.ffmpegPid = null; log('ffmpeg exited', `code=${code ?? 'null'} signal=${signal ?? 'none'} bytes=${bytes}`); scheduleReconnect('ffmpeg-exit'); } });
@@ -76,7 +77,7 @@ async function connectVoice() {
   if (connection) connection.destroy();
   connection = joinVoiceChannel({ channelId: channel.id, guildId: guild.id, adapterCreator: guild.voiceAdapterCreator, selfDeaf: true, selfMute: true });
   connection.subscribe(player);
-  connection.on('stateChange', (oldState, newState) => log('voice state', `${oldState.status} -> ${newState.status}`));
+  connection.on('stateChange', (oldState, newState) => { log('voice state', `${oldState.status} -> ${newState.status}`); if (!state.deliberateStop && (newState.status === VoiceConnectionStatus.Disconnected || newState.status === VoiceConnectionStatus.Destroyed)) scheduleReconnect('voice-state'); });
   connection.on('error', (error) => { setError(`voice: ${error.message}`); scheduleReconnect('voice-error'); });
   try { await entersState(connection, VoiceConnectionStatus.Ready, 30_000); connectAttempt = 0; log('voice connected', `channel=${channel.name}`); startFfmpeg(); }
   catch (error) { connection.destroy(); connection = null; throw error; }
