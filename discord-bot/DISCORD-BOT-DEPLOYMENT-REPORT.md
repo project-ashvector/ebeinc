@@ -34,18 +34,29 @@ audio after 45 seconds. Voice disconnects, bot moves, FFmpeg exits, and stream
 failures schedule bounded reconnects. The bot self-deafens and never receives
 or records Discord users.
 
-## Deployment status
+## Always-on deployment
 
-The bot is currently running in a persistent terminal session for immediate
-Listen Party operation. The production systemd unit is prepared at:
-
-`/home/ebmarah/Projects/AllThings140Radio/config/systemd/allthings140-discord-radio.service`
-
-An always-on Oracle/Tailscale host was not accessible from this workstation:
-the local Tailscale daemon is stopped and `tailscale ssh` cannot yet verify the
-Oracle host key. Boot persistence has therefore not been installed. Install
-the unit on the always-on host with the README instructions before treating
-reboot recovery as complete.
+- Destination host: `allthings140radio-server` (Oracle Linux 9.8)
+- Tailscale address: `100.124.12.41`
+- Isolated project: `/opt/allthings140-discord-radio`
+- Service: `allthings140-discord-radio.service`
+- Service account: `allthings140-discord` (non-root)
+- Secrets: `/etc/allthings140radio-discord/discord-bot.env` (root-owned, mode 0640; token not logged)
+- Private Node runtime: `/opt/allthings140-discord-radio/node` (v24.18.0)
+- Health: localhost-only `http://127.0.0.1:18401/health`
+- Systemd enabled: PASS
+- Systemd active: PASS
+- Discord login/guild discovery: PASS
+- Listen Party voice READY: PASS
+- Audio PLAYING/live stream CONNECTED: PASS
+- Service restart recovery: PASS
+- Controlled Node process failure recovery: PASS
+- FFmpeg-child test: systemd recovered the bot; the tested source’s existing
+  process-level recovery path is retained. No station service was changed.
+- Laptop/terminal independence: PASS — the active instance is systemd-owned on
+  the Oracle host; no local bot process remains required.
+- AutoDJ/Icecast/website/Android: unchanged; final station health was online
+  with active catalog playback after deployment.
 
 ## Operations
 
@@ -56,3 +67,6 @@ sudo systemctl restart allthings140-discord-radio.service
 sudo systemctl stop allthings140-discord-radio.service
 sudo systemctl start allthings140-discord-radio.service
 ```
+
+Run the commands on the Oracle host (or through Tailscale SSH). The environment
+file contains the Discord token and must never be printed or committed.
