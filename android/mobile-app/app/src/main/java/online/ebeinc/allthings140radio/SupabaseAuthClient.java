@@ -15,11 +15,15 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import okhttp3.WebSocket;
+import okhttp3.WebSocketListener;
 
 /** Small client-safe Supabase Auth/profile adapter. Privileged keys never belong here. */
 public final class SupabaseAuthClient {
     public interface Callback { void complete(boolean ok, String message); }
     public interface ProfileCallback { void complete(boolean ok, String username, String avatarPath); }
+    public interface RoleCallback { void complete(boolean ok, String role, String accountStatus, String email, String accountClass, String accountType, boolean alertAdsEnabled); }
+    public interface JsonCallback { void complete(boolean ok, String json, String message); }
     public static final String TERMS_VERSION = "green-room-2026-08-21-v1";
     private static final String URL = "https://dtvnlpgtmrbnpecsapsv.supabase.co";
     private static final String KEY = "sb_publishable_rSf3FiaFsk2zZ37GU0zmzA_2cNQmVJQ";
@@ -32,6 +36,60 @@ public final class SupabaseAuthClient {
     public String userId() { return prefs.getString("user_id", ""); }
     public String username() { return prefs.getString("username", ""); }
     public boolean signedIn() { return !accessToken().isEmpty(); }
+
+    /** Fetches current authority from the protected server RPC; role is never persisted locally. */
+    public void loadRole(RoleCallback callback) {
+        if (!signedIn()) { callback.complete(false, "user", "active", "", "regular", "regular", true); return; }
+        rpc("account_role_state", new JSONObject(), (ok, json, message) -> {
+            try {
+                org.json.JSONArray rows = new org.json.JSONArray(json);
+                JSONObject row = rows.length() == 0 ? new JSONObject() : rows.getJSONObject(0);
+                callback.complete(ok, row.optString("role", "user"), row.optString("account_status", "active"), row.optString("email", ""), row.optString("account_class", "regular"), row.optString("account_type", "regular"), row.optBoolean("alert_ads_enabled", true));
+            } catch (Exception ignored) { callback.complete(false, "user", "active", "", "regular", "regular", true); }
+        });
+    }
+
+    public void rpc(String name, JSONObject body, JsonCallback callback) {
+        new Thread(() -> {
+            try {
+                Request request = new Request.Builder().url(URL + "/rest/v1/rpc/" + name)
+                        .post(RequestBody.create(body.toString(), MediaType.parse("application/json")))
+                        .header("apikey", KEY).header("Authorization", "Bearer " + accessToken())
+                        .header("Content-Type", "application/json").build();
+                try (Response response = client.newCall(request).execute()) {
+                    String text = response.body() == null ? "" : response.body().string();
+                    callback.complete(response.isSuccessful(), text, response.isSuccessful() ? "OK" : error(text));
+                }
+            } catch (Exception e) { callback.complete(false, "", "Network request failed."); }
+        }).start();
+    }
+
+    public void deleteGreenRoomMessage(String messageId, String targetUserId, String reason, Callback callback) {
+        Request request = new Request.Builder().url("wss://chat.ebeinc.online/ws")
+                .header("Origin", "https://allthings140radio.online").build();
+        client.newWebSocket(request, new WebSocketListener() {
+            private boolean actionSent;
+            @Override public void onOpen(WebSocket socket, Response response) {
+                try { socket.send(new JSONObject().put("type", "auth").put("accessToken", accessToken()).toString()); }
+                catch (Exception ignored) { socket.close(1002, "invalid request"); callback.complete(false, "Moderation request failed."); }
+            }
+            @Override public void onMessage(WebSocket socket, String text) {
+                try {
+                    JSONObject event = new JSONObject(text);
+                    if ("auth_state".equals(event.optString("type")) && event.optBoolean("moderator") && !actionSent) {
+                        actionSent = true;
+                        socket.send(new JSONObject().put("type", "moderate").put("action", "delete")
+                                .put("messageId", messageId).put("targetUserId", targetUserId).put("reason", reason).toString());
+                    } else if ("deleted".equals(event.optString("type")) && messageId.equals(event.optString("id"))) {
+                        socket.close(1000, "complete"); callback.complete(true, "Message deleted.");
+                    } else if ("error".equals(event.optString("type"))) {
+                        socket.close(1008, "denied"); callback.complete(false, event.optString("message", "Moderation denied."));
+                    }
+                } catch (Exception ignored) { socket.close(1002, "invalid response"); callback.complete(false, "Moderation response invalid."); }
+            }
+            @Override public void onFailure(WebSocket socket, Throwable error, Response response) { callback.complete(false, "Green Room moderation unavailable."); }
+        });
+    }
 
     /** Refreshes a persisted Supabase session without exposing credentials to the UI. */
     public void refreshSession(Callback callback) {

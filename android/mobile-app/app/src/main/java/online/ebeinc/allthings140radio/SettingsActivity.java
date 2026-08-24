@@ -2,6 +2,7 @@ package online.ebeinc.allthings140radio;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -15,6 +16,10 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.EditText;
+import android.widget.CheckBox;
+import android.widget.ScrollView;
+import android.text.method.HideReturnsTransformationMethod;
+import android.text.method.PasswordTransformationMethod;
 
 import org.json.JSONObject;
 
@@ -46,6 +51,31 @@ public final class SettingsActivity extends Activity {
     private Button openPlay;
     private SupabaseAuthClient authClient;
     private TextView accountState;
+    private TextView accountIntro;
+    private TextView roleBadge;
+    private Button moderationButton;
+    private Button adminButton;
+    private EditText accountEmail;
+    private EditText accountPassword;
+    private EditText accountConfirmPassword;
+    private CheckBox accountShowPassword;
+    private ScrollView settingsScroll;
+    private View accountAuthTabs;
+    private TextView authModeIntro;
+    private Button authModeSignIn;
+    private Button authModeCreate;
+    private EditText accountUsername;
+    private View accountAvatar;
+    private View accountSaveProfile;
+    private View accountSignIn;
+    private View accountSignUp;
+    private View accountReset;
+    private View accountSignOut;
+    private View accountDelete;
+    private TextView accountType;
+    private TextView alertAds;
+    private enum AuthMode { SIGN_IN, CREATE, RESET }
+    private AuthMode authMode = AuthMode.SIGN_IN;
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,6 +92,29 @@ public final class SettingsActivity extends Activity {
         openPlay = findViewById(R.id.btnOpenPlay);
         authClient = new SupabaseAuthClient(this);
         accountState = findViewById(R.id.txtAccountState);
+        accountIntro = findViewById(R.id.txtAccountIntro);
+        roleBadge = findViewById(R.id.txtAccountRoleBadge);
+        moderationButton = findViewById(R.id.btnModeration);
+        adminButton = findViewById(R.id.btnAdminControls);
+        accountEmail = findViewById(R.id.editAccountEmail);
+        accountPassword = findViewById(R.id.editAccountPassword);
+        accountConfirmPassword = findViewById(R.id.editAccountConfirmPassword);
+        accountShowPassword = findViewById(R.id.checkAccountShowPassword);
+        settingsScroll = findViewById(R.id.settingsScroll);
+        accountAuthTabs = findViewById(R.id.accountAuthTabs);
+        authModeIntro = findViewById(R.id.txtAuthModeIntro);
+        authModeSignIn = findViewById(R.id.btnAuthModeSignIn);
+        authModeCreate = findViewById(R.id.btnAuthModeCreate);
+        accountUsername = findViewById(R.id.editAccountUsername);
+        accountAvatar = findViewById(R.id.btnAccountAvatar);
+        accountSaveProfile = findViewById(R.id.btnAccountSaveProfile);
+        accountSignIn = findViewById(R.id.btnAccountSignIn);
+        accountSignUp = findViewById(R.id.btnAccountSignUp);
+        accountReset = findViewById(R.id.btnAccountReset);
+        accountSignOut = findViewById(R.id.btnAccountSignOut);
+        accountDelete = findViewById(R.id.btnAccountDelete);
+        accountType = findViewById(R.id.txtAccountType);
+        alertAds = findViewById(R.id.txtAlertAds);
         ImageButton back = findViewById(R.id.btnBack);
         Button privacy = findViewById(R.id.btnPrivacy);
         Button website = findViewById(R.id.btnWebsiteSettings);
@@ -78,9 +131,26 @@ public final class SettingsActivity extends Activity {
         terms.setOnClickListener(v -> openExternal("https://allthings140radio.online/terms/"));
         deleteWeb.setOnClickListener(v -> openExternal("https://allthings140radio.online/delete-account/"));
         website.setOnClickListener(v -> openExternal("https://allthings140radio.online/"));
+        authModeSignIn.setOnClickListener(v -> showAuthMode(AuthMode.SIGN_IN));
+        authModeCreate.setOnClickListener(v -> showAuthMode(AuthMode.CREATE));
+        accountShowPassword.setOnCheckedChangeListener((button, checked) -> {
+            int passwordCursor = accountPassword.getSelectionStart();
+            int confirmCursor = accountConfirmPassword.getSelectionStart();
+            accountPassword.setTransformationMethod(checked ? HideReturnsTransformationMethod.getInstance() : PasswordTransformationMethod.getInstance());
+            accountConfirmPassword.setTransformationMethod(checked ? HideReturnsTransformationMethod.getInstance() : PasswordTransformationMethod.getInstance());
+            accountPassword.setSelection(Math.max(0, passwordCursor));
+            accountConfirmPassword.setSelection(Math.max(0, confirmCursor));
+        });
+        View.OnFocusChangeListener keepActionVisible = (view, focused) -> {
+            if (focused) view.postDelayed(this::scrollAuthActionIntoView, 300);
+        };
+        accountEmail.setOnFocusChangeListener(keepActionVisible);
+        accountPassword.setOnFocusChangeListener(keepActionVisible);
+        accountConfirmPassword.setOnFocusChangeListener(keepActionVisible);
         findViewById(R.id.btnAccountSignIn).setOnClickListener(v -> authenticate(false));
         findViewById(R.id.btnAccountSignUp).setOnClickListener(v -> authenticate(true));
         findViewById(R.id.btnAccountReset).setOnClickListener(v -> {
+            if (authMode != AuthMode.RESET) { showAuthMode(AuthMode.RESET); return; }
             String email = ((EditText) findViewById(R.id.editAccountEmail)).getText().toString().trim();
             if (email.isEmpty()) { Toast.makeText(this, "Enter your email first.", Toast.LENGTH_SHORT).show(); return; }
             authClient.resetPassword(email, (ok, msg) -> mainHandler.post(() -> Toast.makeText(this, msg, Toast.LENGTH_LONG).show()));
@@ -102,7 +172,42 @@ public final class SettingsActivity extends Activity {
                 if (ok) refreshAccountState();
             }));
         });
+        moderationButton.setOnClickListener(v -> openRoleConsole(false));
+        adminButton.setOnClickListener(v -> openRoleConsole(true));
         refreshAccountState();
+    }
+
+    @Override protected void onResume() {
+        super.onResume();
+        refreshAccountState();
+        if (authClient != null && authClient.signedIn()) authClient.refreshSession((ok, message) -> mainHandler.post(this::refreshRole));
+    }
+
+    private void openRoleConsole(boolean admin) {
+        Intent intent = new Intent(this, RoleConsoleActivity.class);
+        intent.putExtra(RoleConsoleActivity.EXTRA_ADMIN, admin);
+        startActivity(intent);
+    }
+
+    private void refreshRole() {
+        if (!authClient.signedIn()) {
+            roleBadge.setVisibility(View.GONE); moderationButton.setVisibility(View.GONE); adminButton.setVisibility(View.GONE); return;
+        }
+        authClient.loadRole((ok, role, status, email, accountClass, visibleType, alertAdsEnabled) -> mainHandler.post(() -> {
+            String safeRole = ok ? role : "user";
+            boolean moderator = "moderator".equals(safeRole) || "admin".equals(safeRole);
+            boolean admin = "admin".equals(safeRole);
+            String label = "partner_sponsor".equals(visibleType) ? "PARTNER / SPONSOR" : visibleType.toUpperCase();
+            roleBadge.setText(label);
+            roleBadge.setVisibility("regular".equals(visibleType) ? View.GONE : View.VISIBLE);
+            moderationButton.setVisibility(moderator ? View.VISIBLE : View.GONE);
+            adminButton.setVisibility(admin ? View.VISIBLE : View.GONE);
+            accountState.setText("SIGNED IN — " + (email.isEmpty() ? authClient.userId() : email) + " • " + status.toUpperCase());
+            accountType.setText("ACCOUNT TYPE\n" + label);
+            String benefit = "plus".equals(visibleType) ? "Included with Plus" : "resident".equals(visibleType) ? "ALLTHINGS140 Resident benefit" : "partner_sponsor".equals(visibleType) ? "Partner benefit" : "moderator".equals(visibleType) ? "Staff account" : "admin".equals(visibleType) ? "Administrator account" : "Included in the shared station stream";
+            alertAds.setText("ALERT ADS\n" + (alertAdsEnabled ? "ON\n" + benefit : "OFF ENTITLEMENT\n" + benefit + " — stream migration pending"));
+            accountType.setVisibility(View.VISIBLE); alertAds.setVisibility(View.VISIBLE);
+        }));
     }
 
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -124,6 +229,7 @@ public final class SettingsActivity extends Activity {
         String email = ((EditText) findViewById(R.id.editAccountEmail)).getText().toString().trim();
         String password = ((EditText) findViewById(R.id.editAccountPassword)).getText().toString();
         if (email.isEmpty() || password.length() < 8) { Toast.makeText(this, "Enter a valid email and 8+ character password.", Toast.LENGTH_SHORT).show(); return; }
+        if (signUp && !password.equals(accountConfirmPassword.getText().toString())) { Toast.makeText(this, "Passwords do not match.", Toast.LENGTH_SHORT).show(); return; }
         SupabaseAuthClient.Callback callback = (ok, message) -> mainHandler.post(() -> { Toast.makeText(this, message, Toast.LENGTH_LONG).show(); if (ok) refreshAccountState(); });
         if (signUp) authClient.signUp(email, password, callback); else authClient.signIn(email, password, callback);
     }
@@ -137,11 +243,61 @@ public final class SettingsActivity extends Activity {
     }
 
     private void refreshAccountState() {
-        if (accountState != null) accountState.setText(authClient.signedIn() ? "SIGNED IN — " + authClient.userId() : "SIGNED OUT — LISTENING DOES NOT REQUIRE AN ACCOUNT");
-        if (authClient.signedIn()) authClient.loadProfile((ok, username, avatarPath) -> mainHandler.post(() -> {
-            EditText field = findViewById(R.id.editAccountUsername);
-            if (ok && field != null && !username.isEmpty()) field.setText(username);
+        boolean signedIn = authClient.signedIn();
+        setVisible(accountType, signedIn);
+        setVisible(alertAds, signedIn);
+        if (accountState != null) accountState.setText(signedIn ? "YOUR ALLTHINGS140 ACCOUNT" : "SIGN IN TO ALLTHINGS140");
+        if (accountIntro != null) accountIntro.setText(signedIn
+                ? "Manage your profile, membership, community access, and account security."
+                : "Sign in to manage your profile and join the Green Room. Listening always works without an account.");
+        setVisible(accountEmail, !signedIn);
+        setVisible(accountShowPassword, !signedIn && authMode != AuthMode.RESET);
+        setVisible(accountAuthTabs, !signedIn);
+        setVisible(authModeIntro, !signedIn);
+        if (!signedIn) showAuthMode(authMode);
+        else { setVisible(accountPassword, false); setVisible(accountConfirmPassword, false); setVisible(accountShowPassword, false); setVisible(accountSignIn, false); setVisible(accountSignUp, false); setVisible(accountReset, false); }
+        setVisible(accountUsername, signedIn);
+        setVisible(accountAvatar, signedIn);
+        setVisible(accountSaveProfile, signedIn);
+        setVisible(accountSignOut, signedIn);
+        setVisible(accountDelete, signedIn);
+        refreshRole();
+        if (signedIn) authClient.loadProfile((ok, username, avatarPath) -> mainHandler.post(() -> {
+            if (ok && accountUsername != null && !username.isEmpty()) accountUsername.setText(username);
         }));
+    }
+
+    private static void setVisible(View view, boolean visible) {
+        if (view != null) view.setVisibility(visible ? View.VISIBLE : View.GONE);
+    }
+
+    private void scrollAuthActionIntoView() {
+        View action = authMode == AuthMode.CREATE ? accountSignUp : authMode == AuthMode.RESET ? accountReset : accountSignIn;
+        if (settingsScroll == null || action == null || action.getVisibility() != View.VISIBLE) return;
+        Rect target = new Rect();
+        action.getDrawingRect(target);
+        settingsScroll.offsetDescendantRectToMyCoords(action, target);
+        int desired = Math.max(0, target.bottom - settingsScroll.getHeight() + dp(20));
+        settingsScroll.smoothScrollTo(0, desired);
+    }
+
+    private int dp(float value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
+    }
+
+    private void showAuthMode(AuthMode mode) {
+        authMode = mode;
+        boolean signIn = mode == AuthMode.SIGN_IN, create = mode == AuthMode.CREATE, reset = mode == AuthMode.RESET;
+        authModeIntro.setText(signIn ? "Welcome back\nContinue your ALLTHINGS140 identity." : create ? "Create your account\nBuild your profile and join the Green Room." : "Reset your password\nEnter your account email and we’ll send a recovery link.");
+        authModeSignIn.setTextColor(getColor(signIn ? R.color.white : R.color.muted));
+        authModeCreate.setTextColor(getColor(create ? R.color.white : R.color.muted));
+        setVisible(accountPassword, !reset);
+        setVisible(accountConfirmPassword, create);
+        setVisible(accountShowPassword, !reset);
+        setVisible(accountSignIn, signIn);
+        setVisible(accountSignUp, create);
+        setVisible(accountReset, signIn || reset);
+        ((Button) accountReset).setText(reset ? "SEND RESET LINK" : "FORGOT PASSWORD?");
     }
 
     private void displayAppMetadata() {

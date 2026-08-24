@@ -70,6 +70,7 @@
     </LinearLayout>
 
     <ScrollView
+        android:id="@+id/settingsScroll"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -90,7 +91,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
                 android:letterSpacing="0.12"
-                android:text="@string/section_app"
+                android:text="ABOUT THIS BUILD"
                 android:textColor="@color/purple_neon"
                 android:textSize="11sp"
                 android:textStyle="bold" />
@@ -148,7 +149,7 @@
                 android:layout_marginTop="22dp"
                 android:layout_marginBottom="8dp"
                 android:letterSpacing="0.12"
-                android:text="@string/section_updates"
+                android:text="ACCOUNT"
                 android:textColor="@color/purple_neon"
                 android:textSize="11sp"
                 android:textStyle="bold" />
@@ -168,6 +169,95 @@
                     android:textColor="@color/white"
                     android:textSize="16sp"
                     android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/txtAccountIntro"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:layout_marginBottom="12dp"
+                    android:text="Sign in to manage your profile and join the Green Room. Listening always works without an account."
+                    android:textColor="@color/muted"
+                    android:textSize="13sp" />
+                <TextView
+                    android:id="@+id/txtAccountRoleBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/live_badge"
+                    android:paddingStart="10dp"
+                    android:paddingTop="5dp"
+                    android:paddingEnd="10dp"
+                    android:paddingBottom="5dp"
+                    android:textColor="@color/purple_neon"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+                <LinearLayout
+                    android:id="@+id/accountAuthTabs"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/panel"
+                    android:orientation="horizontal"
+                    android:padding="4dp">
+                    <Button
+                        android:id="@+id/btnAuthModeSignIn"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:minHeight="48dp"
+                        android:background="@drawable/button_cyber"
+                        android:text="SIGN IN"
+                        android:textColor="@color/white" />
+                    <Button
+                        android:id="@+id/btnAuthModeCreate"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:minHeight="48dp"
+                        android:background="@drawable/panel"
+                        android:text="CREATE ACCOUNT"
+                        android:textColor="@color/muted" />
+                </LinearLayout>
+                <TextView
+                    android:id="@+id/txtAuthModeIntro"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="4dp"
+                    android:text="Welcome back\nContinue your ALLTHINGS140 identity."
+                    android:textColor="@color/white"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:id="@+id/txtAccountType"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@drawable/panel"
+                        android:padding="12dp"
+                        android:text="ACCOUNT TYPE\nREGULAR"
+                        android:textColor="@color/white"
+                        android:textStyle="bold"
+                        android:visibility="gone" />
+                    <TextView
+                        android:id="@+id/txtAlertAds"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/panel"
+                        android:padding="12dp"
+                        android:text="ALERT ADS\nON"
+                        android:textColor="@color/white"
+                        android:textStyle="bold"
+                        android:visibility="gone" />
+                </LinearLayout>
                 <EditText
                     android:id="@+id/editAccountEmail"
                     android:layout_width="match_parent"
@@ -184,6 +274,25 @@
                     android:inputType="textPassword"
                     android:textColor="@color/white"
                     android:textColorHint="@color/muted" />
+                <EditText
+                    android:id="@+id/editAccountConfirmPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Confirm password"
+                    android:inputType="textPassword"
+                    android:minHeight="52dp"
+                    android:textColor="@color/white"
+                    android:textColorHint="@color/muted"
+                    android:visibility="gone" />
+                <CheckBox
+                    android:id="@+id/checkAccountShowPassword"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:minHeight="48dp"
+                    android:text="Show password"
+                    android:textColor="@color/muted"
+                    android:buttonTint="@color/purple_neon" />
                 <EditText
                     android:id="@+id/editAccountUsername"
                     android:layout_width="match_parent"
@@ -234,7 +343,7 @@
                     android:minHeight="50dp"
                     android:layout_marginTop="8dp"
                     android:background="@drawable/button_cyber"
-                    android:text="RESET PASSWORD"
+                    android:text="FORGOT PASSWORD?"
                     android:textColor="@color/white" />
                 <Button
                     android:id="@+id/btnAccountSignOut"
@@ -254,7 +363,40 @@
                     android:background="@drawable/button_orange"
                     android:text="DELETE ACCOUNT"
                     android:textColor="@color/white" />
+                <Button
+                    android:id="@+id/btnModeration"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:minHeight="52dp"
+                    android:background="@drawable/button_cyber"
+                    android:text="MODERATION"
+                    android:textColor="@color/white"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+                <Button
+                    android:id="@+id/btnAdminControls"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:minHeight="52dp"
+                    android:background="@drawable/button_cyber"
+                    android:text="ADMIN CONTROLS"
+                    android:textColor="@color/purple_neon"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
             </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:layout_marginBottom="8dp"
+                android:letterSpacing="0.12"
+                android:text="SOFTWARE UPDATES"
+                android:textColor="@color/purple_neon"
+                android:textSize="11sp"
+                android:textStyle="bold" />
 
             <LinearLayout
                 android:layout_width="match_parent"
