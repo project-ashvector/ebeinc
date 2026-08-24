@@ -1,6 +1,7 @@
 package online.ebeinc.allthings140radio;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 
 import org.json.JSONObject;
@@ -28,10 +29,18 @@ public final class SupabaseAuthClient {
     private static final String URL = "https://dtvnlpgtmrbnpecsapsv.supabase.co";
     private static final String KEY = "sb_publishable_rSf3FiaFsk2zZ37GU0zmzA_2cNQmVJQ";
     private static final String PREFS = "allthings140_supabase";
+    public static final String ACTION_ACCOUNT_STATE_CHANGED = "online.ebeinc.allthings140radio.ACCOUNT_STATE_CHANGED";
+    private final Context context;
     private final SharedPreferences prefs;
     private final OkHttpClient client = new OkHttpClient.Builder().callTimeout(15, TimeUnit.SECONDS).build();
 
-    public SupabaseAuthClient(Context context) { prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE); }
+    public SupabaseAuthClient(Context context) {
+        this.context = context.getApplicationContext();
+        prefs = this.context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+    }
+    private void notifyAccountStateChanged() {
+        context.sendBroadcast(new Intent(ACTION_ACCOUNT_STATE_CHANGED).setPackage(context.getPackageName()));
+    }
     public String accessToken() { return prefs.getString("access_token", ""); }
     public String userId() { return prefs.getString("user_id", ""); }
     public String username() { return prefs.getString("username", ""); }
@@ -109,6 +118,7 @@ public final class SupabaseAuthClient {
                     prefs.edit().putString("access_token", data.optString("access_token", accessToken()))
                             .putString("refresh_token", data.optString("refresh_token", refresh))
                             .putString("user_id", user == null ? userId() : user.optString("id", userId())).apply();
+                    notifyAccountStateChanged();
                     callback.complete(true, "Session restored.");
                 }
             } catch (Exception e) { callback.complete(false, "Session refresh failed."); }
@@ -145,6 +155,7 @@ public final class SupabaseAuthClient {
                     JSONObject user = data.optJSONObject("user");
                     prefs.edit().putString("access_token", token).putString("refresh_token", data.optString("refresh_token", ""))
                             .putString("user_id", user == null ? "" : user.optString("id", "")).apply();
+                    notifyAccountStateChanged();
                     callback.complete(true, "Signed in.");
                 }
             } catch (Exception e) { callback.complete(false, "Network error. Please try again."); }
@@ -231,6 +242,6 @@ public final class SupabaseAuthClient {
         }).start();
     }
 
-    public void signOut() { prefs.edit().clear().apply(); }
+    public void signOut() { prefs.edit().clear().apply(); notifyAccountStateChanged(); }
     private static String error(String text) { try { return new JSONObject(text).optString("msg", new JSONObject(text).optString("error_description", "Authentication failed.")); } catch (Exception ignored) { return "Authentication failed."; } }
 }
