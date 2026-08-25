@@ -99,6 +99,7 @@ public final class MainActivity extends Activity {
     private ImageButton btnSendMessage;
     private ChatAdapter chatAdapter;
     private ChatClient chatClient;
+    private boolean keepChatAtBottomForIme;
     private SupabaseAuthClient authClient;
 
     // Media & Status
@@ -337,6 +338,9 @@ public final class MainActivity extends Activity {
         });
 
         btnSendMessage.setOnClickListener(v -> submitChatMessage());
+        editChatMessage.setOnFocusChangeListener((v, hasFocus) -> {
+            keepChatAtBottomForIme = hasFocus && isChatNearBottom();
+        });
         editChatMessage.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEND) {
                 submitChatMessage();
@@ -363,6 +367,14 @@ public final class MainActivity extends Activity {
         int last = count - 1;
         if (smooth) recyclerChatMessages.smoothScrollToPosition(last);
         else recyclerChatMessages.scrollToPosition(last);
+    }
+
+    private boolean isChatNearBottom() {
+        if (recyclerChatMessages == null || chatAdapter == null || chatAdapter.getItemCount() == 0) return true;
+        RecyclerView.LayoutManager manager = recyclerChatMessages.getLayoutManager();
+        if (!(manager instanceof LinearLayoutManager)) return true;
+        int lastVisible = ((LinearLayoutManager) manager).findLastVisibleItemPosition();
+        return lastVisible >= chatAdapter.getItemCount() - 3;
     }
 
     private void updatePresenceUi(int count) {
@@ -696,10 +708,14 @@ public final class MainActivity extends Activity {
             if (Build.VERSION.SDK_INT >= 30) {
                 android.graphics.Insets systemBars = insets.getInsets(
                         WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars() | WindowInsets.Type.displayCutout());
+                android.graphics.Insets ime = insets.getInsets(WindowInsets.Type.ime());
                 left = systemBars.left;
                 top = systemBars.top;
                 right = systemBars.right;
-                bottom = systemBars.bottom;
+                bottom = Math.max(systemBars.bottom, ime.bottom);
+                if (insets.isVisible(WindowInsets.Type.ime()) && keepChatAtBottomForIme) {
+                    recyclerChatMessages.post(() -> scrollChatToEndIfNeeded(false));
+                }
             } else {
                 left = insets.getSystemWindowInsetLeft();
                 top = insets.getSystemWindowInsetTop();

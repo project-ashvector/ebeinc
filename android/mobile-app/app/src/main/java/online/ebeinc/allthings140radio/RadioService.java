@@ -230,6 +230,8 @@ public final class RadioService extends MediaLibraryService {
                     boolean qaEnabled = BuildConfig.DEBUG && alertPrefs.getBoolean("qa_client_alerts", false);
                     alertIntervalMs = qaEnabled ? Math.min(interval, 60_000L) : interval;
                     clientAlertsEnabled = enabled || qaEnabled;
+                    Log.i(TAG, "Alert catalog loaded: " + loaded.size()
+                            + " items; client delivery " + (clientAlertsEnabled ? "enabled" : "disabled"));
                     scheduleAlert();
                 });
             } catch (Exception error) {
