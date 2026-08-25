@@ -7,7 +7,7 @@
 <meta name="description" content="AllThings140Radio — persistent 24/7 heavy bass transmission.">
 <title>AllThings140Radio</title>
 <link rel="icon" href="/assets/allthings140-logo-64.png" sizes="64x64" type="image/png">
-<link rel="stylesheet" href="/persistent-shell.css?v=2.0.0">
+<link rel="stylesheet" href="/persistent-shell.css?v=3.0.0">
 </head>
 <body>
 <iframe id="routeFrame" title="AllThings140Radio page"></iframe>
@@ -22,7 +22,7 @@
 <dialog id="accountDialog" aria-labelledby="accountTitle">
   <div class="account-panel">
     <header>
-      <div><span class="account-kicker">UNIVERSAL IDENTITY</span><h1 id="accountTitle">ALLTHINGS140 ACCOUNT</h1></div>
+      <div class="account-heading"><span class="account-kicker">UNIVERSAL IDENTITY</span><h1 id="accountTitle">ALLTHINGS140 Account</h1><p>Sign in to manage your profile and access Green Room community features.</p></div>
       <button id="accountClose" class="account-close" type="button" aria-label="Close account panel">×</button>
     </header>
     <p id="accountMessage" class="account-message" role="status" hidden></p>
@@ -34,42 +34,79 @@
       </div>
       <div id="authForms">
         <form id="signInForm" data-auth-section="signin">
+          <div class="auth-intro"><h2>Welcome back</h2><p>Continue your ALLTHINGS140 identity.</p></div>
           <label>Email<input name="email" type="email" autocomplete="email" required></label>
-          <label>Password<input name="password" type="password" autocomplete="current-password" minlength="8" required></label>
-          <button class="account-primary" type="submit">SIGN IN</button>
+          <label>Password<div class="password-field"><input name="password" type="password" autocomplete="current-password" minlength="8" required><button type="button" data-password-toggle>Show</button></div></label>
+          <button class="account-primary" type="submit">Sign In</button>
+          <button class="auth-text-action" type="button" data-auth-switch="reset">Forgot your password? <b>Reset password</b></button>
+          <p class="auth-footnote">Radio listening does not require an account.</p>
         </form>
         <form id="signUpForm" data-auth-section="signup" hidden>
+          <div class="auth-intro"><h2>Create your account</h2><p>Build your profile and join the Green Room.</p></div>
           <label>Email<input name="email" type="email" autocomplete="email" required></label>
-          <label>Password<input name="password" type="password" autocomplete="new-password" minlength="8" required></label>
-          <small>Use at least 8 characters with letters and numbers. Email verification is required.</small>
-          <button class="account-primary" type="submit">CREATE ACCOUNT</button>
+          <label>Password<div class="password-field"><input name="password" type="password" autocomplete="new-password" minlength="8" required><button type="button" data-password-toggle>Show</button></div></label>
+          <label>Confirm password<div class="password-field"><input name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required><button type="button" data-password-toggle>Show</button></div></label>
+          <small>At least 8 characters. Email verification may be required.</small>
+          <button class="account-primary" type="submit">Create Account</button>
+          <button class="auth-text-action" type="button" data-auth-switch="signin">Already have an account? <b>Sign in</b></button>
         </form>
         <form id="resetForm" data-auth-section="reset" hidden>
+          <div class="auth-intro"><h2>Reset your password</h2><p>Enter your account email and we’ll send a recovery link.</p></div>
           <label>Email<input name="email" type="email" autocomplete="email" required></label>
-          <button class="account-primary" type="submit">SEND RESET LINK</button>
+          <button class="account-primary" type="submit">Send Reset Link</button>
+          <button class="auth-text-action" type="button" data-auth-switch="signin">Back to <b>Sign In</b></button>
         </form>
         <form id="recoveryForm" data-auth-section="recovery" hidden>
-          <label>New password<input name="password" type="password" autocomplete="new-password" minlength="8" required></label>
-          <button class="account-primary" type="submit">UPDATE PASSWORD</button>
+          <div class="auth-intro"><span class="account-kicker">SECURE RECOVERY</span><h2>Set new password</h2><p>Your recovery session is verified. Choose a new password.</p></div>
+          <label>New password<div class="password-field"><input name="password" type="password" autocomplete="new-password" minlength="8" required><button type="button" data-password-toggle>Show</button></div></label>
+          <label>Confirm password<div class="password-field"><input name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required><button type="button" data-password-toggle>Show</button></div></label>
+          <button class="account-primary" type="submit">Update Password</button>
         </form>
       </div>
-      <div class="oauth-divider"><span>OR</span></div>
-      <button id="googleAuth" class="oauth-button" type="button">CONTINUE WITH GOOGLE <small>CONFIG REQUIRED</small></button>
-      <button id="soundCloudAuth" class="oauth-button" type="button">CONTINUE WITH SOUNDCLOUD <small>FOUNDATION ONLY</small></button>
+      <div id="oauthOptions" hidden><div class="oauth-divider"><span>OR</span></div><button id="googleAuth" class="oauth-button" type="button">Continue with Google</button><button id="soundCloudAuth" class="oauth-button" type="button">Continue with SoundCloud</button></div>
     </section>
     <section id="accountSignedIn" hidden>
-      <div class="profile-heading">
+      <div class="profile-heading account-hero">
         <span id="profileAvatar" class="profile-avatar" aria-hidden="true">AT</span>
-        <div><h2 id="profileUsername">Profile</h2><p id="profileIdentity"></p></div>
+        <div><div class="profile-title"><h2 id="profileUsername">Profile</h2><span id="accountRoleBadge" class="role-badge" hidden></span></div><p id="profileHeroEmail">—</p><small id="profileIdentity"></small></div>
       </div>
-      <form id="profileForm">
+      <nav id="accountNav" class="account-nav" aria-label="Account sections">
+        <button type="button" data-account-view="account">ACCOUNT</button>
+        <button type="button" data-account-view="profile" aria-current="page">PROFILE</button>
+        <button type="button" data-account-view="moderation" data-min-role="moderator" hidden>MODERATION</button>
+        <button type="button" data-account-view="admin" data-min-role="admin" hidden>ADMIN</button>
+        <button type="button" data-account-view="privacy">PRIVACY &amp; LEGAL</button>
+      </nav>
+      <section class="account-view" data-account-view-panel="account" hidden>
+        <h3>ACCOUNT</h3><p class="account-copy">Your credentials remain in Supabase Auth. Community status and staff authority are enforced server-side.</p>
+        <div class="membership-card"><span>MEMBERSHIP / STATUS</span><div><small>ACCOUNT TYPE</small><strong id="profileAccountType">REGULAR</strong></div><div><small>ALERT ADS</small><strong id="profileAlertAds">ON</strong><em id="profileAlertNote">Regular accounts include station alerts.</em><fieldset id="alertPreferenceControl" class="alert-preference" hidden><legend>Station alert preference</legend><button type="button" data-alert-preference="off">OFF</button><button type="button" data-alert-preference="on">ON</button></fieldset></div></div>
+        <div class="profile-grid"><span>EMAIL</span><strong id="profileEmail">—</strong><span>ACCOUNT STATUS</span><strong id="profileStatus">ACTIVE</strong><span>SECURITY ROLE</span><strong id="profileRole">USER</strong></div>
+      </section>
+      <form id="profileForm" class="account-view" data-account-view-panel="profile">
         <label>Username<input id="profileUsernameInput" name="username" type="text" minlength="3" maxlength="24" pattern="[A-Za-z0-9_]+" autocomplete="username" required></label>
         <small id="profileCooldown"></small>
         <label>Profile picture<input id="profileAvatarInput" name="avatar" type="file" accept="image/jpeg,image/png,image/webp"></label>
         <small>JPEG, PNG, or WebP. Images are normalized to a 512×512 WebP and limited to 2 MB.</small>
-        <div class="profile-grid"><span>ACCOUNT STATUS</span><strong id="profileStatus">ACTIVE</strong><span>TERMS</span><strong id="profileTermsState">PENDING</strong></div>
+        <div class="profile-grid"><span>TERMS</span><strong id="profileTermsState">PENDING</strong></div>
         <button class="account-primary" type="submit">SAVE PROFILE</button>
       </form>
+      <section id="moderationView" class="account-view staff-view" data-account-view-panel="moderation" hidden>
+        <div class="section-heading"><div><span>COMMUNITY SAFETY</span><h3>MODERATION</h3></div><button id="refreshModeration" type="button">REFRESH</button></div>
+        <div class="staff-tabs"><button type="button" data-mod-tab="reports" aria-current="page">PENDING REPORTS</button><button type="button" data-mod-tab="actions">RECENT ACTIONS</button></div>
+        <div id="moderationReports" class="staff-list" aria-live="polite"></div><div id="moderationActions" class="staff-list" hidden></div>
+      </section>
+      <section id="adminView" class="account-view staff-view" data-account-view-panel="admin" hidden>
+        <div class="section-heading"><div><span>USERS • ACCOUNT TYPES • MODERATION • AUDIT</span><h3>ADMIN CONTROLS</h3></div></div>
+        <div class="admin-capability-grid"><article><b>USERS</b><small>Lookup and account status</small></article><article><b>ACCOUNT TYPES</b><small>Protected benefit assignments</small></article><article><b>MODERATION</b><small>Roles and community safety</small></article><article><b>AUDIT</b><small>Human-readable action history</small></article></div>
+        <form id="adminLookupForm" class="lookup-form"><label>User lookup<input id="adminLookupQuery" type="search" minlength="2" placeholder="Username, email, or UUID" required></label><button type="submit">SEARCH</button></form>
+        <div id="adminResults" class="staff-list" aria-live="polite"></div>
+        <div class="section-heading admin-audit-heading"><div><span>RECENT PROTECTED ACTIONS</span><h3>AUDIT HISTORY</h3></div><button id="refreshAdminAudit" type="button">REFRESH</button></div>
+        <div id="adminAudit" class="staff-list" aria-live="polite"></div>
+      </section>
+      <section class="account-view" data-account-view-panel="privacy" hidden>
+        <h3>PRIVACY &amp; LEGAL</h3><p class="account-copy">Review community rules, privacy practices, or request account deletion.</p>
+        <div class="account-link-grid"><a href="/privacy/">PRIVACY POLICY</a><a href="/terms/">TERMS / COMMUNITY RULES</a></div>
+      </section>
       <div class="account-actions">
         <button id="accountSignOut" type="button">SIGN OUT</button>
         <button id="requestDeletion" type="button">REQUEST ACCOUNT DELETION</button>
@@ -77,9 +114,10 @@
     </section>
   </div>
 </dialog>
-<script src="/persistent-shell.js?v=1.0.0"></script>
+<script src="/persistent-shell.js?v=3.0.0"></script>
 <script src="/vendor-supabase-2.112.3.min.js"></script>
 <script src="/supabase-config.js?v=1.0.0"></script>
-<script src="/persistent-auth.js?v=1.0.0"></script>
+<script src="/persistent-auth.js?v=3.0.0"></script>
+<script src="/role-console.js?v=3.0.0"></script>
 </body>
 </html>

@@ -1,10 +1,91 @@
 const PUBLIC_API_ORIGIN = "https://status.ebeinc.online";
 const OBS_STREAM_ORIGIN = "https://stream.ebeinc.online/live.mp3";
-const PUBLIC_GET_PATH = /^\/api\/public\/(?:status|schedule|support(?:\/status)?|takeover-invite\/[A-Za-z0-9_-]+|takeover-logo\/[a-f0-9]{32}\.(?:png|jpg|webp)|archive(?:\/[^/]+\/(?:audio|waveform))?|alerts)$/;
+const PUBLIC_GET_PATH = /^\/api\/public\/(?:status|schedule|support(?:\/status)?|takeover-invite\/[A-Za-z0-9_-]+|takeover-logo\/[a-f0-9]{32}\.(?:png|jpg|webp)|archive(?:\/[^/]+\/(?:audio|waveform))?|alerts|alert-catalog|alert-media\/[a-f0-9]{32}\.mp3)$/;
 const PUBLIC_POST_PATH = /^\/api\/public\/(?:support\/(?:checkout|webhook)|requests|submissions|newsletter|takeover-interest|takeover-invite\/[A-Za-z0-9_-]+)$/;
 const MAILCHIMP_SERVER = "us7";
 const MAILCHIMP_AUDIENCE = "b9ed48d509";
 const WELCOME_TAG = "Welcome Sent";
+
+async function clientAlertCatalog(request, env) {
+  const manifestUrl = new URL("/assets/client-alerts/manifest.json", request.url);
+  const manifestResponse = await env.ASSETS.fetch(new Request(manifestUrl, {
+    method: "GET",
+    headers: { "Accept": "application/json" },
+  }));
+  if (!manifestResponse.ok) {
+    return Response.json({ error: "Alert catalog unavailable" }, {
+      status: 503,
+      headers: { "Cache-Control": "no-store" },
+    });
+  }
+  const manifest = await manifestResponse.json();
+  const origin = new URL(request.url).origin;
+  return Response.json({
+    ...manifest,
+    server_stream_alert_injection_enabled: env.SERVER_STREAM_ALERT_INJECTION_ENABLED !== "false",
+    client_account_alerts_enabled: env.CLIENT_ACCOUNT_ALERTS_ENABLED === "true",
+    server_time: Math.floor(Date.now() / 1000),
+    alerts: (manifest.alerts || []).map((alert) => ({
+      ...alert,
+      url: new URL(alert.url, origin).toString(),
+    })),
+  }, {
+    headers: {
+      "Cache-Control": "public, max-age=60, stale-while-revalidate=300",
+      "X-Content-Type-Options": "nosniff",
+    },
+  });
+}
+
+async function clientAlertMedia(request, env, opaqueId) {
+  const assetUrl = new URL(`/assets/client-alerts/${opaqueId}.mp3`, request.url);
+  const assetResponse = await env.ASSETS.fetch(new Request(assetUrl, {
+    method: "GET",
+    headers: { "Accept": "audio/mpeg" },
+  }));
+  if (!assetResponse.ok) return new Response("Not found", { status: 404 });
+
+  const media = await assetResponse.arrayBuffer();
+  const size = media.byteLength;
+  const headers = new Headers({
+    "Accept-Ranges": "bytes",
+    "Cache-Control": "public, max-age=86400, immutable",
+    "Content-Type": "audio/mpeg",
+    "X-Content-Type-Options": "nosniff",
+  });
+  const range = request.headers.get("Range");
+  if (!range) {
+    headers.set("Content-Length", String(size));
+    return new Response(request.method === "HEAD" ? null : media, { status: 200, headers });
+  }
+  const match = /^bytes=(\d*)-(\d*)$/.exec(range.trim());
+  if (!match) {
+    headers.set("Content-Range", `bytes */${size}`);
+    return new Response(null, { status: 416, headers });
+  }
+  let start;
+  let end;
+  if (match[1] === "") {
+    const suffixLength = Number(match[2]);
+    if (!Number.isInteger(suffixLength) || suffixLength < 1) {
+      headers.set("Content-Range", `bytes */${size}`);
+      return new Response(null, { status: 416, headers });
+    }
+    start = Math.max(0, size - suffixLength);
+    end = size - 1;
+  } else {
+    start = Number(match[1]);
+    end = match[2] === "" ? size - 1 : Math.min(Number(match[2]), size - 1);
+  }
+  if (!Number.isInteger(start) || !Number.isInteger(end) || start < 0 || start >= size || end < start) {
+    headers.set("Content-Range", `bytes */${size}`);
+    return new Response(null, { status: 416, headers });
+  }
+  const body = media.slice(start, end + 1);
+  headers.set("Content-Length", String(body.byteLength));
+  headers.set("Content-Range", `bytes ${start}-${end}/${size}`);
+  return new Response(request.method === "HEAD" ? null : body, { status: 206, headers });
+}
 
 function mailchimpHeaders(env, json = false) {
   const headers = { "Authorization": `Basic ${btoa(`allthings140:${env.MAILCHIMP_API_KEY}`)}` };
@@ -358,6 +439,13 @@ async function handleVisualHealth(request, env) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    if (url.pathname === "/api/public/alert-catalog" && request.method === "GET") {
+      return clientAlertCatalog(request, env);
+    }
+    const alertMediaMatch = /^\/api\/public\/alert-media\/([a-f0-9]{32})\.mp3$/.exec(url.pathname);
+    if (alertMediaMatch && (request.method === "GET" || request.method === "HEAD")) {
+      return clientAlertMedia(request, env, alertMediaMatch[1]);
+    }
     if ((url.pathname === "/visuals" || url.pathname === "/visuals/") && (request.method === "GET" || request.method === "HEAD")) {
       return servePublicVisuals(request, env);
     }

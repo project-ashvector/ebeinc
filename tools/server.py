@@ -56,6 +56,7 @@ FALLBACK_MUSIC_DIR = Path(FALLBACK_MUSIC_DIR_VALUE) if FALLBACK_MUSIC_DIR_VALUE 
 CACHE_DIR = Path(os.environ.get("ALLTHINGS140_CACHE_DIR", "/srv/allthings140radio/cache"))
 CACHE_INDEX_PATH = CACHE_DIR / "cache-index.json"
 INTEGRITY_STATE_PATH = DATA_DIR / "catalog-integrity.json"
+INTEGRITY_SUMMARY_PATH = DATA_DIR / "catalog-integrity-summary.json"
 CACHE_ONLY = os.environ.get("ALLTHINGS140_CACHE_ONLY", "false").lower() in {"1", "true", "yes", "on"}
 TRASH_DIR = Path(os.environ.get("ALLTHINGS140_TRASH_DIR", DATA_DIR / "trash"))
 QUARANTINE_DIR = Path(os.environ.get("ALLTHINGS140_QUARANTINE_DIR", DATA_DIR / "music-quarantine"))
@@ -163,7 +164,12 @@ def cache_status() -> dict[str, Any]:
 
 
 def load_ad_meta() -> dict[str, Any]:
-    default = {"interval_seconds": 420, "ads": {}}
+    default = {
+        "interval_seconds": 900,
+        "server_stream_alert_injection_enabled": True,
+        "client_account_alerts_enabled": False,
+        "ads": {},
+    }
     try:
         if AD_META_PATH.exists():
             loaded = json.loads(AD_META_PATH.read_text(encoding="utf-8"))
@@ -174,6 +180,63 @@ def load_ad_meta() -> dict[str, Any]:
     except (OSError, ValueError, TypeError):
         event_log("ad_metadata_read_failed")
     return default
+
+
+def public_alert_id(filename: str) -> str:
+    """Return a stable opaque id without exposing a server filename."""
+    return hashlib.sha256(("allthings140-client-alert\0" + filename).encode("utf-8")).hexdigest()[:32]
+
+
+def public_alert_catalog() -> dict[str, Any]:
+    """Return public-safe client delivery policy and media metadata."""
+    meta = load_ad_meta()
+    ads_meta = meta.get("ads", {}) if isinstance(meta.get("ads"), dict) else {}
+    alerts: list[dict[str, Any]] = []
+    if AD_DIR.is_dir():
+        for path in sorted(AD_DIR.iterdir()):
+            if not path.is_file() or path.suffix.lower() != ".mp3":
+                continue
+            info = ads_meta.get(path.name, {}) if isinstance(ads_meta.get(path.name, {}), dict) else {}
+            if not info.get("enabled", True) or not info.get("client_delivery_enabled", False):
+                continue
+            alert_id = public_alert_id(path.name)
+            duration = info.get("duration_seconds", info.get("duration", 0))
+            try:
+                duration = max(0.0, round(float(duration or 0), 3))
+            except (TypeError, ValueError):
+                duration = 0.0
+            alerts.append({
+                "id": alert_id,
+                "url": f"/api/public/alert-media/{alert_id}.mp3",
+                "duration_seconds": duration,
+                "category": str(info.get("category", "station_alert"))[:40],
+            })
+    version_source = "\n".join(f"{item['id']}:{item['duration_seconds']}" for item in alerts)
+    return {
+        "schema_version": 1,
+        "interval_seconds": max(60, int(meta.get("interval_seconds", 900))),
+        "server_stream_alert_injection_enabled": bool(meta.get("server_stream_alert_injection_enabled", True)),
+        "client_account_alerts_enabled": bool(meta.get("client_account_alerts_enabled", False)),
+        "alerts": alerts,
+        "version": hashlib.sha256(version_source.encode("utf-8")).hexdigest()[:16],
+        "server_time": int(time.time()),
+    }
+
+
+def resolve_public_alert(alert_id: str) -> Path | None:
+    if not re.fullmatch(r"[a-f0-9]{32}", alert_id):
+        return None
+    meta = load_ad_meta()
+    ads_meta = meta.get("ads", {}) if isinstance(meta.get("ads"), dict) else {}
+    if not AD_DIR.is_dir():
+        return None
+    for path in AD_DIR.iterdir():
+        info = ads_meta.get(path.name, {}) if isinstance(ads_meta.get(path.name, {}), dict) else {}
+        if (path.is_file() and path.suffix.lower() == ".mp3"
+                and info.get("enabled", True) and info.get("client_delivery_enabled", False)
+                and secrets.compare_digest(public_alert_id(path.name), alert_id)):
+            return path
+    return None
 
 
 def save_ad_meta(meta: dict[str, Any]) -> None:
@@ -355,6 +418,15 @@ def catalog_integrity_snapshot(compute_hashes: bool = False) -> dict[str, Any]:
         temporary = INTEGRITY_STATE_PATH.with_suffix(".tmp")
         temporary.write_text(json.dumps(report, ensure_ascii=False, default=str), encoding="utf-8")
         os.replace(temporary, INTEGRITY_STATE_PATH)
+        summary = {
+            "schema": report.get("schema", 1),
+            "generated_at": report.get("generated_at", int(time.time())),
+            "health": report.get("health", "unknown"),
+            "counts": report.get("counts", {}),
+        }
+        summary_temporary = INTEGRITY_SUMMARY_PATH.with_suffix(".tmp")
+        summary_temporary.write_text(json.dumps(summary, ensure_ascii=False), encoding="utf-8")
+        os.replace(summary_temporary, INTEGRITY_SUMMARY_PATH)
     except OSError:
         pass
     return report
@@ -366,6 +438,31 @@ def cached_catalog_integrity() -> dict[str, Any]:
         return value if isinstance(value, dict) else {}
     except (OSError, ValueError, TypeError):
         return {}
+
+
+_INTEGRITY_SUMMARY_LOCK = threading.Lock()
+_INTEGRITY_SUMMARY_CACHE: dict[str, Any] = {"mtime_ns": -1, "value": {}}
+
+
+def cached_catalog_integrity_summary() -> dict[str, Any]:
+    """Cache only the small public integrity summary between report updates."""
+    try:
+        mtime_ns = INTEGRITY_SUMMARY_PATH.stat().st_mtime_ns
+    except OSError:
+        return {}
+    with _INTEGRITY_SUMMARY_LOCK:
+        if _INTEGRITY_SUMMARY_CACHE["mtime_ns"] == mtime_ns:
+            return dict(_INTEGRITY_SUMMARY_CACHE["value"])
+        try:
+            report = json.loads(INTEGRITY_SUMMARY_PATH.read_text(encoding="utf-8"))
+            value = {
+                "health": report.get("health", "unknown"),
+                "counts": dict(report.get("counts", {})),
+            }
+        except (OSError, ValueError, TypeError):
+            return dict(_INTEGRITY_SUMMARY_CACHE["value"])
+        _INTEGRITY_SUMMARY_CACHE.update({"mtime_ns": mtime_ns, "value": value})
+        return dict(value)
 
 
 def rotation_audit_snapshot() -> dict[str, Any]:
@@ -412,7 +509,7 @@ def load_config() -> dict[str, Any]:
         "soundcloud_token_expires": 0,
         "soundcloud_test_enabled": True,
         "allow_unlicensed_test_mode": False,
-        "ad_interval_seconds": 420,
+        "ad_interval_seconds": 900,
         "archive_storage_provider": "local",
         "archive_retention_mode": "keep_all",
         "archive_retention_days": 0,
@@ -1207,9 +1304,12 @@ class AutoDJManager(threading.Thread):
             self.forced_ad = forced
             return
         else:
+            if not bool(load_ad_meta().get("server_stream_alert_injection_enabled", True)):
+                self.next_ad_at = time.monotonic() + float(load_ad_meta().get("interval_seconds", 900))
+                return
             path = self.choose_ad()
         if path is None:
-            self.next_ad_at = time.monotonic() + self.AD_INTERVAL_SECONDS
+            self.next_ad_at = time.monotonic() + float(load_ad_meta().get("interval_seconds", 900))
             return
         self.ad_decoder = subprocess.Popen(
             self.ad_decoder_command(path), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, bufsize=0,
@@ -2280,7 +2380,22 @@ STATION_WATCHDOG = StationWatchdog(daemon=True, name="StationWatchdog")
 SILENCE_MONITOR = SilenceMonitor(daemon=True, name="SilenceMonitor")
 
 
+_ICECAST_STATUS_LOCK = threading.Lock()
+_ICECAST_STATUS_CACHE: dict[str, Any] = {"checked_at": 0.0, "value": {}}
+
+
 def icecast_status() -> dict[str, Any]:
+    now = time.monotonic()
+    with _ICECAST_STATUS_LOCK:
+        cached = _ICECAST_STATUS_CACHE["value"]
+        if cached and now - float(_ICECAST_STATUS_CACHE["checked_at"]) < 1.0:
+            return dict(cached)
+        value = _fetch_icecast_status()
+        _ICECAST_STATUS_CACHE.update({"checked_at": now, "value": value})
+        return dict(value)
+
+
+def _fetch_icecast_status() -> dict[str, Any]:
     url = f"http://127.0.0.1:{CONFIG['icecast_port']}/status-json.xsl"
     try:
         with urllib.request.urlopen(url, timeout=2) as response:
@@ -2402,8 +2517,18 @@ def public_status(handler: BaseHTTPRequestHandler | None = None) -> dict[str, An
     if mode == "autodj" and autodj.get("current_title"):
         title = str(autodj.get("current_title", ""))
         artist = str(autodj.get("current_artist", ""))
-    catalog_total, approved, missing_approved = catalog_counts()
-    integrity = cached_catalog_integrity()
+    integrity = cached_catalog_integrity_summary()
+    integrity_counts = integrity.get("counts", {}) if isinstance(integrity, dict) else {}
+    # This endpoint is polled by every listener. Never walk the full catalog on
+    # the request path: concurrent resolve_music_path() scans can exhaust the
+    # public gateway thread/backlog and make a healthy stream appear offline.
+    # The background integrity monitor already maintains these exact values.
+    if integrity_counts:
+        catalog_total = int(integrity_counts.get("total_catalog", 0) or 0)
+        approved = int(integrity_counts.get("playback_ready", 0) or 0)
+        missing_approved = int(integrity_counts.get("missing_approved_audio", 0) or 0)
+    else:
+        catalog_total, approved, missing_approved = catalog_counts()
     takeover = active_takeover()
     return {
         "station_name": CONFIG.get("station_name", APP_NAME),
@@ -2584,6 +2709,61 @@ def serve_archive_file(handler: BaseHTTPRequestHandler, archive_id: str, kind: s
             remaining -= len(chunk)
 
 
+def serve_public_alert_file(handler: BaseHTTPRequestHandler, filename: str) -> None:
+    alert_id = filename[:-4] if filename.endswith(".mp3") else ""
+    path = resolve_public_alert(alert_id)
+    if path is None:
+        body = b'{"error":"Alert media not found"}'
+        handler.send_response(404)
+        handler.send_header("Content-Type", "application/json")
+        handler.send_header("Content-Length", str(len(body)))
+        handler.send_header("Access-Control-Allow-Origin", "*")
+        handler.end_headers()
+        if handler.command != "HEAD":
+            handler.wfile.write(body)
+        return
+    total = path.stat().st_size
+    start, end, status = 0, total - 1, 200
+    range_header = handler.headers.get("Range", "")
+    if range_header.startswith("bytes="):
+        try:
+            left, right = range_header[6:].split("-", 1)
+            start = int(left) if left else 0
+            end = min(total - 1, int(right)) if right else total - 1
+            if start < 0 or end < start or start >= total:
+                raise ValueError
+            status = 206
+        except ValueError:
+            handler.send_response(416)
+            handler.send_header("Content-Range", f"bytes */{total}")
+            handler.end_headers()
+            return
+    length = end - start + 1
+    handler.send_response(status)
+    handler.send_header("Content-Type", "audio/mpeg")
+    handler.send_header("Content-Length", str(length))
+    handler.send_header("Accept-Ranges", "bytes")
+    handler.send_header("Cache-Control", "public, max-age=3600, immutable")
+    handler.send_header("Access-Control-Allow-Origin", "*")
+    if status == 206:
+        handler.send_header("Content-Range", f"bytes {start}-{end}/{total}")
+    handler.end_headers()
+    if handler.command == "HEAD":
+        return
+    with path.open("rb") as stream:
+        stream.seek(start)
+        remaining = length
+        while remaining:
+            chunk = stream.read(min(64 * 1024, remaining))
+            if not chunk:
+                break
+            try:
+                handler.wfile.write(chunk)
+            except (BrokenPipeError, ConnectionResetError):
+                break
+            remaining -= len(chunk)
+
+
 class PublicGatewayHandler(BaseHTTPRequestHandler):
     """Public-only gateway used by the HTTPS tunnel.
 
@@ -2632,7 +2812,9 @@ class PublicGatewayHandler(BaseHTTPRequestHandler):
             return serve_archive_file(self, parts[3], parts[4])
         if len(parts) == 4 and parts[:3] == ["api", "public", "takeover-logo"]:
             return serve_takeover_logo(self, parts[3])
-        if parsed.path in ("/api/public/status", "/public/status.json", "/api/public/archive", "/api/public/schedule", "/health"):
+        if len(parts) == 4 and parts[:3] == ["api", "public", "alert-media"]:
+            return serve_public_alert_file(self, parts[3])
+        if parsed.path in ("/api/public/status", "/public/status.json", "/api/public/archive", "/api/public/schedule", "/api/public/alert-catalog", "/health"):
             return self._json({"ok": True})
         if parsed.path == "/live.mp3":
             self.send_response(200)
@@ -2658,6 +2840,10 @@ class PublicGatewayHandler(BaseHTTPRequestHandler):
         if path == "/api/public/alerts":
             query = urllib.parse.parse_qs(parsed.query)
             return self._json({"alerts": ALERTS.since(int(query.get("since", ["0"])[0]))})
+        if path == "/api/public/alert-catalog":
+            return self._json(public_alert_catalog())
+        if path.startswith("/api/public/alert-media/"):
+            return serve_public_alert_file(self, path.rsplit("/", 1)[-1])
         if path == "/api/public/schedule":
             return self._json({"takeovers": takeover_rows(True)})
         if path == "/api/public/support":
@@ -2922,6 +3108,10 @@ class Handler(BaseHTTPRequestHandler):
                 ))
             if path == "/api/public/alerts":
                 return self.json_response({"alerts": ALERTS.since(int(query.get("since", ["0"])[0]))})
+            if path == "/api/public/alert-catalog":
+                return self.json_response(public_alert_catalog())
+            if path.startswith("/api/public/alert-media/"):
+                return serve_public_alert_file(self, path.rsplit("/", 1)[-1])
             if path == "/api/public/schedule":
                 return self.json_response({"takeovers": takeover_rows(True)})
             if path == "/api/public/support":
@@ -3033,7 +3223,7 @@ class Handler(BaseHTTPRequestHandler):
                             if len(history) >= 50: break
                 except (OSError, ValueError):
                     pass
-                return self.json_response({"ads": ads, "interval_seconds": int(meta.get("interval_seconds", 420)), "history": history})
+                return self.json_response({"ads": ads, "interval_seconds": int(meta.get("interval_seconds", 900)), "history": history})
             if path == "/api/me":
                 user = self.auth_user()
                 if not user:
@@ -3875,7 +4065,7 @@ class Handler(BaseHTTPRequestHandler):
                     return self.json_response({"error": "Administrator or manager access required"}, 403)
                 if path == "/api/ads/settings":
                     data = self.read_json()
-                    interval = max(60, min(3600, int(data.get("interval_seconds", 420))))
+                    interval = max(60, min(3600, int(data.get("interval_seconds", 900))))
                     meta = load_ad_meta()
                     meta["interval_seconds"] = interval
                     save_ad_meta(meta)
@@ -4116,6 +4306,30 @@ h1{{font-size:clamp(36px,7vw,66px);line-height:.95;margin:22px 0 14px}}p{{color:
 class ReusableThreadingHTTPServer(ThreadingHTTPServer):
     allow_reuse_address = True
     daemon_threads = True
+    request_queue_size = 128
+
+    def __init__(self, *args: Any, max_request_threads: int = 64, **kwargs: Any) -> None:
+        # ThreadingHTTPServer is otherwise unbounded: every accepted connection
+        # creates a new thread.  A slow-client/request pileup must never consume
+        # the process resources used by the AutoDJ playback thread.
+        self._request_slots = threading.BoundedSemaphore(max_request_threads)
+        super().__init__(*args, **kwargs)
+
+    def process_request(self, request: socket.socket, client_address: Any) -> None:
+        if not self._request_slots.acquire(blocking=False):
+            self.shutdown_request(request)
+            return
+        try:
+            super().process_request(request, client_address)
+        except BaseException:
+            self._request_slots.release()
+            raise
+
+    def process_request_thread(self, request: socket.socket, client_address: Any) -> None:
+        try:
+            super().process_request_thread(request, client_address)
+        finally:
+            self._request_slots.release()
 
 
 def shutdown_handler(signum: int, frame: Any) -> None:

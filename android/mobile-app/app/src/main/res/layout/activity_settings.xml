@@ -258,6 +258,42 @@
                         android:textStyle="bold"
                         android:visibility="gone" />
                 </LinearLayout>
+                <LinearLayout
+                    android:id="@+id/alertPreferenceControl"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/panel"
+                    android:orientation="vertical"
+                    android:padding="12dp"
+                    android:visibility="gone">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="STATION ALERT PREFERENCE"
+                        android:textColor="@color/muted"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal">
+                        <Button
+                            android:id="@+id/btnAlertAdsOff"
+                            android:layout_width="0dp"
+                            android:layout_height="52dp"
+                            android:layout_weight="1"
+                            android:text="OFF" />
+                        <Button
+                            android:id="@+id/btnAlertAdsOn"
+                            android:layout_width="0dp"
+                            android:layout_height="52dp"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1"
+                            android:text="ON" />
+                    </LinearLayout>
+                </LinearLayout>
                 <EditText
                     android:id="@+id/editAccountEmail"
                     android:layout_width="match_parent"

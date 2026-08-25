@@ -42,7 +42,7 @@ public final class RoleConsoleActivity extends Activity {
 
     private void verifyRoleAndLoad() {
         content.removeAllViews(); content.addView(text("CHECKING SERVER AUTHORITY…",14,Color.LTGRAY));
-        auth.loadRole((ok,role,status,email,accountClass,accountType,alertAdsEnabled)->main.post(()->{
+        auth.loadRole((ok,role,status,email,accountClass,accountType,alertAdsPreference,alertAdsEnabled)->main.post(()->{
             boolean moderator="moderator".equals(role)||"admin".equals(role), admin="admin".equals(role);
             if(!ok||!moderator||(adminView&&!admin)){ content.removeAllViews(); content.addView(text("ACCESS DENIED",22,Color.rgb(255,140,170))); content.addView(text("This section requires a current server-authorized "+(adminView?"Admin":"Moderator")+" role.",14,Color.LTGRAY)); return; }
             if(adminView) renderAdmin(); else renderModeration();

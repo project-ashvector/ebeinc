@@ -1,5 +1,6 @@
 (() => {
   "use strict";
+  window.AT140InitialAccountMode = new URLSearchParams(location.search).get("account");
 
   const STREAM_FALLBACK = "https://stream.ebeinc.online/live.mp3";
   const ROUTE_PARAM = "at140_route";
@@ -11,6 +12,12 @@
   const savedVolumeRaw = localStorage.getItem("allthings140-volume");
   const savedVolume = Number(savedVolumeRaw);
   if (savedVolumeRaw !== null && Number.isFinite(savedVolume) && savedVolume >= 0 && savedVolume <= 1) audio.volume = savedVolume;
+  let listenerVolume = audio.volume;
+  let alertDuckFactor = 1;
+  function applyListenerVolume(value) {
+    listenerVolume = Math.max(0, Math.min(1, Number(value) || 0));
+    audio.volume = listenerVolume * alertDuckFactor;
+  }
   const clients = new Map();
   let currentClient = null;
   let desiredPlay = false;
@@ -91,8 +98,8 @@
           const next = new URL(value || STREAM_FALLBACK, location.href).href;
           if (audio.src !== next) { audio.src = next; generation += 1; }
         },
-        get volume() { return audio.volume; },
-        set volume(value) { audio.volume = value; },
+        get volume() { return listenerVolume; },
+        set volume(value) { applyListenerVolume(value); },
         get muted() { return audio.muted; },
         set muted(value) { audio.muted = Boolean(value); },
         play: () => authority.play(),
@@ -114,7 +121,8 @@
         clients: clients.size,
         desiredPlay,
         paused: audio.paused,
-        volume: audio.volume,
+        volume: listenerVolume,
+        effectiveVolume: audio.volume,
         muted: audio.muted,
         generation,
         src: audio.currentSrc || audio.src,
@@ -124,6 +132,165 @@
   };
   window.AT140Radio = authority;
   window.AT140Navigate = (url) => navigate(url);
+
+  class AccountAlertScheduler {
+    constructor() {
+      this.catalog = null;
+      this.identity = Object.freeze({ signedIn: false });
+      this.alertPlayer = new Audio();
+      this.alertPlayer.preload = "auto";
+      this.timer = 0;
+      this.playing = false;
+      this.tabId = crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+      this.peers = new Map();
+      this.channel = typeof BroadcastChannel === "function" ? new BroadcastChannel("at140-radio-owner-v1") : null;
+      this.channel?.addEventListener("message", (event) => this.onPeer(event.data));
+      this.heartbeat = setInterval(() => this.announce(), 3000);
+      this.alertPlayer.addEventListener("ended", () => this.finish());
+      this.alertPlayer.addEventListener("error", () => this.finish("media_failed"));
+      audio.addEventListener("playing", () => { this.announce(); this.schedule(); });
+      audio.addEventListener("pause", () => { this.announce(); this.cancel(); });
+      addEventListener("pagehide", () => this.destroy(), { once: true });
+      this.bootstrap();
+    }
+
+    async bootstrap() {
+      try {
+        const response = await fetch("/api/public/alert-catalog", { cache: "no-store" });
+        if (!response.ok) throw new Error(`catalog_${response.status}`);
+        const catalog = await response.json();
+        if (!Array.isArray(catalog.alerts) || !Number.isFinite(Number(catalog.interval_seconds))) throw new Error("catalog_invalid");
+        this.catalog = catalog;
+      } catch (error) {
+        console.warn("AT140 alert catalog unavailable; radio continues.", String(error));
+        this.catalog = null;
+      }
+      const connectAuth = () => {
+        if (!window.AT140Auth?.subscribe) return false;
+        this.unsubscribeAuth = window.AT140Auth.subscribe((identity) => {
+          const switched = this.identity.signedIn && identity.signedIn && this.identity.userId !== identity.userId;
+          this.identity = identity;
+          if (!identity.signedIn || switched) this.cancelActive();
+          this.schedule();
+        });
+        return true;
+      };
+      if (!connectAuth()) this.authWait = setInterval(() => { if (connectAuth()) clearInterval(this.authWait); }, 100);
+      this.announce();
+      this.schedule();
+    }
+
+    enabledForAccount() {
+      return !this.identity.signedIn || this.identity.alertAdsEnabled === true;
+    }
+
+    clientFeatureEnabled() {
+      if (this.catalog?.client_account_alerts_enabled === true) return true;
+      const preview = !["allthings140radio.online", "www.allthings140radio.online"].includes(location.hostname);
+      return preview && new URL(location.href).searchParams.get("alert_qa") === "1";
+    }
+
+    isOwner() {
+      if (audio.paused || !desiredPlay) return false;
+      const cutoff = Date.now() - 8000;
+      const active = [this.tabId];
+      for (const [id, peer] of this.peers) if (peer.playing && peer.at >= cutoff) active.push(id); else if (peer.at < cutoff) this.peers.delete(id);
+      return active.sort()[0] === this.tabId;
+    }
+
+    announce() {
+      this.channel?.postMessage({ id: this.tabId, playing: desiredPlay && !audio.paused, at: Date.now() });
+    }
+
+    onPeer(message) {
+      if (!message || message.id === this.tabId) return;
+      this.peers.set(String(message.id), { playing: Boolean(message.playing), at: Number(message.at) || 0 });
+      if (!this.isOwner()) this.cancel();
+    }
+
+    intervalMs() {
+      const qa = !["allthings140radio.online", "www.allthings140radio.online"].includes(location.hostname)
+        && new URL(location.href).searchParams.get("alert_qa") === "1";
+      return (qa ? 60 : Math.max(60, Number(this.catalog?.interval_seconds) || 900)) * 1000;
+    }
+
+    schedule() {
+      this.cancel();
+      if (!this.catalog || !this.clientFeatureEnabled() || !this.enabledForAccount() || !this.isOwner() || !this.catalog.alerts.length) return;
+      let last = Number(localStorage.getItem("at140-alert-last-played-v1") || 0);
+      if (!last) {
+        last = Date.now();
+        localStorage.setItem("at140-alert-last-played-v1", String(last));
+      }
+      const delay = Math.max(1000, this.intervalMs() - Math.max(0, Date.now() - last));
+      this.timer = setTimeout(() => this.playDue(), delay);
+    }
+
+    async playDue() {
+      this.timer = 0;
+      if (this.playing || !this.clientFeatureEnabled() || !this.enabledForAccount() || !this.isOwner() || audio.paused) return this.schedule();
+      const alerts = this.catalog?.alerts || [];
+      if (!alerts.length) return;
+      const previous = localStorage.getItem("at140-alert-last-id-v1");
+      const choices = alerts.filter((item) => item.id !== previous);
+      const selected = (choices.length ? choices : alerts)[Math.floor(Math.random() * (choices.length || alerts.length))];
+      this.playing = true;
+      alertDuckFactor = 0.34;
+      applyListenerVolume(listenerVolume);
+      this.alertPlayer.src = new URL(selected.url, location.origin).href;
+      try {
+        await this.alertPlayer.play();
+        localStorage.setItem("at140-alert-last-played-v1", String(Date.now()));
+        localStorage.setItem("at140-alert-last-id-v1", selected.id);
+      } catch (error) {
+        console.warn("AT140 alert playback failed; radio continues.", String(error));
+        this.finish("play_rejected");
+      }
+    }
+
+    finish(reason = "complete") {
+      if (!this.playing) return;
+      this.playing = false;
+      this.alertPlayer.removeAttribute("src");
+      this.alertPlayer.load();
+      alertDuckFactor = 1;
+      applyListenerVolume(listenerVolume);
+      if (reason !== "complete") console.warn("AT140 alert ended early; next retry remains on normal cadence.", reason);
+      this.schedule();
+    }
+
+    cancelActive() {
+      if (!this.playing) return;
+      this.alertPlayer.pause();
+      this.finish("entitlement_changed");
+    }
+
+    cancel() { if (this.timer) clearTimeout(this.timer); this.timer = 0; }
+
+    inspect() {
+      return Object.freeze({
+        catalogLoaded: Boolean(this.catalog),
+        clientEnabled: this.clientFeatureEnabled(),
+        accountEligible: this.enabledForAccount(),
+        owner: this.isOwner(),
+        playing: this.playing,
+        intervalSeconds: this.intervalMs() / 1000,
+        serverInjectionEnabled: this.catalog?.server_stream_alert_injection_enabled !== false,
+      });
+    }
+
+    destroy() {
+      this.cancelActive();
+      this.cancel();
+      clearInterval(this.heartbeat);
+      clearInterval(this.authWait);
+      this.unsubscribeAuth?.();
+      this.channel?.close();
+    }
+  }
+
+  const alertScheduler = new AccountAlertScheduler();
+  window.AT140Alerts = Object.freeze({ inspect: () => alertScheduler.inspect() });
 
   function releaseRoute() {
     if (currentClient) {

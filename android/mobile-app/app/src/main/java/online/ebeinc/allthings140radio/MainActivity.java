@@ -529,12 +529,9 @@ public final class MainActivity extends Activity {
         if (visualsVideoView != null) {
             visualsVideoView.pausePlayback();
         }
-        if (controller != null) controller.removeListener(playerListener);
-        if (controllerFuture != null) {
-            MediaController.releaseFuture(controllerFuture);
-            controllerFuture = null;
-        }
-        controller = null;
+        // Keep the MediaController binding for the Activity lifetime. Releasing
+        // the last controller here lets the bound MediaLibraryService stop a
+        // few seconds after the task backgrounds on some Samsung builds.
         super.onStop();
     }
 
@@ -719,6 +716,12 @@ public final class MainActivity extends Activity {
     @Override protected void onDestroy() {
         stopStatusPolling();
         statusExecutor.shutdownNow();
+        if (controller != null) controller.removeListener(playerListener);
+        if (controllerFuture != null) {
+            MediaController.releaseFuture(controllerFuture);
+            controllerFuture = null;
+        }
+        controller = null;
         if (chatClient != null) {
             chatClient.disconnect();
             chatClient = null;

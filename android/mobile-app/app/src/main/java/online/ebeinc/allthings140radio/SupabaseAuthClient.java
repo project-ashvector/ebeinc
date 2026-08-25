@@ -23,7 +23,7 @@ import okhttp3.WebSocketListener;
 public final class SupabaseAuthClient {
     public interface Callback { void complete(boolean ok, String message); }
     public interface ProfileCallback { void complete(boolean ok, String username, String avatarPath); }
-    public interface RoleCallback { void complete(boolean ok, String role, String accountStatus, String email, String accountClass, String accountType, boolean alertAdsEnabled); }
+    public interface RoleCallback { void complete(boolean ok, String role, String accountStatus, String email, String accountClass, String accountType, String alertAdsPreference, boolean alertAdsEnabled); }
     public interface JsonCallback { void complete(boolean ok, String json, String message); }
     public static final String TERMS_VERSION = "green-room-2026-08-21-v1";
     private static final String URL = "https://dtvnlpgtmrbnpecsapsv.supabase.co";
@@ -48,14 +48,24 @@ public final class SupabaseAuthClient {
 
     /** Fetches current authority from the protected server RPC; role is never persisted locally. */
     public void loadRole(RoleCallback callback) {
-        if (!signedIn()) { callback.complete(false, "user", "active", "", "regular", "regular", true); return; }
+        if (!signedIn()) { callback.complete(false, "user", "active", "", "regular", "regular", "default", true); return; }
         rpc("account_role_state", new JSONObject(), (ok, json, message) -> {
             try {
                 org.json.JSONArray rows = new org.json.JSONArray(json);
                 JSONObject row = rows.length() == 0 ? new JSONObject() : rows.getJSONObject(0);
-                callback.complete(ok, row.optString("role", "user"), row.optString("account_status", "active"), row.optString("email", ""), row.optString("account_class", "regular"), row.optString("account_type", "regular"), row.optBoolean("alert_ads_enabled", true));
-            } catch (Exception ignored) { callback.complete(false, "user", "active", "", "regular", "regular", true); }
+                callback.complete(ok, row.optString("role", "user"), row.optString("account_status", "active"), row.optString("email", ""), row.optString("account_class", "regular"), row.optString("account_type", "regular"), row.optString("alert_ads_preference", "default"), row.optBoolean("alert_ads_enabled", true));
+            } catch (Exception ignored) { callback.complete(false, "user", "active", "", "regular", "regular", "default", true); }
         });
+    }
+
+    public void setAlertAdsPreference(String preference, Callback callback) {
+        try {
+            rpc("set_alert_ads_preference", new JSONObject().put("p_preference", preference),
+                    (ok, json, message) -> {
+                        if (ok) notifyAccountStateChanged();
+                        callback.complete(ok, ok ? "Station alert preference saved." : message);
+                    });
+        } catch (Exception error) { callback.complete(false, "Alert preference could not be saved."); }
     }
 
     public void rpc(String name, JSONObject body, JsonCallback callback) {

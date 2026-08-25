@@ -96,6 +96,30 @@ class RadioSystemTest(unittest.TestCase):
         status, _, schedule = self.request("/api/public/schedule")
         self.assertEqual((status, schedule["takeovers"]), (200, []))
 
+    def test_public_alert_catalog_uses_opaque_ids_and_safe_flags(self):
+        self.app.AD_DIR.mkdir(parents=True, exist_ok=True)
+        alert_path = self.app.AD_DIR / "private-server-name.mp3"
+        alert_path.write_bytes(b"ID3test-alert")
+        self.app.save_ad_meta({
+            "interval_seconds": 900,
+            "server_stream_alert_injection_enabled": True,
+            "client_account_alerts_enabled": False,
+            "ads": {alert_path.name: {"enabled": True, "client_delivery_enabled": True, "duration_seconds": 7.25}},
+        })
+        status, _, catalog = self.request("/api/public/alert-catalog")
+        self.assertEqual(status, 200)
+        self.assertEqual(catalog["interval_seconds"], 900)
+        self.assertTrue(catalog["server_stream_alert_injection_enabled"])
+        self.assertFalse(catalog["client_account_alerts_enabled"])
+        self.assertEqual(len(catalog["alerts"]), 1)
+        item = catalog["alerts"][0]
+        self.assertNotIn(alert_path.name, json.dumps(item))
+        self.assertRegex(item["id"], r"^[a-f0-9]{32}$")
+        request = urllib.request.Request(self.base_url + item["url"], headers={"Range": "bytes=0-2"})
+        with urllib.request.urlopen(request, timeout=3) as response:
+            self.assertEqual(response.status, 206)
+            self.assertEqual(response.read(), b"ID3")
+
     def test_rotation_audit_is_not_publicly_exposed(self):
         status, _, _ = self.request("/api/rotation-audit")
         self.assertEqual(status, 404)
@@ -269,7 +293,7 @@ class RadioSystemTest(unittest.TestCase):
         self.assertIn('const OBS_STREAM_ORIGIN = "https://stream.ebeinc.online/live.mp3"', worker)
         self.assertIn('url.pathname.startsWith("/api/")', service_worker)
         self.assertIn('fetch("/api/public/submissions"', app)
-        self.assertIn('allthings140-radio-v59', service_worker)
+        self.assertIn('allthings140-radio-v63', service_worker)
         self.assertIn('support.css?v=1.1.0', service_worker)
         self.assertIn('support.js?v=1.1.0', service_worker)
         self.assertIn('const networkFirst =', service_worker)
@@ -344,6 +368,7 @@ class RadioSystemTest(unittest.TestCase):
         stage_css = (ROOT / "visuals-green/stage.css").read_text(encoding="utf-8")
         overlay_css = (ROOT / "visuals-green/overlay.css").read_text(encoding="utf-8")
         dj_app = (ROOT / "tools/dj_app.py").read_text(encoding="utf-8")
+        server = (ROOT / "tools/server.py").read_text(encoding="utf-8")
         discord = (ROOT / "discord-bot/index.js").read_text(encoding="utf-8")
         restore_script = ROOT / "operations/restore-vm.sh"
 
@@ -370,6 +395,10 @@ class RadioSystemTest(unittest.TestCase):
         # DJ App queue fix and async alert
         self.assertNotIn("self.render_rotation([])", dj_app.split("def set_takeover_status")[1].split("def _scroll_rotation_with_mouse")[0])
         self.assertIn("threading.Thread(target=send_alert", dj_app)
+        self.assertIn('"DECODER", "HOT CACHE"', dj_app)
+        self.assertIn("self.health_labels.get(key)", dj_app)
+        self.assertIn("STATION STATUS UNKNOWN", dj_app)
+        self.assertIn("threading.BoundedSemaphore(max_request_threads)", server)
 
         # Discord Bot keys
         self.assertIn("data.current_title", discord)

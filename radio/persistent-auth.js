@@ -29,6 +29,7 @@
 
   let user = null;
   let profile = null;
+  let roleState = null;
   let authSubscription = null;
   let profileLoadGeneration = 0;
   let profileLoadingUserId = null;
@@ -69,6 +70,11 @@
       username: profile?.username || null,
       avatarUrl: avatarPublicUrl(profile?.avatar_path),
       accountStatus: profile?.account_status || "active",
+      role: roleState?.role || "user",
+      accountClass: roleState?.account_class || "regular",
+      accountType: roleState?.account_type || roleState?.role || "regular",
+      alertAdsPreference: roleState?.alert_ads_preference || "default",
+      alertAdsEnabled: roleState?.alert_ads_enabled !== false,
       profileComplete: Boolean(profile?.username),
     });
   }
@@ -125,9 +131,33 @@
       renderAvatar(profileAvatar, profile?.username, profile?.avatar_path);
       profileUsername.textContent = profile?.username || "Profile setup required";
       profileIdentity.textContent = `Account ID ${user.id}`;
+      document.getElementById("profileHeroEmail").textContent = roleState?.email || user.email || "—";
       usernameInput.value = profile?.username || "";
       usernameInput.disabled = profile?.account_status !== "active";
       document.getElementById("profileStatus").textContent = (profile?.account_status || "active").toUpperCase();
+      document.getElementById("profileEmail").textContent = roleState?.email || user.email || "—";
+      document.getElementById("profileRole").textContent = (roleState?.role || "user").toUpperCase();
+      const role = roleState?.role || "user";
+      const badge = document.getElementById("accountRoleBadge");
+      const accountType = roleState?.account_type || "regular";
+      badge.hidden = accountType === "regular";
+      badge.textContent = accountType === "partner_sponsor" ? "PARTNER" : accountType === "moderator" ? "MOD" : accountType.toUpperCase();
+      badge.dataset.role = accountType;
+      document.getElementById("profileAccountType").textContent = accountType === "partner_sponsor" ? "PARTNER / SPONSOR" : accountType.toUpperCase();
+      const adsOn = roleState?.alert_ads_enabled !== false;
+      document.getElementById("profileAlertAds").textContent = adsOn ? "ON" : "OFF";
+      const benefit = accountType === "plus" ? "Included with Plus" : accountType === "resident" ? "ALLTHINGS140 Resident benefit" : accountType === "partner_sponsor" ? "Partner benefit" : accountType === "moderator" ? "Staff account" : accountType === "admin" ? "Administrator account" : "Included in the shared station stream";
+      document.getElementById("profileAlertNote").textContent = accountType === "regular" ? "Regular accounts include station alerts." : `${benefit} — account-aware delivery is in testing`;
+      const preferenceControl = document.getElementById("alertPreferenceControl");
+      const eligible = accountType !== "regular";
+      preferenceControl.hidden = !eligible;
+      for (const button of preferenceControl.querySelectorAll("[data-alert-preference]")) {
+        button.setAttribute("aria-pressed", String((button.dataset.alertPreference === "on") === adsOn));
+        button.disabled = false;
+      }
+      for (const item of document.querySelectorAll("[data-min-role]")) {
+        item.hidden = item.dataset.minRole === "admin" ? role !== "admin" : !["moderator", "admin"].includes(role);
+      }
       document.getElementById("profileTermsState").textContent = "PENDING LEGAL/UGC PHASE";
       document.getElementById("profileCooldown").textContent = profile?.username
         ? `Username changes are limited to once every ${config.usernameCooldownDays} days.`
@@ -141,11 +171,10 @@
     profileLoadingUserId = expectedUser.id;
     const generation = ++profileLoadGeneration;
     profileQueries += 1;
-    const { data, error } = await client
-      .from("profiles")
-      .select("id,username,avatar_path,created_at,updated_at,account_status")
-      .eq("id", expectedUser.id)
-      .maybeSingle();
+    const [{ data, error }, roleResult] = await Promise.all([
+      client.from("profiles").select("id,username,avatar_path,created_at,updated_at,account_status").eq("id", expectedUser.id).maybeSingle(),
+      client.rpc("account_role_state"),
+    ]);
     if (generation !== profileLoadGeneration || user?.id !== expectedUser.id) return;
     profileLoadingUserId = null;
     if (error) {
@@ -153,6 +182,7 @@
       showMessage("Your session is active, but the profile could not be loaded.", "error");
     } else {
       profile = data;
+      roleState = Array.isArray(roleResult.data) ? roleResult.data[0] || null : roleResult.data;
       if (!profile?.username) openDialog("profile");
     }
     render();
@@ -166,6 +196,7 @@
     }
     user = nextUser;
     profile = null;
+    roleState = null;
     if (user) loadProfile(user);
     else {
       profileLoadGeneration += 1;
@@ -177,9 +208,11 @@
   function setMode(mode) {
     currentMode = mode;
     const authenticatedMode = mode === "profile";
+    const recoveryMode = mode === "recovery";
     authForms.hidden = authenticatedMode;
     signedIn.hidden = !authenticatedMode;
     signedOut.hidden = authenticatedMode;
+    document.querySelector(".auth-tabs").hidden = recoveryMode;
     for (const tab of tabs) tab.setAttribute("aria-selected", String(tab.dataset.authTab === mode));
     for (const section of sections) section.hidden = section.dataset.authSection !== mode;
     showMessage("");
@@ -269,6 +302,7 @@
     const form = event.currentTarget;
     const email = form.elements.email.value.trim();
     const password = form.elements.password?.value || "";
+    if (currentMode === "signup" && password !== form.elements.confirmPassword?.value) return showMessage("Passwords do not match.", "error");
     showMessage(currentMode === "signup" ? "Creating account…" : "Signing in…");
     const redirectTo = `${location.origin}${location.pathname}`;
     const result = currentMode === "signup"
@@ -297,6 +331,7 @@
   async function updatePassword(event) {
     event.preventDefault();
     const password = event.currentTarget.elements.password.value;
+    if (password !== event.currentTarget.elements.confirmPassword.value) return showMessage("Passwords do not match.", "error");
     showMessage("Updating password…");
     const { error } = await client.auth.updateUser({ password });
     if (error) showMessage(error.message, "error");
@@ -322,6 +357,14 @@
   dialog.addEventListener("click", (event) => { if (event.target === dialog) closeDialog(); });
   for (const button of document.querySelectorAll("[data-open-auth]")) button.addEventListener("click", () => openDialog(button.dataset.openAuth));
   for (const tab of tabs) tab.addEventListener("click", () => setMode(tab.dataset.authTab));
+  for (const button of document.querySelectorAll("[data-auth-switch]")) button.addEventListener("click", () => setMode(button.dataset.authSwitch));
+  for (const button of document.querySelectorAll("[data-password-toggle]")) button.addEventListener("click", () => {
+    const input = button.previousElementSibling;
+    const reveal = input.type === "password";
+    input.type = reveal ? "text" : "password";
+    button.textContent = reveal ? "Hide" : "Show";
+    button.setAttribute("aria-label", `${reveal ? "Hide" : "Show"} password`);
+  });
   document.getElementById("signInForm").addEventListener("submit", submitEmail);
   document.getElementById("signUpForm").addEventListener("submit", submitEmail);
   document.getElementById("resetForm").addEventListener("submit", requestReset);
@@ -329,10 +372,29 @@
   profileForm.addEventListener("submit", saveProfile);
   document.getElementById("googleAuth").addEventListener("click", () => startOAuth("google"));
   document.getElementById("soundCloudAuth").addEventListener("click", () => startOAuth("soundcloud"));
+  document.getElementById("oauthOptions").hidden = !(config.googleEnabled || config.soundCloudEnabled);
+  document.getElementById("googleAuth").hidden = !config.googleEnabled;
+  document.getElementById("soundCloudAuth").hidden = !config.soundCloudEnabled;
   document.getElementById("accountSignOut").addEventListener("click", async () => {
     const { error } = await client.auth.signOut();
     if (error) showMessage(error.message, "error");
     else closeDialog();
+  });
+  document.getElementById("alertPreferenceControl").addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-alert-preference]");
+    if (!button || !user || (roleState?.account_type || "regular") === "regular") return;
+    const controls = [...event.currentTarget.querySelectorAll("button")];
+    controls.forEach(item => { item.disabled = true; });
+    showMessage(`Turning station alerts ${button.dataset.alertPreference === "on" ? "on" : "off"}…`);
+    const result = await client.rpc("set_alert_ads_preference", { p_preference: button.dataset.alertPreference });
+    if (result.error) {
+      controls.forEach(item => { item.disabled = false; });
+      return showMessage("Alert preference could not be saved. Please try again.", "error");
+    }
+    const refreshed = await client.rpc("account_role_state");
+    if (!refreshed.error) roleState = Array.isArray(refreshed.data) ? refreshed.data[0] || null : refreshed.data;
+    render();
+    showMessage("Station alert preference saved across your devices.", "success");
   });
   document.getElementById("requestDeletion").addEventListener("click", async () => {
     if (!confirm("Submit an account-deletion request? This is intended to be permanent.")) return;
@@ -350,6 +412,15 @@
     identity,
     accessToken: async () => (await client.auth.getSession()).data?.session?.["access_" + "token"] || null,
     open: openDialog,
+    rpc: (name, parameters = {}) => client.rpc(name, parameters),
+    avatarUrl: avatarPublicUrl,
+    async refreshRole() {
+      if (!user) return identity();
+      const result = await client.rpc("account_role_state");
+      if (!result.error) roleState = Array.isArray(result.data) ? result.data[0] || null : result.data;
+      render();
+      return identity();
+    },
     syncRoute,
     subscribe(callback) {
       subscribers.add(callback);
@@ -376,6 +447,8 @@
     if (event.data?.type === "AT140_OPEN_AUTH") openDialog(event.data.mode || "signin");
   });
 
+  const requestedMode = window.AT140InitialAccountMode || new URLSearchParams(location.search).get("account");
+  if (["signin", "signup", "reset"].includes(requestedMode)) openDialog(requestedMode);
   client.auth.getSession().then(({ data, error }) => {
     if (error) showMessage("The saved session could not be restored.", "error");
     applySession(data?.session || null);

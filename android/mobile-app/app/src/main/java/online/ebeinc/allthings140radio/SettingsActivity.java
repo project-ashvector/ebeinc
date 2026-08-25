@@ -74,6 +74,9 @@ public final class SettingsActivity extends Activity {
     private View accountDelete;
     private TextView accountType;
     private TextView alertAds;
+    private View alertPreferenceControl;
+    private Button alertAdsOff;
+    private Button alertAdsOn;
     private enum AuthMode { SIGN_IN, CREATE, RESET }
     private AuthMode authMode = AuthMode.SIGN_IN;
 
@@ -115,6 +118,9 @@ public final class SettingsActivity extends Activity {
         accountDelete = findViewById(R.id.btnAccountDelete);
         accountType = findViewById(R.id.txtAccountType);
         alertAds = findViewById(R.id.txtAlertAds);
+        alertPreferenceControl = findViewById(R.id.alertPreferenceControl);
+        alertAdsOff = findViewById(R.id.btnAlertAdsOff);
+        alertAdsOn = findViewById(R.id.btnAlertAdsOn);
         ImageButton back = findViewById(R.id.btnBack);
         Button privacy = findViewById(R.id.btnPrivacy);
         Button website = findViewById(R.id.btnWebsiteSettings);
@@ -174,6 +180,8 @@ public final class SettingsActivity extends Activity {
         });
         moderationButton.setOnClickListener(v -> openRoleConsole(false));
         adminButton.setOnClickListener(v -> openRoleConsole(true));
+        alertAdsOff.setOnClickListener(v -> saveAlertPreference("off"));
+        alertAdsOn.setOnClickListener(v -> saveAlertPreference("on"));
         refreshAccountState();
     }
 
@@ -193,7 +201,7 @@ public final class SettingsActivity extends Activity {
         if (!authClient.signedIn()) {
             roleBadge.setVisibility(View.GONE); moderationButton.setVisibility(View.GONE); adminButton.setVisibility(View.GONE); return;
         }
-        authClient.loadRole((ok, role, status, email, accountClass, visibleType, alertAdsEnabled) -> mainHandler.post(() -> {
+        authClient.loadRole((ok, role, status, email, accountClass, visibleType, alertAdsPreference, alertAdsEnabled) -> mainHandler.post(() -> {
             String safeRole = ok ? role : "user";
             boolean moderator = "moderator".equals(safeRole) || "admin".equals(safeRole);
             boolean admin = "admin".equals(safeRole);
@@ -205,8 +213,25 @@ public final class SettingsActivity extends Activity {
             accountState.setText("SIGNED IN — " + (email.isEmpty() ? authClient.userId() : email) + " • " + status.toUpperCase());
             accountType.setText("ACCOUNT TYPE\n" + label);
             String benefit = "plus".equals(visibleType) ? "Included with Plus" : "resident".equals(visibleType) ? "ALLTHINGS140 Resident benefit" : "partner_sponsor".equals(visibleType) ? "Partner benefit" : "moderator".equals(visibleType) ? "Staff account" : "admin".equals(visibleType) ? "Administrator account" : "Included in the shared station stream";
-            alertAds.setText("ALERT ADS\n" + (alertAdsEnabled ? "ON\n" + benefit : "OFF ENTITLEMENT\n" + benefit + " — stream migration pending"));
+            alertAds.setText("ALERT ADS\n" + (alertAdsEnabled ? "ON\n" + benefit : "OFF\n" + benefit + " — account-aware delivery is in testing"));
+            boolean eligible = !"regular".equals(visibleType);
+            alertPreferenceControl.setVisibility(eligible ? View.VISIBLE : View.GONE);
+            alertAdsOff.setText(alertAdsEnabled ? "OFF" : "✓ OFF");
+            alertAdsOn.setText(alertAdsEnabled ? "✓ ON" : "ON");
+            alertAdsOff.setAlpha(alertAdsEnabled ? 0.72f : 1f);
+            alertAdsOn.setAlpha(alertAdsEnabled ? 1f : 0.72f);
             accountType.setVisibility(View.VISIBLE); alertAds.setVisibility(View.VISIBLE);
+        }));
+    }
+
+    private void saveAlertPreference(String preference) {
+        alertAdsOff.setEnabled(false);
+        alertAdsOn.setEnabled(false);
+        authClient.setAlertAdsPreference(preference, (ok, message) -> mainHandler.post(() -> {
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+            alertAdsOff.setEnabled(true);
+            alertAdsOn.setEnabled(true);
+            if (ok) refreshRole();
         }));
     }
 
@@ -246,6 +271,7 @@ public final class SettingsActivity extends Activity {
         boolean signedIn = authClient.signedIn();
         setVisible(accountType, signedIn);
         setVisible(alertAds, signedIn);
+        if (!signedIn) setVisible(alertPreferenceControl, false);
         if (accountState != null) accountState.setText(signedIn ? "YOUR ALLTHINGS140 ACCOUNT" : "SIGN IN TO ALLTHINGS140");
         if (accountIntro != null) accountIntro.setText(signedIn
                 ? "Manage your profile, membership, community access, and account security."

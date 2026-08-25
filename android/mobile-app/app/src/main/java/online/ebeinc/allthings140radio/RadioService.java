@@ -52,7 +52,9 @@ public final class RadioService extends MediaLibraryService {
     private static final String ROOT_ID = "allthings140_root";
     private static final String LIVE_ID = "allthings140_live";
     private static final String STREAM_URL = "https://stream.ebeinc.online/live.mp3";
-    private static final String ALERT_CATALOG_URL = "https://status.ebeinc.online/api/public/alert-catalog";
+    private static final String ALERT_CATALOG_URL = BuildConfig.DEBUG
+            ? "https://account-aware-alerts-vc19.ebeinc-uqt.pages.dev/api/public/alert-catalog"
+            : "https://allthings140radio.online/api/public/alert-catalog";
     private static final long RETRY_DELAY_MS = 5_000L;
     private static final long POLICY_REFRESH_MS = 5 * 60_000L;
     private static final long ENTITLEMENT_GRACE_MS = 60 * 60_000L;
@@ -263,7 +265,7 @@ public final class RadioService extends MediaLibraryService {
             protectedStateKnown = false;
             cancelActiveAlert("account_changed");
         }
-        authClient.loadRole((ok, role, status, email, accountClass, accountType, alertAdsEnabled) -> mainHandler.post(() -> {
+        authClient.loadRole((ok, role, status, email, accountClass, accountType, alertAdsPreference, alertAdsEnabled) -> mainHandler.post(() -> {
             if (ok && userId.equals(authClient.userId())) {
                 protectedAlertsEnabled = alertAdsEnabled;
                 protectedStateKnown = true;

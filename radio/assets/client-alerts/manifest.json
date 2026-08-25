@@ -1,0 +1,181 @@
+{
+  "schema_version": 1,
+  "interval_seconds": 900,
+  "alerts": [
+    {
+      "id": "bb308db112a6c3b96f3da2e8937e3187",
+      "url": "/api/public/alert-media/bb308db112a6c3b96f3da2e8937e3187.mp3",
+      "duration_seconds": 7.027,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "b4f20cba1c7c1d964bf3aa3b37e0845d",
+      "url": "/api/public/alert-media/b4f20cba1c7c1d964bf3aa3b37e0845d.mp3",
+      "duration_seconds": 6.531,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "82a1c9b160d4cf2bdeba6d75f488c51e",
+      "url": "/api/public/alert-media/82a1c9b160d4cf2bdeba6d75f488c51e.mp3",
+      "duration_seconds": 9.404,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "71baa845b941b1db680062c47f5fe764",
+      "url": "/api/public/alert-media/71baa845b941b1db680062c47f5fe764.mp3",
+      "duration_seconds": 6.322,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "98a448ecf5e183affd51004f46f165d2",
+      "url": "/api/public/alert-media/98a448ecf5e183affd51004f46f165d2.mp3",
+      "duration_seconds": 3.918,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "17cc140ad51595fe64e9d99733ded946",
+      "url": "/api/public/alert-media/17cc140ad51595fe64e9d99733ded946.mp3",
+      "duration_seconds": 4.963,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "23306cfbee306168312063ee463bdd00",
+      "url": "/api/public/alert-media/23306cfbee306168312063ee463bdd00.mp3",
+      "duration_seconds": 5.721,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "1b38e6ffccd2890d35e14e444b6f75fa",
+      "url": "/api/public/alert-media/1b38e6ffccd2890d35e14e444b6f75fa.mp3",
+      "duration_seconds": 7.704,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "7d27bb24da4ba53282b3ebd9d27c8001",
+      "url": "/api/public/alert-media/7d27bb24da4ba53282b3ebd9d27c8001.mp3",
+      "duration_seconds": 7.464,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "c482296787319084446515af96e52045",
+      "url": "/api/public/alert-media/c482296787319084446515af96e52045.mp3",
+      "duration_seconds": 6.288,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "d15720c4ee999f376fee954dede3c2d0",
+      "url": "/api/public/alert-media/d15720c4ee999f376fee954dede3c2d0.mp3",
+      "duration_seconds": 6.048,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "486017c0c6f63eeb03d85ab92bf29f19",
+      "url": "/api/public/alert-media/486017c0c6f63eeb03d85ab92bf29f19.mp3",
+      "duration_seconds": 7.848,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "470294dc649392e134f22df3572023fb",
+      "url": "/api/public/alert-media/470294dc649392e134f22df3572023fb.mp3",
+      "duration_seconds": 7.776,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "d3a9dc300ddfe738773a796a8d9338f4",
+      "url": "/api/public/alert-media/d3a9dc300ddfe738773a796a8d9338f4.mp3",
+      "duration_seconds": 6.744,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "654ab04f148c6f5707ad019ca745fed0",
+      "url": "/api/public/alert-media/654ab04f148c6f5707ad019ca745fed0.mp3",
+      "duration_seconds": 8.736,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "4d1c84a595270de9efeb2e1816ee42fa",
+      "url": "/api/public/alert-media/4d1c84a595270de9efeb2e1816ee42fa.mp3",
+      "duration_seconds": 6.816,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "88d77b1613cc9fbe9fb8b12cf1cda84a",
+      "url": "/api/public/alert-media/88d77b1613cc9fbe9fb8b12cf1cda84a.mp3",
+      "duration_seconds": 7.416,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "ca190ea1e85b4a323af59d6ab3ee0e65",
+      "url": "/api/public/alert-media/ca190ea1e85b4a323af59d6ab3ee0e65.mp3",
+      "duration_seconds": 7.296,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "20b748cea4530768c60719662a62d038",
+      "url": "/api/public/alert-media/20b748cea4530768c60719662a62d038.mp3",
+      "duration_seconds": 6.096,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "baea9c4d37645361f7c053047560bd33",
+      "url": "/api/public/alert-media/baea9c4d37645361f7c053047560bd33.mp3",
+      "duration_seconds": 7.704,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "0c1560b1d098dedf6b9b190d5d1efab8",
+      "url": "/api/public/alert-media/0c1560b1d098dedf6b9b190d5d1efab8.mp3",
+      "duration_seconds": 6.713,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "2cf43028b3fd45eb4c3cfb2ed36611e0",
+      "url": "/api/public/alert-media/2cf43028b3fd45eb4c3cfb2ed36611e0.mp3",
+      "duration_seconds": 7.464,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "ec93405bc64f93d142ce07cea38bc73d",
+      "url": "/api/public/alert-media/ec93405bc64f93d142ce07cea38bc73d.mp3",
+      "duration_seconds": 7.471,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "e7d19450d5442ce3f410ab62c3fe55fc",
+      "url": "/api/public/alert-media/e7d19450d5442ce3f410ab62c3fe55fc.mp3",
+      "duration_seconds": 6.87,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "ca2863a1ec578c6d00fea1ce00ea8832",
+      "url": "/api/public/alert-media/ca2863a1ec578c6d00fea1ce00ea8832.mp3",
+      "duration_seconds": 5.878,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "abb9a5976a5c84ee64ac11e9874a345e",
+      "url": "/api/public/alert-media/abb9a5976a5c84ee64ac11e9874a345e.mp3",
+      "duration_seconds": 7.549,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "07b38cfc653ff93f000f1d23d4a869c3",
+      "url": "/api/public/alert-media/07b38cfc653ff93f000f1d23d4a869c3.mp3",
+      "duration_seconds": 4.937,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "f3c4187280f760cea59cd2385dda614a",
+      "url": "/api/public/alert-media/f3c4187280f760cea59cd2385dda614a.mp3",
+      "duration_seconds": 9.509,
+      "category": "promotional_alert"
+    },
+    {
+      "id": "bc1a0abb390341b6e36f7cb50afa2ae0",
+      "url": "/api/public/alert-media/bc1a0abb390341b6e36f7cb50afa2ae0.mp3",
+      "duration_seconds": 11.546,
+      "category": "promotional_alert"
+    }
+  ],
+  "version": "bccf6c12306d3be9"
+}
