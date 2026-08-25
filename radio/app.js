@@ -124,7 +124,7 @@
   function updateClock() {
     if (latest) {
       const dur = Number(latest.duration_seconds) || 0;
-      const base = Number(latest.position_seconds) || 0;
+      const base = Number(latest._position_at_received ?? latest.position_seconds) || 0;
       const receivedAt = Number(latest._received_at) || Date.now() / 1000;
       const pos = Math.min(dur || Infinity, base + Math.max(0, Date.now() / 1000 - receivedAt));
       elapsed.textContent = fmt(pos);
@@ -269,7 +269,21 @@
 
   function apply(s) {
     const receivedAt = Date.now() / 1000;
-    latest = { ...s, _received_at: receivedAt };
+    const durationSeconds = Math.max(0, Number(s.duration_seconds) || 0);
+    const serverTime = Number(s.server_time);
+    const startedAt = Number(s.started_at);
+    let positionAtReceived = Math.max(0, Number(s.position_seconds) || 0);
+    // Anchor the counter to the station clock, not to when a delayed HTTP
+    // response happened to reach the browser. This corrects request latency
+    // and resets cleanly on every server-reported track transition.
+    if (Number.isFinite(serverTime) && serverTime > 0) {
+      if (Number.isFinite(startedAt) && startedAt > 0) {
+        positionAtReceived = Math.max(0, serverTime - startedAt);
+      }
+      positionAtReceived += Math.max(0, receivedAt - serverTime);
+    }
+    if (durationSeconds > 0) positionAtReceived = Math.min(durationSeconds, positionAtReceived);
+    latest = { ...s, _received_at: receivedAt, _position_at_received: positionAtReceived };
 
     const takeover = s.active_takeover || null;
     const isLive = s.mode === "live" || s.live === true;
