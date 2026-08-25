@@ -2774,6 +2774,14 @@ class PublicGatewayHandler(BaseHTTPRequestHandler):
 
     server_version = f"AllThings140Radio-Public/{VERSION}"
 
+    def setup(self) -> None:
+        super().setup()
+        # Never let an abandoned Cloudflare/client socket occupy one of the
+        # gateway's bounded request threads indefinitely. Live audio bypasses
+        # this handler and connects directly to Icecast, so this applies only
+        # to short metadata/API responses.
+        self.connection.settimeout(10.0)
+
     def log_message(self, fmt: str, *args: Any) -> None:
         sys.stdout.write("public-gateway %s - %s\n" % (self.address_string(), fmt % args))
 
@@ -2795,7 +2803,7 @@ class PublicGatewayHandler(BaseHTTPRequestHandler):
         if self.command != "HEAD":
             try:
                 self.wfile.write(body)
-            except (BrokenPipeError, ConnectionResetError):
+            except (BrokenPipeError, ConnectionResetError, TimeoutError):
                 # Streaming clients and health probes frequently disconnect as
                 # soon as they have enough data. That is not a server failure.
                 self.close_connection = True
