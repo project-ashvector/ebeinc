@@ -55,7 +55,8 @@ public final class RadioService extends MediaLibraryService {
     private static final String ALERT_CATALOG_URL = BuildConfig.DEBUG
             ? "https://account-aware-alerts-vc19.ebeinc-uqt.pages.dev/api/public/alert-catalog"
             : "https://allthings140radio.online/api/public/alert-catalog";
-    private static final long RETRY_DELAY_MS = 5_000L;
+    private static final long BUFFERING_STALL_MS = 15_000L;
+    private static final long[] RETRY_DELAYS_MS = {5_000L, 10_000L, 20_000L, 30_000L, 60_000L};
     private static final long POLICY_REFRESH_MS = 5 * 60_000L;
     private static final long ENTITLEMENT_GRACE_MS = 60 * 60_000L;
     private static final float ALERT_DUCK_GAIN = 0.34f;
@@ -77,6 +78,7 @@ public final class RadioService extends MediaLibraryService {
     private boolean protectedStateKnown;
     private String protectedUserId = "";
     private long protectedStateAt;
+    private int streamRecoveryAttempt;
 
     private static final class AlertItem {
         final String id;
@@ -86,8 +88,14 @@ public final class RadioService extends MediaLibraryService {
 
     private final Runnable recoveryRunnable = () -> {
         if (player == null || !player.getPlayWhenReady()) return;
-        Log.i(TAG, "Retrying continuous stream after bounded delay");
-        player.seekToDefaultPosition();
+        streamRecoveryAttempt++;
+        Log.i(TAG, "Reconnecting continuous stream, attempt " + streamRecoveryAttempt);
+        // A failed Icecast response can leave ExoPlayer indefinitely BUFFERING
+        // without raising onPlayerError. Reusing that MediaSource merely keeps
+        // waiting on the stale request, so create a fresh HTTP stream request.
+        player.stop();
+        player.clearMediaItems();
+        player.setMediaItem(liveItem());
         player.prepare();
         player.play();
     };
@@ -146,13 +154,33 @@ public final class RadioService extends MediaLibraryService {
         player.setMediaItem(liveItem());
         player.addListener(new Player.Listener() {
             @Override public void onIsPlayingChanged(boolean isPlaying) {
-                if (isPlaying) scheduleAlert();
-                else mainHandler.removeCallbacks(alertDueRunnable);
+                if (isPlaying) {
+                    streamRecoveryAttempt = 0;
+                    mainHandler.removeCallbacks(recoveryRunnable);
+                    scheduleAlert();
+                } else {
+                    mainHandler.removeCallbacks(alertDueRunnable);
+                }
+            }
+
+            @Override public void onPlaybackStateChanged(int state) {
+                if (!player.getPlayWhenReady()) {
+                    mainHandler.removeCallbacks(recoveryRunnable);
+                } else if (state == Player.STATE_BUFFERING) {
+                    scheduleRecovery(BUFFERING_STALL_MS);
+                } else if (state == Player.STATE_READY) {
+                    mainHandler.removeCallbacks(recoveryRunnable);
+                }
+            }
+
+            @Override public void onPlayWhenReadyChanged(boolean playWhenReady, int reason) {
+                if (!playWhenReady) mainHandler.removeCallbacks(recoveryRunnable);
             }
 
             @Override public void onPlayerError(PlaybackException error) {
                 Log.w(TAG, "Stream error: " + error.getErrorCodeName());
-                scheduleRecovery();
+                int delayIndex = Math.min(streamRecoveryAttempt, RETRY_DELAYS_MS.length - 1);
+                scheduleRecovery(RETRY_DELAYS_MS[delayIndex]);
             }
 
             @Override public void onMediaMetadataChanged(MediaMetadata mediaMetadata) {
@@ -200,10 +228,10 @@ public final class RadioService extends MediaLibraryService {
         Log.i(TAG, "Media library service created");
     }
 
-    private void scheduleRecovery() {
+    private void scheduleRecovery(long delayMs) {
         mainHandler.removeCallbacks(recoveryRunnable);
         if (player == null || !player.getPlayWhenReady()) return;
-        mainHandler.postDelayed(recoveryRunnable, RETRY_DELAY_MS);
+        mainHandler.postDelayed(recoveryRunnable, delayMs);
     }
 
     private void fetchAlertCatalog() {

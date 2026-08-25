@@ -584,9 +584,14 @@ public final class MainActivity extends Activity {
             controller.pause();
             return;
         }
-        ensureLiveItem();
-        controller.prepare();
-        controller.play();
+        if (controller.getPlaybackState() == Player.STATE_BUFFERING
+                || controller.getPlayerError() != null) {
+            restartLivePlayback();
+        } else {
+            ensureLiveItem();
+            controller.prepare();
+            controller.play();
+        }
     }
 
     private void retryPlayback() {
@@ -595,7 +600,14 @@ public final class MainActivity extends Activity {
             connectController();
             return;
         }
-        ensureLiveItem();
+        restartLivePlayback();
+    }
+
+    /** Force a fresh network request instead of reusing a stale buffering source. */
+    private void restartLivePlayback() {
+        controller.stop();
+        controller.clearMediaItems();
+        controller.setMediaItem(new MediaItem.Builder().setMediaId(LIVE_MEDIA_ID).build());
         controller.prepare();
         controller.play();
     }
