@@ -6,3 +6,7 @@
 /liveradio/index.html / 301
 /radio/* /:splat 301
 /liveradio/* /:splat 301
+/live /live/ 301
+/submit-audio /submit-audio/ 301
+/takeovers /takeovers/ 301
+/community /community/ 301

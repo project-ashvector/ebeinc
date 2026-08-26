@@ -12,7 +12,7 @@
       if (!anchor || anchor.target || anchor.hasAttribute("download") || anchor.dataset.noPersistentNav !== undefined) return;
       const url = new URL(anchor.href, location.href);
       const path = url.pathname.replace(/\/index\.html$/, "/");
-      if (url.origin !== location.origin || !["/", "/visuals/", "/room/", "/roadmap/"].includes(path)) return;
+      if (url.origin !== location.origin || !["/", "/live/", "/submit-audio/", "/takeovers/", "/community/", "/visuals/", "/room/", "/roadmap/"].includes(path)) return;
       event.preventDefault();
       setTimeout(() => window.top.AT140Navigate?.(url.href), 0);
     }, true);

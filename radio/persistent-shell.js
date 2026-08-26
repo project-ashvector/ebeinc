@@ -4,7 +4,7 @@
 
   const STREAM_FALLBACK = "https://stream.ebeinc.online/live.mp3";
   const ROUTE_PARAM = "at140_route";
-  const routes = new Set(["/", "/visuals/", "/room/", "/roadmap/"]);
+  const routes = new Set(["/", "/live/", "/submit-audio/", "/takeovers/", "/community/", "/visuals/", "/room/", "/roadmap/"]);
   const frame = document.getElementById("routeFrame");
   const status = document.getElementById("routeStatus");
   const audio = document.getElementById("siteRadio");
@@ -24,6 +24,7 @@
   let generation = 0;
   const shellRoute = new URL(location.href).searchParams.get("route") || "/";
   const initialRoute = new URL(shellRoute, location.origin);
+  document.body.dataset.route = canonicalPath(initialRoute);
 
   function canonicalPath(url) {
     let path = url.pathname.replace(/\/index\.html$/, "/");
@@ -360,6 +361,7 @@
   function navigate(input, options = {}) {
     const url = publicUrl(input);
     if (!isEligible(url)) { location.href = url.href; return; }
+    document.body.dataset.route = url.pathname;
     const current = publicUrl(location.href);
     if (current.pathname === url.pathname && current.search === url.search && current.hash !== url.hash) {
       if (options.replace) history.replaceState({ at140: true }, "", url.href);

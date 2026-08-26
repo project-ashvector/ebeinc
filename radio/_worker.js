@@ -439,6 +439,17 @@ async function handleVisualHealth(request, env) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    const tabbedRoutes = new Set(["/live", "/live/", "/submit-audio", "/submit-audio/", "/takeovers", "/takeovers/", "/community", "/community/"]);
+    if (tabbedRoutes.has(url.pathname) && (request.method === "GET" || request.method === "HEAD")) {
+      const assetUrl = new URL(request.url);
+      assetUrl.pathname = "/";
+      const assetResponse = await env.ASSETS.fetch(new Request(assetUrl, request));
+      return new Response(request.method === "HEAD" ? null : assetResponse.body, {
+        status: assetResponse.status,
+        statusText: assetResponse.statusText,
+        headers: assetResponse.headers,
+      });
+    }
     if (url.pathname === "/api/public/alert-catalog" && request.method === "GET") {
       return clientAlertCatalog(request, env);
     }
