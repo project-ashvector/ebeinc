@@ -63,7 +63,7 @@ button,a,input,select,textarea{font:inherit}
 
 .wrap{width:min(1320px,calc(100% - 38px));margin:auto}
 .wrap-shell{width:min(1400px,100%);margin:auto}
-.home-route-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:0 0 34px}
+.home-route-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;padding:0 0 34px}
 .home-route-grid a{min-height:118px;padding:20px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(145deg,rgba(22,10,37,.94),rgba(8,4,14,.9));color:#fff;text-decoration:none;display:flex;flex-direction:column;gap:5px;transition:.2s transform,.2s border-color}
 .home-route-grid a:hover,.home-route-grid a:focus-visible{transform:translateY(-2px);border-color:var(--cyan);outline:none}
 .home-route-grid small,.route-intro .kicker{color:var(--cyan);font-weight:900;letter-spacing:.14em}

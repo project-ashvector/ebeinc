@@ -439,7 +439,10 @@ async function handleVisualHealth(request, env) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    const tabbedRoutes = new Set(["/live", "/live/", "/submit-audio", "/submit-audio/", "/takeovers", "/takeovers/", "/community", "/community/"]);
+    if ((url.pathname === "/live" || url.pathname === "/live/") && (request.method === "GET" || request.method === "HEAD")) {
+      return Response.redirect(new URL("/#schedule", request.url), 301);
+    }
+    const tabbedRoutes = new Set(["/submit-audio", "/submit-audio/", "/takeovers", "/takeovers/", "/community", "/community/"]);
     if (tabbedRoutes.has(url.pathname) && (request.method === "GET" || request.method === "HEAD")) {
       const assetUrl = new URL(request.url);
       assetUrl.pathname = "/";

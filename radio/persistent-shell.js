@@ -4,7 +4,7 @@
 
   const STREAM_FALLBACK = "https://stream.ebeinc.online/live.mp3";
   const ROUTE_PARAM = "at140_route";
-  const routes = new Set(["/", "/live/", "/submit-audio/", "/takeovers/", "/community/", "/visuals/", "/room/", "/roadmap/"]);
+  const routes = new Set(["/", "/submit-audio/", "/takeovers/", "/community/", "/visuals/", "/room/", "/roadmap/"]);
   const frame = document.getElementById("routeFrame");
   const status = document.getElementById("routeStatus");
   const audio = document.getElementById("siteRadio");
