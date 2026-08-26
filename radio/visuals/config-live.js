@@ -8,6 +8,7 @@ window.AT140_GREEN_CONFIG={
   playlistUrl:"../room/playlist.json",
   layoutUrl:"../room/layout.json",
   mediaBaseUrl:"https://visuals-media-staging.allthings140radio.online",
+  optimizedMediaBaseUrl:"https://allthings140-visuals-green.pages.dev/media",
   mediaVersion:"20260816-2",
   routingUrl:"/api/visuals-routing",
   legacyFallbackEnabled:true,

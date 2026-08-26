@@ -220,7 +220,19 @@
   function mediaUrl(url) {
     if (!url) return url;
     const base = String(C.mediaBaseUrl || '').replace(/\/$/, '');
+    const optimizedBase = String(C.optimizedMediaBaseUrl || '').replace(/\/$/, '');
     let out = url;
+    if (optimizedBase) {
+      try {
+        const parsed = new URL(out, location.href);
+        if ((base && parsed.origin === new URL(base).origin) || parsed.pathname.startsWith('/media/')) {
+          if (parsed.pathname.startsWith('/visuals/')) out = `${optimizedBase}/visuals/${parsed.pathname.slice('/visuals/'.length)}`;
+          else if (parsed.pathname.startsWith('/stage/')) out = `${optimizedBase}/stage/${parsed.pathname.slice('/stage/'.length)}`;
+          else if (parsed.pathname.startsWith('/media/playlist/')) out = `${optimizedBase}/visuals/${parsed.pathname.slice('/media/playlist/'.length)}`;
+          else if (parsed.pathname.startsWith('/media/stage/')) out = `${optimizedBase}/stage/${parsed.pathname.slice('/media/stage/'.length)}`;
+        }
+      } catch (_) {}
+    }
     if (!/^https?:\/\//i.test(out) && base) {
       if (out.startsWith('/media/playlist/')) out = base + '/visuals/' + out.slice('/media/playlist/'.length);
       else if (out.startsWith('/media/stage/')) out = base + '/stage/' + out.slice('/media/stage/'.length);

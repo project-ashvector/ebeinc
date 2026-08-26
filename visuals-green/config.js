@@ -9,6 +9,7 @@ window.AT140_GREEN_CONFIG={
   layoutUrl:"./layout.json",
   // Large media is served by the isolated Oracle staging media origin, never Pages.
   mediaBaseUrl:"https://visuals-media-staging.allthings140radio.online",
+  optimizedMediaBaseUrl:location.origin+"/media",
   mediaVersion:"20260816-2",
   streamUrl:"https://stream.ebeinc.online/live.mp3"
 };
