@@ -1,10 +1,11 @@
-const CACHE = "allthings140-radio-v68";
+const CACHE = "allthings140-radio-v69";
 const SHELL = [
   "./",
   "index.html",
   "styles.css?v=2.1.3",
   "support.css?v=1.1.0",
   "app.js?v=2.0.3",
+  "background-renderer.js?v=1.0.0",
   "support.js?v=1.1.0",
   "persistent-shell.html",
   "persistent-shell.css?v=2.0.0",
@@ -85,6 +86,7 @@ self.addEventListener("fetch", event => {
     url.pathname.endsWith("/styles.css") ||
     url.pathname.endsWith("/support.css") ||
     url.pathname.endsWith("/app.js") ||
+    url.pathname.endsWith("/background-renderer.js") ||
     url.pathname.endsWith("/route-layout.js") ||
     url.pathname.endsWith("/persistent-shell.js") ||
     url.pathname.endsWith("/persistent-auth.js") ||

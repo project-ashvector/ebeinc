@@ -28,6 +28,22 @@
 .roadmap-hero{
   margin-bottom: 48px;
 }
+.roadmap-hero .lead{max-width:860px}
+.roadmap-summary{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin-top:28px;
+}
+.roadmap-summary div{
+  min-height:92px;
+  padding:18px;
+  border:1px solid rgba(184,92,255,.34);
+  border-radius:12px;
+  background:linear-gradient(145deg,rgba(18,8,31,.92),rgba(7,3,13,.88));
+}
+.roadmap-summary b{display:block;color:#fff;font-size:1.55rem;line-height:1}
+.roadmap-summary span{display:block;margin-top:9px;color:#45eaff;font-size:.67rem;font-weight:900;letter-spacing:.13em}
 .roadmap-hero h1{
   font-size: clamp(3rem, 6.5vw, 5.8rem);
   line-height: .88;
@@ -119,6 +135,9 @@
   font-size: .88rem;
   line-height: 1.6;
 }
+.roadmap-card ul{margin:16px 0 0;padding:15px 0 0 18px;border-top:1px solid rgba(184,92,255,.18);color:#a99cb2;font-size:.78rem;line-height:1.65}
+.roadmap-card li::marker{color:#45eaff}
+.roadmap-card.featured{grid-column:span 2;border-color:rgba(69,234,255,.5);background:linear-gradient(135deg,rgba(20,8,35,.96),rgba(6,17,24,.92))}
 .roadmap-cta{
   margin-top: 54px;
   padding: 32px;
@@ -147,17 +166,24 @@
   gap: 12px;
 }
 @media(max-width: 800px){
+  .roadmap-page{padding-top:28px}
+  .roadmap-summary{grid-template-columns:repeat(2,1fr)}
+  .roadmap-cards{grid-template-columns:1fr}
+  .roadmap-card.featured{grid-column:auto}
+  .phase-title{align-items:flex-start;flex-direction:column;line-height:1.45}
   .roadmap-cta{
     grid-template-columns: 1fr;
     padding: 22px;
   }
 }
+@media(max-width:480px){.roadmap-summary{grid-template-columns:1fr 1fr}.roadmap-summary div{min-height:78px;padding:14px}.roadmap-summary b{font-size:1.25rem}}
 </style>
 </head>
 <body>
 <div class="bg-media" aria-hidden="true">
-  <video id="backgroundVideo" autoplay muted loop playsinline webkit-playsinline preload="auto" poster="assets/allthings140-background.webp?v=1.1.0">
-    <source src="assets/visuals-home-desktop-hq.mp4?v=2.0.0" type="video/mp4">
+  <canvas id="backgroundCanvas"></canvas>
+  <video id="backgroundVideo" autoplay muted loop playsinline webkit-playsinline preload="auto" poster="assets/main-vis-home-v1-poster.webp?v=1.0.0">
+    <source src="assets/main-vis-home-hq-v2.mp4?v=2.0.0" type="video/mp4">
   </video>
 </div>
 <div class="bg-overlay" aria-hidden="true"></div>
@@ -174,15 +200,16 @@
       <span>MENU</span>
     </button>
     <nav class="nav" id="siteNav" aria-label="Main navigation" hidden>
-      <a class="nav-entry" href="./"><span class="nav-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m3 11 9-8 9 8v10h-6v-6H9v6H3Z"/></svg></span><span>HOME</span></a>
-      <a class="nav-entry" href="visuals/"><span class="nav-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m12 2 10 19H2Z"/><path d="m12 7 5 10H7Z"/></svg></span><span>VISUALS TAB</span></a>
-      <a class="nav-entry is-current" href="roadmap/"><span class="nav-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 6h16v15H4Zm0 5h16M8 3v6m8-6v6"/></svg></span><span>ROADMAP</span></a>
-      <a class="nav-entry" href="./#schedule"><span class="nav-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 6h16v15H4Zm0 5h16M8 3v6m8-6v6"/><path d="M8 15h2m4 0h2m-8 3h2m4 0h2"/></svg></span><span>SCHEDULE</span></a>
-      <a class="nav-entry" href="./#submit"><span class="nav-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m3 11 18-8-8 18-2-8Z"/><path d="m11 13 5-5"/></svg></span><span>SUBMISSIONS</span></a>
-      <a class="nav-entry" href="./#about"><span class="nav-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 14v-2a8 8 0 0 1 16 0v2M4 14H2v6h4v-6Zm16 0h2v6h-4v-6Z"/></svg></span><span>STATION & HOSTS</span></a>
+      <a class="nav-entry" data-route="/" href="/"><span class="nav-icon" aria-hidden="true">⌂</span><span>HOME</span></a>
+      <a class="nav-entry" data-route="/submit-audio/" href="/submit-audio/"><span class="nav-icon" aria-hidden="true">↗</span><span>SUBMIT AUDIO</span></a>
+      <a class="nav-entry" data-route="/takeovers/" href="/takeovers/"><span class="nav-icon" aria-hidden="true">⚡</span><span>TAKEOVERS</span></a>
+      <a class="nav-entry" data-route="/community/" href="/community/"><span class="nav-icon" aria-hidden="true">◆</span><span>COMMUNITY</span></a>
+      <a class="nav-entry" href="visuals/"><span class="nav-icon" aria-hidden="true">△</span><span>VISUALS</span></a>
       <a class="nav-entry" href="room/"><span class="nav-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 4h16v12H9l-5 4Z"/><path d="M8 8h8m-8 4h5"/></svg></span><span>GREEN ROOM</span></a>
+      <a class="nav-entry is-current" aria-current="page" href="roadmap/"><span class="nav-icon" aria-hidden="true">＋</span><span>ROADMAP</span></a>
       <button class="nav-entry" type="button" data-open-support><span class="nav-icon" aria-hidden="true">💜</span><span>SUPPORT</span></button>
       <a class="nav-entry" href="https://ebedesigns.online" target="_blank" rel="noopener"><span class="nav-icon" aria-hidden="true">🛒</span><span>SHOP MERCH ↗</span></a>
+      <button class="nav-entry" type="button" id="installApp" hidden><span class="nav-icon" aria-hidden="true">↓</span><span>INSTALL APP</span></button>
     </nav>
   </div>
   <span class="status-chip" id="headerStatus" data-state="offline"><i></i>CONNECTING</span>
@@ -190,176 +217,61 @@
 
 <main class="roadmap-page wrap">
   <section class="roadmap-hero">
-    <p class="kicker">STATION EVOLUTION // 2026 ROADMAP</p>
-    <h1>PUBLIC<br>ROADMAP.<span>BUILDING THE UNDERGROUND.</span></h1>
-    <p class="lead">Real milestones, verified infrastructure, and transparent progress. We are expanding AllThings140 Radio without compromising our 24/7 broadcast authority or burdening listeners with paywalls.</p>
+    <p class="kicker">STATION EVOLUTION // VERIFIED AUGUST 2026</p>
+    <h1>THE ROAD<br>AHEAD.<span>BUILT IN PUBLIC.</span></h1>
+    <p class="lead">A living record of what is broadcasting now, what has shipped across the ALLTHINGS140 ecosystem, what is being hardened, and what comes next. Statuses reflect the real deployed system—not placeholder promises.</p>
+    <div class="roadmap-summary" aria-label="Current platform summary">
+      <div><b>24/7</b><span>RADIO LIVE</span></div>
+      <div><b>6</b><span>CORE EXPERIENCES</span></div>
+      <div><b>1.3.x</b><span>ANDROID FAMILY</span></div>
+      <div><b>0.1.43</b><span>VISUALS WORKSTATION</span></div>
+    </div>
   </section>
 
-  <!-- Phase 1: Live Foundation -->
   <section class="phase-group">
-    <div class="phase-title">
-      <span class="phase-badge live">● LIVE NOW</span>
-      <span>PHASE 1 — 24/7 BROADCAST AUTHORITY & PLAYBACK</span>
-    </div>
+    <div class="phase-title"><span class="phase-badge live">● LIVE NOW</span><span>THE WORKING STATION</span></div>
     <div class="roadmap-cards">
-      <article class="roadmap-card">
-        <div class="roadmap-card-head">
-          <small>CORE PLATFORM</small>
-          <span class="phase-badge live">LIVE</span>
-        </div>
-        <h3>24/7 Synchronized Broadcast Engine</h3>
-        <p>Authoritative Oracle VM streaming cluster running continuous heavy dubstep rotation, instant track transitions, and zero desync across all web and mobile listeners.</p>
-      </article>
-
-      <article class="roadmap-card">
-        <div class="roadmap-card-head">
-          <small>REALTIME FEED</small>
-          <span class="phase-badge live">LIVE</span>
-        </div>
-        <h3>Live Metadata & Telemetry Sync</h3>
-        <p>Sub-second metadata polling delivering current track title, artist info, progress duration, listener counts, and takeover banners in real time.</p>
-      </article>
-
-      <article class="roadmap-card">
-        <div class="roadmap-card-head">
-          <small>HOST CONTROLS</small>
-          <span class="phase-badge live">LIVE</span>
-        </div>
-        <h3>Resident & Guest DJ Takeovers</h3>
-        <p>Live takeover pipeline allowing Ebmarah, Eyewitnis, and guest DJs to connect live microphones and CDJ sets with zero audio dropouts or relay resets.</p>
-      </article>
-
-      <article class="roadmap-card">
-        <div class="roadmap-card-head">
-          <small>MOBILE</small>
-          <span class="phase-badge live">LIVE</span>
-        </div>
-        <h3>Dedicated Android Streaming App</h3>
-        <p>Standalone Android listening application with background playback, lock screen media session controls, and auto-reconnect resilience.</p>
-      </article>
+      <article class="roadmap-card"><div class="roadmap-card-head"><small>RADIO CORE</small><span class="phase-badge live">LIVE</span></div><h3>24/7 AutoDJ, Encoder & Icecast</h3><p>The production AutoDJ continuously decodes the catalog, mixes station announcements, feeds one persistent MP3 encoder, and publishes the public stream with independent metadata and listener status.</p><ul><li>Continuous rotation and track progress</li><li>Live status, schedule and history APIs</li><li>Music remains independent of optional operator tools</li></ul></article>
+      <article class="roadmap-card"><div class="roadmap-card-head"><small>WEBSITE</small><span class="phase-badge live">LIVE</span></div><h3>Persistent Radio Across True Routes</h3><p>The website is organized into Home, Submit Audio, Takeovers, Community, Visuals, Green Room, Account and Roadmap experiences while one persistent player owns playback.</p><ul><li>Back, Forward, refresh and direct URLs</li><li>Zero player recreation during navigation</li><li>Responsive desktop and mobile navigation</li></ul></article>
+      <article class="roadmap-card"><div class="roadmap-card-head"><small>MOBILE</small><span class="phase-badge live">LIVE</span></div><h3>Android Listener & Account Experience</h3><p>The dedicated Android listener supports resilient background playback, lock-screen media controls, account sessions, profiles, avatars and role-aware experiences.</p><ul><li>Automatic stream recovery</li><li>Regular, Plus, Resident and staff roles</li><li>Green Room authentication integration</li></ul></article>
+      <article class="roadmap-card"><div class="roadmap-card-head"><small>COMMUNITY</small><span class="phase-badge live">LIVE</span></div><h3>Green Room & Moderation</h3><p>The Green Room combines the radio community with account-aware chat and a protected moderation layer.</p><ul><li>Terms gate, TTL and message deletion</li><li>Blocking, reporting, bans and moderator RPCs</li><li>Composer and mobile keyboard safeguards</li></ul></article>
+      <article class="roadmap-card"><div class="roadmap-card-head"><small>ARTISTS</small><span class="phase-badge live">LIVE</span></div><h3>Submissions & Takeover Operations</h3><p>Artists can submit tracks or prerecorded mixes, request private takeover forms, and receive scheduled takeover communications without exposing operational controls.</p><ul><li>Public submission validation</li><li>Private expiring takeover invites</li><li>Schedule, reminders and archive surfaces</li></ul></article>
+      <article class="roadmap-card"><div class="roadmap-card-head"><small>EXTENSIONS</small><span class="phase-badge live">LIVE</span></div><h3>Discord Radio Relay</h3><p>A resilient Discord voice relay extends the station into community voice channels with Opus audio, supervised recovery and teardown protection.</p><ul><li>Persistent voice connection</li><li>Stream failure recovery</li><li>Isolated from the broadcast authority</li></ul></article>
     </div>
   </section>
 
-  <!-- Phase 2: In Development -->
   <section class="phase-group">
-    <div class="phase-title">
-      <span class="phase-badge in-progress">⚡ IN ACTIVE DEVELOPMENT</span>
-      <span>PHASE 2 — HIGH-DEFINITION VISUALS & STAGING</span>
-    </div>
+    <div class="phase-title"><span class="phase-badge in-progress">⚡ ACTIVE BUILD</span><span>HARDENING & CUTOVER</span></div>
     <div class="roadmap-cards">
-      <article class="roadmap-card">
-        <div class="roadmap-card-head">
-          <small>VISUALS ENGINE</small>
-          <span class="phase-badge in-progress">ACTIVE</span>
-        </div>
-        <h3>Dedicated 1080p 30 FPS Visuals Tab</h3>
-        <p>Dedicated high-definition visual broadcast plane with smooth 30 FPS hardware-accelerated playback, takeover artist overlays, and isolated audio controls.</p>
-      </article>
-
-      <article class="roadmap-card">
-        <div class="roadmap-card-head">
-          <small>OPERATIONS</small>
-          <span class="phase-badge in-progress">ACTIVE</span>
-        </div>
-        <h3>ALLTHINGS140 Operations Hub</h3>
-        <p>Central management dashboard with station health telemetry, rotation state controls, audio buffer monitors, and live takeover scheduler.</p>
-      </article>
-
-      <article class="roadmap-card">
-        <div class="roadmap-card-head">
-          <small>AUTOMOTIVE</small>
-          <span class="phase-badge in-progress">ACTIVE</span>
-        </div>
-        <h3>Vehicle Integration & Directory Expansion</h3>
-        <p>Android Auto support, in-vehicle media service validation, and submissions to global internet radio directories.</p>
-      </article>
-
-      <article class="roadmap-card">
-        <div class="roadmap-card-head">
-          <small>CURATION</small>
-          <span class="phase-badge in-progress">ACTIVE</span>
-        </div>
-        <h3>Streamlined Audio Submissions Pipeline</h3>
-        <p>Automated artist track and mix submission queue with direct Google Drive library integration and verification tools.</p>
-      </article>
+      <article class="roadmap-card featured"><div class="roadmap-card-head"><small>VISUALS</small><span class="phase-badge in-progress">STAGING</span></div><h3>24/7 Visuals Compositor</h3><p>The shared compositor, stage layering, renderer-truth acknowledgements, fallback watchdogs and optimized-media pipeline are built. The workstation is at version 0.1.43.</p><ul><li>Green and public renderers share one core</li><li>95-source visual library and generated derivatives</li><li>Public Visuals remains on the safe legacy selector until always-on realtime capacity and soak gates pass</li></ul></article>
+      <article class="roadmap-card"><div class="roadmap-card-head"><small>BROADCAST MIC</small><span class="phase-badge in-progress">HARDENING</span></div><h3>Private Push-to-Talk Broadcast Mic</h3><p>A separate authenticated Android microphone path includes Opus transport, short PTT leases, heartbeat expiry, VU feedback, source isolation and a server kill switch.</p><ul><li>Fail-closed microphone state</li><li>Music survives phone or receiver failure</li><li>Voice quality and final production mixing remain under refinement</li></ul></article>
+      <article class="roadmap-card"><div class="roadmap-card-head"><small>OPERATIONS</small><span class="phase-badge in-progress">ACTIVE</span></div><h3>Unified Station Operations</h3><p>The Hub, desktop DJ tools, service health views and recovery documentation continue to consolidate routine station control without coupling optional tools to the live stream.</p><ul><li>Health and status visibility</li><li>Safe rollback and deployment records</li><li>Alert and takeover controls</li></ul></article>
+      <article class="roadmap-card"><div class="roadmap-card-head"><small>WEAR OS</small><span class="phase-badge in-progress">PROTOTYPE</span></div><h3>Galaxy Watch Push-to-Talk</h3><p>A Wear OS companion direction is established for watch microphone capture through the trusted phone relay, with a fast Tile shortcut and production-confirmed LIVE state.</p><ul><li>Hold-to-talk, never toggle-to-talk</li><li>Phone retains server credentials</li><li>Physical Watch 4 validation still required</li></ul></article>
     </div>
   </section>
 
-  <!-- Phase 3: Planned -->
   <section class="phase-group">
-    <div class="phase-title">
-      <span class="phase-badge planned">✦ PLANNED MILESTONES</span>
-      <span>PHASE 3 — COMMUNITY, ARCHIVES & RESILIENCY</span>
-    </div>
+    <div class="phase-title"><span class="phase-badge planned">✦ NEXT</span><span>NEAR-TERM MILESTONES</span></div>
     <div class="roadmap-cards">
-      <article class="roadmap-card">
-        <div class="roadmap-card-head">
-          <small>DISCOVERY</small>
-          <span class="phase-badge planned">PLANNED</span>
-        </div>
-        <h3>Artist Profiles & Takeover Archives</h3>
-        <p>Dedicated DJ profile pages, timestamped tracklists, downloadable set recordings, and underground artist discovery features.</p>
-      </article>
-
-      <article class="roadmap-card">
-        <div class="roadmap-card-head">
-          <small>INFRASTRUCTURE</small>
-          <span class="phase-badge planned">PLANNED</span>
-        </div>
-        <h3>Encrypted Multi-Region Database Failover</h3>
-        <p>Nightly encrypted database replication across cloud providers to guarantee instant automatic failover under any node interruption.</p>
-      </article>
-
-      <article class="roadmap-card">
-        <div class="roadmap-card-head">
-          <small>COMMUNITY</small>
-          <span class="phase-badge planned">PLANNED</span>
-        </div>
-        <h3>Realtime Chat Reactions & DJ Shoutouts</h3>
-        <p>Enhanced listener interactions with track-synchronized bass drop reactions and on-air host shoutouts during live broadcasts.</p>
-      </article>
+      <article class="roadmap-card"><div class="roadmap-card-head"><small>VISUALS CUTOVER</small><span class="phase-badge planned">GATED</span></div><h3>Promote the New Visuals System</h3><p>Restore always-on realtime authority, complete Green Room soak testing, verify 20+ transitions and media fallback, then promote the same proven renderer core to the public Visuals route.</p></article>
+      <article class="roadmap-card"><div class="roadmap-card-head"><small>MIC QUALITY</small><span class="phase-badge planned">NEXT</span></div><h3>Broadcast-Grade Voice Tuning</h3><p>Finish jitter buffering, Opus packet continuity, latency control, limiter tuning and human audition before treating phone or watch speech as a routine live production source.</p></article>
+      <article class="roadmap-card"><div class="roadmap-card-head"><small>DISCOVERY</small><span class="phase-badge planned">PLANNED</span></div><h3>Artist Profiles & Takeover Archive</h3><p>Connect existing operator, schedule and archive data into dedicated artist pages, timestamped set information and better underground discovery without inventing catalog data.</p></article>
+      <article class="roadmap-card"><div class="roadmap-card-head"><small>REACH</small><span class="phase-badge planned">PLANNED</span></div><h3>Vehicle & Directory Expansion</h3><p>Complete Android Auto validation and expand reliable station discovery across compatible radio directories and listening surfaces.</p></article>
     </div>
   </section>
 
-  <!-- Phase 4: Future -->
   <section class="phase-group">
-    <div class="phase-title">
-      <span class="phase-badge future">○ FUTURE VISION</span>
-      <span>PHASE 4 — SUSTAINABILITY & LIVE VENUE RELAYS</span>
-    </div>
+    <div class="phase-title"><span class="phase-badge future">○ FUTURE</span><span>LONG-RANGE DIRECTION</span></div>
     <div class="roadmap-cards">
-      <article class="roadmap-card">
-        <div class="roadmap-card-head">
-          <small>SUSTAINABILITY</small>
-          <span class="phase-badge future">FUTURE</span>
-        </div>
-        <h3>Ethical Underground Sponsorships</h3>
-        <p>Carefully curated partnerships with sound systems, gear makers, and independent labels with transparent reporting, keeping free listening 100% ad-light.</p>
-      </article>
-
-      <article class="roadmap-card">
-        <div class="roadmap-card-head">
-          <small>STAGE & VENUES</small>
-          <span class="phase-badge future">FUTURE</span>
-        </div>
-        <h3>Live Event & Club Stage Visuals Feeds</h3>
-        <p>High-bitrate synchronized visual relays engineered for live club projection systems and bass festival stages.</p>
-      </article>
+      <article class="roadmap-card"><div class="roadmap-card-head"><small>RESILIENCY</small><span class="phase-badge future">FUTURE</span></div><h3>Multi-Region Recovery</h3><p>Encrypted off-site backups, rehearsed restore paths and carefully tested service failover—introduced without destabilizing the healthy primary broadcast.</p></article>
+      <article class="roadmap-card"><div class="roadmap-card-head"><small>LIVE EVENTS</small><span class="phase-badge future">FUTURE</span></div><h3>Venue & Stage Visual Relays</h3><p>High-bitrate synchronized visual outputs for club projection, event stages and takeover environments, driven by the same verified compositor architecture.</p></article>
+      <article class="roadmap-card"><div class="roadmap-card-head"><small>SUSTAINABILITY</small><span class="phase-badge future">FUTURE</span></div><h3>Underground-First Partnerships</h3><p>Transparent partnerships with independent labels, sound systems and gear makers that support the station without putting core listening behind a paywall.</p></article>
     </div>
   </section>
 
-  <!-- CTA Box -->
   <section class="roadmap-cta">
-    <div>
-      <p class="kicker">GET INVOLVED</p>
-      <h2>SHAPE THE FUTURE<br>OF 140.</h2>
-      <p>Have ideas for the station, want to submit a track, or interested in playing a guest takeover? Join our underground community.</p>
-    </div>
-    <div class="roadmap-cta-actions">
-      <a class="btn primary" href="./#submit">SUBMIT AUDIO ↗</a>
-      <a class="btn" href="https://discord.gg/3vVzvuXP" target="_blank" rel="noopener">JOIN DISCORD ↗</a>
-      <button class="btn" type="button" data-open-support>💜 SUPPORT STATION</button>
-    </div>
+    <div><p class="kicker">BUILD WITH THE STATION</p><h2>YOUR SOUND.<br>YOUR SCENE.</h2><p>Submit music, request a takeover, join the Green Room or support the infrastructure keeping 140 broadcasting around the clock.</p></div>
+    <div class="roadmap-cta-actions"><a class="btn primary" href="/submit-audio/">SUBMIT AUDIO ↗</a><a class="btn" href="/takeovers/">REQUEST A TAKEOVER</a><a class="btn" href="/room/">ENTER GREEN ROOM</a><button class="btn" type="button" data-open-support>💜 SUPPORT STATION</button></div>
   </section>
 </main>
 
@@ -386,8 +298,12 @@
     <span><strong>ALLTHINGS140</strong><small>RADIO</small></span>
   </a>
   <button class="footer-support" type="button" data-open-support>💜 SUPPORT THE STATION</button>
-  <a class="footer-merch" href="visuals/">◉ VISUALS TAB</a>
-  <a class="footer-merch" href="roadmap/">🗺 ROADMAP</a>
+  <a class="footer-merch" href="/#schedule">LIVE + HISTORY</a>
+  <a class="footer-merch" href="/submit-audio/">SUBMIT AUDIO</a>
+  <a class="footer-merch" href="/takeovers/">TAKEOVERS</a>
+  <a class="footer-merch" href="/community/">COMMUNITY</a>
+  <a class="footer-merch" href="visuals/">VISUALS</a>
+  <a class="footer-merch" href="roadmap/">ROADMAP</a>
   <a class="footer-merch" href="https://ebedesigns.online" target="_blank" rel="noopener">SHOP MERCH ↗</a>
   <div class="foot-status" id="footerStatus">SYSTEM STATUS: CONNECTING</div>
 </footer>
@@ -448,6 +364,7 @@
 <a class="chat-launcher green-room-launcher" href="room/"><span>GREEN ROOM</span> <b>LIVE</b></a>
 
 <script src="support.js?v=1.1.0"></script>
+<script src="background-renderer.js?v=1.0.0"></script>
 <script>
 (() => {
   "use strict";
