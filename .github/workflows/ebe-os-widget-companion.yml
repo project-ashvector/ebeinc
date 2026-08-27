@@ -26,23 +26,16 @@ jobs:
       - name: Build release APK
         working-directory: ebe-os-widget-companion
         run: gradle :app:assembleRelease --stacktrace --no-daemon
-      - name: Align and validate APK
+      - name: Align and export EBE build tools
         run: |
           mkdir -p dist
           "$ANDROID_HOME/build-tools/35.0.0/zipalign" -p -f 4 ebe-os-widget-companion/app/build/outputs/apk/release/app-release-unsigned.apk dist/EBE-OS-Widget-Companion-v0.9.9-unsigned-aligned.apk
-          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging dist/EBE-OS-Widget-Companion-v0.9.9-unsigned-aligned.apk | head -10
           "$ANDROID_HOME/build-tools/35.0.0/zipalign" -c -v 4 dist/EBE-OS-Widget-Companion-v0.9.9-unsigned-aligned.apk
           sha256sum dist/EBE-OS-Widget-Companion-v0.9.9-unsigned-aligned.apk > dist/EBE-OS-Widget-Companion-v0.9.9-unsigned-aligned.apk.sha256
           cp "$ANDROID_HOME/build-tools/35.0.0/lib/apksigner.jar" dist/apksigner-35.jar
-      - name: Commit build output
-        run: |
-          git config user.name 'EBE OS Build Bot'
-          git config user.email 'actions@users.noreply.github.com'
-          git add dist/EBE-OS-Widget-Companion-v0.9.9-unsigned-aligned.apk dist/EBE-OS-Widget-Companion-v0.9.9-unsigned-aligned.apk.sha256
-          if git diff --cached --quiet; then exit 0; fi
-          git commit -m 'Build EBE OS v0.9.9 widget companion APK [skip ci]'
-          git push
+          cp "$ANDROID_HOME/platforms/android-35/android.jar" dist/android-35.jar
+          cp "$ANDROID_HOME/build-tools/35.0.0/lib/d8.jar" dist/d8-35.jar
       - uses: actions/upload-artifact@v4
         with:
-          name: EBE-OS-Widget-Companion-v0.9.9
+          name: EBE-Android-Build-Tools-35
           path: dist/*
