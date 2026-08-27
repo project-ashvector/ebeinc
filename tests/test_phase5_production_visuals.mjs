@@ -29,5 +29,5 @@ check(legacy.includes('assets/visuals-desktop-v8/index.m3u8'),'legacy fallback p
 check(legacy.includes('phone-visuals-authoritative-v1.mp4'),'legacy fallback preserves the separate mobile Visuals asset');
 check(legacyRoute===legacy,'routed legacy document is byte-identical to the Phase 2 Visuals page');
 check(read('radio/sw.js')===read('radio/sw-v47.js'),'service worker entry files remain synchronized');
-check(read('radio/sw.js').includes('allthings140-radio-v65'),'service worker cache namespace includes the current persistent-radio shell revision');
+check(read('radio/sw.js').includes('allthings140-radio-v66'),'service worker cache namespace includes the current persistent-radio shell revision');
 console.log(`${passed}/${passed} Phase 5 production Visuals checks passed`);

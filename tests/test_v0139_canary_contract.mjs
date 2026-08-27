@@ -29,8 +29,8 @@ console.log('\n2. Verifying Legacy Visual Path Preservation & Separation:');
 const radioIndex = fs.readFileSync(path.join(ROOT, 'radio/index.html'), 'utf8');
 assert.ok(radioIndex.includes('id="backgroundVideo"'), 'Public home/chat page must preserve legacy #backgroundVideo');
 assert.ok(radioIndex.includes('assets/allthings140-background.webp'), 'Public home/chat page must preserve legacy poster');
-assert.ok(radioIndex.includes('assets/visuals-home-desktop-hq.mp4'), 'Public home/chat page must preserve desktop legacy video');
-assert.ok(radioIndex.includes('assets/visuals-mainpage-2026-08-11-v2.mp4'), 'Public home/chat page must preserve mobile legacy video');
+assert.ok(radioIndex.includes('assets/allthings140-background.mp4'), 'Public home/chat page must preserve the lightweight desktop video');
+assert.ok(radioIndex.includes('assets/allthings140-background-mobile.mp4'), 'Public home/chat page must preserve the lightweight mobile video');
 console.log('  ✓ Public Chat tab preserves exact legacy background video stack');
 
 const visualsIndex = fs.readFileSync(path.join(ROOT, 'radio/visuals/index.html'), 'utf8');

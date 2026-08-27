@@ -42,8 +42,8 @@ check(main.includes("audience: false") && stage.includes("audience: C.environmen
 check(main.includes('renderer-state?environment=green-staging'),'Test Current Visual waits specifically for Green staging ACK');
 check(headers.includes('wss://chat.ebeinc.online'),'Room CSP allows the existing moderated chat WebSocket');
 check(app.includes("navigator.serviceWorker.register('/sw.js'"),'public site explicitly registers the corrected service worker');
-check(read('radio/index.html').includes('app.js?v=2.0.2') && sw.includes('app.js?v=2.0.2'),'radio app cache key is bumped so the restored service-worker registration reaches existing browsers');
-check(sw.includes('allthings140-radio-v65'),'service worker cache namespace includes the current persistent-radio shell revision');
+check(read('radio/index.html').includes('app.js?v=2.0.3') && sw.includes('app.js?v=2.0.3'),'radio app cache key is bumped so the restored service-worker registration reaches existing browsers');
+check(sw.includes('allthings140-radio-v66'),'service worker cache namespace includes the current persistent-radio shell revision');
 check(worker.includes('url.pathname === "/sw.js" || url.pathname === "/sw-v47.js"'),'Worker prevents HTTP caching of both service-worker entry URLs');
 check(worker.includes('Visual routing storage unavailable'),'routing writes fail closed instead of falsely succeeding when KV is unbound');
 check(worker.includes('raw.chat === "new" ? "new" : "legacy"'),'persisted routing values are normalized fail-safe to legacy');

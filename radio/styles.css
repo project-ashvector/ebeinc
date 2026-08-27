@@ -37,7 +37,6 @@ button,a,input,select,textarea{font:inherit}
   overflow:hidden;
   background:#050309 url("assets/allthings140-background.webp") center/cover no-repeat;
   pointer-events:none;
-  transform:translateZ(0);
 }
 .bg-media video{
   width:100vw;
@@ -46,7 +45,6 @@ button,a,input,select,textarea{font:inherit}
   object-position:center;
   pointer-events:none;
   opacity:0.82;
-  transform:translateZ(0);
 }
 
 .bg-overlay{
@@ -56,7 +54,6 @@ button,a,input,select,textarea{font:inherit}
   pointer-events:none;
   background:linear-gradient(90deg, rgba(3,1,8,0.88) 0%, rgba(3,1,8,0.62) 34%, rgba(3,1,8,0.18) 64%, rgba(3,1,8,0.3) 100%),
              linear-gradient(180deg, rgba(3,1,8,0.35) 0%, transparent 40%, rgba(3,1,8,0.88) 100%);
-  transform:translateZ(0);
 }
 
 .reduced-motion .bg-media video{display:none}
