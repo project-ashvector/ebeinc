@@ -1,0 +1,10 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/root" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:gravity="center_vertical" android:background="@drawable/widget_bg" android:padding="16dp">
+ <TextView android:id="@+id/title" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/cyan" android:textStyle="bold" android:textSize="13sp" android:maxLines="1"/>
+ <TextView android:id="@+id/main" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:textColor="@color/white" android:textStyle="bold" android:textSize="21sp" android:maxLines="2" android:ellipsize="end"/>
+ <TextView android:id="@+id/sub" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:textColor="@color/muted" android:textSize="13sp" android:maxLines="2" android:ellipsize="end"/>
+ <LinearLayout android:id="@+id/buttons" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="9dp">
+  <TextView android:id="@+id/action1" android:layout_width="0dp" android:layout_height="38dp" android:layout_weight="1" android:gravity="center" android:background="@drawable/button_bg" android:textColor="@color/white" android:textStyle="bold" android:textSize="11sp" android:text="OPEN"/>
+  <TextView android:id="@+id/action2" android:layout_width="0dp" android:layout_height="38dp" android:layout_weight="1" android:layout_marginStart="8dp" android:gravity="center" android:background="@drawable/button_bg" android:textColor="@color/white" android:textStyle="bold" android:textSize="11sp" android:text="REFRESH"/>
+ </LinearLayout>
+ <TextView android:id="@+id/footer" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="7dp" android:textColor="@color/green" android:textSize="10sp" android:maxLines="1"/>
+</LinearLayout>

@@ -1,0 +1,5 @@
+<resources>
+ <string name="app_name">EBE OS Widget Pack</string>
+ <string name="radio_full">ALLTHINGS140 · Live Status</string><string name="radio_compact">ALLTHINGS140 · Compact</string>
+ <string name="system_monitor">EBE · System Monitor</string><string name="at_a_glance">EBE · At a Glance</string><string name="network_vpn">EBE · Network &amp; VPN</string><string name="device_health">EBE · Device Health</string><string name="quick_panels">EBE · Quick Panels</string><string name="battery">EBE · Battery</string><string name="storage">EBE · Storage</string>
+</resources>
