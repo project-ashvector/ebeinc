@@ -1,0 +1,19 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+
+const read = path => fs.readFileSync(path, 'utf8');
+const home = read('radio/index.html');
+const styles = read('radio/styles.css');
+const sw = read('radio/sw.js');
+
+assert.match(home, /styles\.css\?v=2\.1\.2/, 'homepage requests the repaired stylesheet revision');
+assert.match(home, /id="backgroundVideo"[\s\S]*autoplay muted loop playsinline/, 'homepage retains safe autoplay video attributes');
+assert.match(home, /visuals-home-desktop-hq\.mp4\?v=2\.0\.0/, 'homepage references the canonical desktop background');
+assert.match(styles, /\.home-route-grid\{display:grid/, 'route CTAs have their intended grid styling');
+assert.match(styles, /\.home-route-grid a\{[^}]*display:flex/, 'route CTAs cannot fall back to raw inline links');
+assert.match(sw, /allthings140-radio-v64/, 'service worker activates a new cache generation');
+assert.match(sw, /url\.pathname\.endsWith\("\/styles\.css"\)/, 'stylesheet is network-first after upgrades');
+assert.match(sw, /\.\(\?:mp4\|webm\|mp3\|m3u8\|ts\)/, 'video remains outside CacheStorage');
+assert.equal(sw, read('radio/sw-v47.js'), 'service-worker entry points remain identical');
+
+console.log('homepage regression recovery contract: PASS');
