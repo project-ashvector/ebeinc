@@ -33,6 +33,7 @@ jobs:
           "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging dist/EBE-OS-Widget-Companion-v0.9.9-unsigned-aligned.apk | head -10
           "$ANDROID_HOME/build-tools/35.0.0/zipalign" -c -v 4 dist/EBE-OS-Widget-Companion-v0.9.9-unsigned-aligned.apk
           sha256sum dist/EBE-OS-Widget-Companion-v0.9.9-unsigned-aligned.apk > dist/EBE-OS-Widget-Companion-v0.9.9-unsigned-aligned.apk.sha256
+          cp "$ANDROID_HOME/build-tools/35.0.0/lib/apksigner.jar" dist/apksigner-35.jar
       - name: Commit build output
         run: |
           git config user.name 'EBE OS Build Bot'
