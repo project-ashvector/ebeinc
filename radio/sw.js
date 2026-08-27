@@ -1,8 +1,8 @@
-const CACHE = "allthings140-radio-v69";
+const CACHE = "allthings140-radio-v70";
 const SHELL = [
   "./",
   "index.html",
-  "styles.css?v=2.1.3",
+  "styles.css?v=2.1.4",
   "support.css?v=1.1.0",
   "app.js?v=2.0.3",
   "background-renderer.js?v=1.0.0",
