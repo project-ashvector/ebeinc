@@ -1,4 +1,4 @@
-const CACHE = "allthings140-radio-v66";
+const CACHE = "allthings140-radio-v67";
 const SHELL = [
   "./",
   "index.html",
@@ -18,7 +18,7 @@ const SHELL = [
   "assets/allthings140-logo-64.png",
   "assets/allthings140-logo-192.webp",
   "assets/allthings140-logo-512.png",
-  "assets/allthings140-background.webp",
+  "assets/main-vis-home-v1-poster.webp?v=1.0.0",
   "room/index.html",
   "room/stage.css?v=2.5.0",
   "room/overlay.css?v=2.4.0",
