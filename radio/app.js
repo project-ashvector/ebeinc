@@ -443,7 +443,7 @@
     document.body.classList.toggle("reduced-motion", reduced);
     motionToggle.setAttribute("aria-pressed", String(reduced));
     motionToggle.textContent = reduced ? "▶ MOTION" : "◉ MOTION";
-    localStorage.setItem("allthings140-reduced-motion", String(reduced));
+    localStorage.setItem("allthings140-background-motion-disabled-v2", String(reduced));
     if (backgroundVideo) {
       if (reduced) backgroundVideo.pause();
       else backgroundVideo.play().catch(() => {});
@@ -513,7 +513,10 @@
 
   setVolume(Number.isFinite(lastVolume) && lastVolume >= 0 ? lastVolume : 0.78);
   updateSleep();
-  setReducedMotion(localStorage.getItem("allthings140-reduced-motion") === "true");
+  // Ignore the legacy preference: it was set during the broken-video rollout
+  // and could make a repaired homepage look broken forever on that browser.
+  localStorage.removeItem("allthings140-reduced-motion");
+  setReducedMotion(localStorage.getItem("allthings140-background-motion-disabled-v2") === "true");
 
   // MediaSession API handlers
   if ("mediaSession" in navigator) {

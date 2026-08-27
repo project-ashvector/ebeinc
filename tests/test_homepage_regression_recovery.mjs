@@ -11,7 +11,9 @@ assert.match(home, /id="backgroundVideo"[\s\S]*autoplay muted loop playsinline/,
 assert.match(home, /visuals-home-desktop-hq\.mp4\?v=2\.0\.0/, 'homepage references the canonical desktop background');
 assert.match(styles, /\.home-route-grid\{display:grid/, 'route CTAs have their intended grid styling');
 assert.match(styles, /\.home-route-grid a\{[^}]*display:flex/, 'route CTAs cannot fall back to raw inline links');
-assert.match(sw, /allthings140-radio-v64/, 'service worker activates a new cache generation');
+assert.match(sw, /allthings140-radio-v65/, 'service worker activates a new cache generation');
+assert.match(home, /app\.js\?v=2\.0\.2/, 'homepage requests the repaired motion-preference revision');
+assert.match(read('radio/app.js'), /localStorage\.removeItem\("allthings140-reduced-motion"\)/, 'legacy stuck motion-off preference is migrated');
 assert.match(sw, /url\.pathname\.endsWith\("\/styles\.css"\)/, 'stylesheet is network-first after upgrades');
 assert.match(sw, /\.\(\?:mp4\|webm\|mp3\|m3u8\|ts\)/, 'video remains outside CacheStorage');
 assert.equal(sw, read('radio/sw-v47.js'), 'service-worker entry points remain identical');

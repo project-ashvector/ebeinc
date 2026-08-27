@@ -38,7 +38,7 @@ check(read('radio/app.js').includes('window.top.AT140Radio.client(window)'), 'Ho
 check(read('radio/roadmap/index.html').includes('window.top.AT140Radio.client(window)'), 'Roadmap controls consume shell audio authority');
 check(read('radio/visuals/legacy.html').includes('window.top.AT140Radio.client(window)'), 'legacy Visuals controls consume shell audio authority');
 check(hash('radio/room/stage.js') === hash('visuals-green/stage.js'), 'Room compositor engine remains byte-identical to frozen Green engine');
-check(sw.includes('allthings140-radio-v64'), 'service-worker cache namespace is advanced');
+check(sw.includes('allthings140-radio-v65'), 'service-worker cache namespace is advanced');
 check(sw.includes('mp4|webm|mp3|m3u8|ts'), 'service worker continues bypassing live and visual media');
 check(read('radio/_headers').includes("frame-ancestors 'self'"), 'Room permits only same-origin persistent-shell framing');
 check(read('radio/_headers').includes('/persistent-shell.js\n  Cache-Control: no-store'), 'router assets are not served stale');
