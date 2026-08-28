@@ -26,8 +26,9 @@ jobs:
       - name: Build release APK
         working-directory: ebe-os-widget-companion
         run: gradle :app:assembleRelease --stacktrace --no-daemon
-      - name: Align and export EBE build tools
+      - name: Export EBE Android/resource build tools
         run: |
+          set -euo pipefail
           mkdir -p dist
           "$ANDROID_HOME/build-tools/35.0.0/zipalign" -p -f 4 ebe-os-widget-companion/app/build/outputs/apk/release/app-release-unsigned.apk dist/EBE-OS-Widget-Companion-v0.9.9-unsigned-aligned.apk
           "$ANDROID_HOME/build-tools/35.0.0/zipalign" -c -v 4 dist/EBE-OS-Widget-Companion-v0.9.9-unsigned-aligned.apk
@@ -35,7 +36,11 @@ jobs:
           cp "$ANDROID_HOME/build-tools/35.0.0/lib/apksigner.jar" dist/apksigner-35.jar
           cp "$ANDROID_HOME/platforms/android-35/android.jar" dist/android-35.jar
           cp "$ANDROID_HOME/build-tools/35.0.0/lib/d8.jar" dist/d8-35.jar
+          cp "$ANDROID_HOME/build-tools/35.0.0/aapt2" dist/aapt2-35
+          cp "$ANDROID_HOME/build-tools/35.0.0/aapt" dist/aapt-35
+          wget -q https://github.com/iBotPeaches/Apktool/releases/download/v2.12.1/apktool_2.12.1.jar -O dist/apktool_2.12.1.jar
+          sha256sum dist/apktool_2.12.1.jar > dist/apktool_2.12.1.jar.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: EBE-Android-Build-Tools-35
+          name: EBE-Android-Resource-Tools-35
           path: dist/*
