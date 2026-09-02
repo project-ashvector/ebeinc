@@ -15,14 +15,14 @@ body{padding:max(18px,env(safe-area-inset-top)) 18px max(24px,env(safe-area-inse
 .card{background:linear-gradient(180deg,rgba(27,19,38,.96),rgba(16,12,23,.96));border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:14px}
 label{display:block;font-size:11px;letter-spacing:.12em;color:var(--muted);margin:0 0 7px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{margin-bottom:12px}.field:last-child{margin-bottom:0}
 input{width:100%;min-height:48px;border-radius:13px;border:1px solid var(--line);background:#0d0a12;color:var(--text);padding:0 13px;font-size:16px;outline:none}input:focus{border-color:var(--accent)}
-button{font:inherit;color:inherit}.connect{width:100%;min-height:50px;border:0;border-radius:14px;background:linear-gradient(135deg,#7c3aed,#a855f7);font-weight:800;letter-spacing:.08em;cursor:pointer}.connect:disabled{opacity:.55}
+button{font:inherit;color:inherit}.connect{width:100%;min-height:50px;border:0;border-radius:14px;background:linear-gradient(135deg,#7c3aed,#a855f7);font-weight:800;letter-spacing:.08em;cursor:pointer}.connect:disabled{opacity:.55}.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}.secondary{min-height:44px;border-radius:12px;border:1px solid var(--line);background:#0d0a12;color:#d9cbe8;font-size:11px;font-weight:800;letter-spacing:.07em}.secondary.danger{color:#ff9ba6}.background-chip{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:11px;padding:8px 10px;border:1px solid rgba(85,227,157,.25);border-radius:12px;background:rgba(85,227,157,.06);color:#83e9b7;font-size:11px;font-weight:800;letter-spacing:.06em}.background-chip i{width:7px;height:7px;border-radius:50%;background:var(--good)}
 .statusline{display:flex;align-items:center;justify-content:space-between;gap:12px}.statusleft{min-width:0}.statuslabel{font-size:11px;letter-spacing:.13em;color:var(--muted)}.statusvalue{font-weight:800;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dot{width:12px;height:12px;border-radius:50%;background:#5a5162;box-shadow:0 0 0 5px rgba(255,255,255,.03)}.dot.online{background:var(--good);box-shadow:0 0 0 5px rgba(85,227,157,.08)}.dot.connecting{background:#f7c755}.dot.error{background:var(--bad)}
 .members{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}.member{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:999px;padding:7px 10px;font-size:12px;background:#0d0a12}.member i{width:7px;height:7px;border-radius:50%;background:var(--good)}.member.talking{border-color:var(--accent2);box-shadow:0 0 0 2px rgba(255,122,26,.08)}
-.radio{padding:20px 16px 18px;text-align:center}.talker{min-height:42px}.talker .small{font-size:11px;letter-spacing:.13em;color:var(--muted)}.talker .name{font-size:20px;font-weight:900;margin-top:3px}.pttwrap{display:flex;justify-content:center;margin:14px 0 12px}
+.radio{padding:20px 16px 18px;text-align:center}.talker{min-height:64px}.talker .small{font-size:11px;letter-spacing:.13em;color:var(--muted)}.talker .name{font-size:20px;font-weight:900;margin-top:3px}.signal{height:18px;display:flex;align-items:flex-end;justify-content:center;gap:3px;margin-top:8px}.signal span{display:block;width:4px;height:4px;border-radius:4px;background:#665c70;transition:height .15s ease,background .15s ease}.signal.active span{background:var(--accent2);animation:meter .65s ease-in-out infinite alternate}.signal.active span:nth-child(2){animation-delay:.12s}.signal.active span:nth-child(3){animation-delay:.24s}.signal.active span:nth-child(4){animation-delay:.08s}.signal.active span:nth-child(5){animation-delay:.18s}@keyframes meter{from{height:4px}to{height:18px}}.pttwrap{display:flex;justify-content:center;margin:14px 0 12px}
 #ptt{width:min(72vw,292px);aspect-ratio:1;border-radius:50%;border:2px solid #503566;background:radial-gradient(circle at 50% 35%,#372149,#1a1025 66%,#0d0a12);box-shadow:inset 0 0 0 10px rgba(255,255,255,.015),0 16px 44px rgba(0,0,0,.36);display:flex;flex-direction:column;align-items:center;justify-content:center;touch-action:none;user-select:none;cursor:pointer;transition:transform .08s ease,border-color .12s ease,background .12s ease}.ptt:active,#ptt.transmitting{transform:scale(.97);border-color:var(--accent2);background:radial-gradient(circle at 50% 35%,#73370d,#2b160d 65%,#100a08)}#ptt.busy{border-color:#6a5d72;opacity:.6}.micicon{font-size:39px;line-height:1;margin-bottom:12px}.pttmain{font-weight:950;font-size:18px;letter-spacing:.09em}.pttsub{font-size:11px;color:var(--muted);letter-spacing:.08em;margin-top:7px}
 .hint{font-size:12px;color:var(--muted);line-height:1.5}.warning{color:#f4c86f}.errorText{color:#ff8d99}.goodText{color:#7ee7b2}.hidden{display:none!important}
 .footer{text-align:center;color:#766a84;font-size:10px;line-height:1.5;padding:6px 4px}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.mini{font-size:11px;color:var(--muted);margin-top:8px;word-break:break-word}
-@media(max-width:390px){body{padding-left:12px;padding-right:12px}.card{border-radius:17px}.brand h1{font-size:27px}.row{grid-template-columns:1fr}}
+@media(max-width:390px){body{padding-left:12px;padding-right:12px}.card{border-radius:17px}.brand h1{font-size:27px}.row{grid-template-columns:1fr}.actions{grid-template-columns:1fr}}@media(prefers-reduced-motion:reduce){.signal.active span{animation:none;height:12px}}
 </style>
 </head>
 <body>
@@ -41,9 +41,14 @@ button{font:inherit;color:inherit}.connect{width:100%;min-height:50px;border:0;b
     <div class="field">
       <label for="roomInput">FAMILY ROOM CODE</label>
       <input id="roomInput" class="mono" maxlength="64" autocomplete="off" autocapitalize="characters">
-      <div class="mini">Everyone using the same code joins the same private radio room.</div>
+      <div class="mini">Everyone using the same code joins the same private radio room. Your name and room are saved on this phone.</div>
     </div>
     <button class="connect" id="connectBtn" type="button">CONNECT TO FAMILY CHANNEL</button>
+    <div class="actions">
+      <button class="secondary" id="shareBtn" type="button">SHARE ROOM CODE</button>
+      <button class="secondary danger hidden" id="disconnectBtn" type="button">DISCONNECT</button>
+    </div>
+    <div class="background-chip hidden" id="backgroundChip"><i></i> BACKGROUND LISTENING ENABLED</div>
   </section>
 
   <section class="card" id="statusCard">
@@ -62,6 +67,7 @@ button{font:inherit;color:inherit}.connect{width:100%;min-height:50px;border:0;b
     <div class="talker">
       <div class="small">CURRENT TRANSMISSION</div>
       <div class="name" id="talkerName">CHANNEL CLEAR</div>
+      <div class="signal" id="signalMeter"><span></span><span></span><span></span><span></span><span></span></div>
     </div>
     <div class="pttwrap">
       <button id="ptt" type="button" disabled aria-label="Hold to talk">
@@ -70,65 +76,337 @@ button{font:inherit;color:inherit}.connect{width:100%;min-height:50px;border:0;b
         <div class="pttsub" id="pttSub">CONNECT FIRST</div>
       </button>
     </div>
-    <div class="hint" id="hint">Keep this screen open for the first test build. Audio uses an encrypted WebRTC connection between phones whenever possible.</div>
+    <div class="hint" id="hint">You can leave this screen after connecting. EBE Talkie Talkie keeps the family channel listening in the background; reopen the app to push-to-talk.</div>
   </section>
 
   <div id="audioBin" class="hidden"></div>
-  <footer class="footer">EBE TALKIE TALKIE v0.1.0 · FAMILY TEST BUILD</footer>
+  <footer class="footer">EBE TALKIE TALKIE v0.1.1 · FAMILY BUILD</footer>
 </main>
 <script>
 (() => {
 'use strict';
+
 const $ = (id) => document.getElementById(id);
-const ui = {name:$('nameInput'),room:$('roomInput'),connect:$('connectBtn'),status:$('statusValue'),dot:$('statusDot'),members:$('members'),detail:$('networkDetail'),ptt:$('ptt'),pttSub:$('pttSub'),talker:$('talkerName'),hint:$('hint'),audioBin:$('audioBin')};
-const enc=new TextEncoder(),dec=new TextDecoder();
-const native=window.EBEAndroid||null;
-const BROKER='wss://test.mosquitto.org:8081/mqtt';
-const ICE=[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']},{urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turns:openrelay.metered.ca:443'],username:'openrelayproject',credential:'openrelayproject'}];
-let myId=native?.getDeviceId?.()||crypto.randomUUID();let myName=native?.getSavedName?.()||'';let roomCode=native?.getDefaultRoom?.()||'EBE-9WEN-F9H9-8EP3';let roomTopic='',cryptoKey=null,localStream=null,ws=null,mqttConnected=false,joining=false,reconnectTimer=null,keepAliveTimer=null,helloTimer=null,reapTimer=null,reconnectDelay=1000,packetId=1,joined=false,transmitting=false,txHeartbeat=null,activeTalker=null,activeTalkerSeen=0;const peers=new Map();
-ui.name.value=myName;ui.room.value=roomCode;
-function setStatus(text,state=''){ui.status.textContent=text;ui.dot.className='dot'+(state?' '+state:'');}
-function detail(text,cls=''){ui.detail.textContent=text;ui.detail.className='mini'+(cls?' '+cls:'');}
-function buzz(ms=30){try{native?.buzz?.(ms);}catch(_){}}
-function sanitizeName(v){return(v||'').trim().replace(/[<>]/g,'').slice(0,32)}
-function sanitizeRoom(v){return(v||'').trim().toUpperCase().replace(/[^A-Z0-9_-]/g,'').slice(0,64)}
-async function sha256Hex(text){const digest=await crypto.subtle.digest('SHA-256',enc.encode(text));return[...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('')}
-function bytesToB64(bytes){let s='';for(let i=0;i<bytes.length;i+=0x8000)s+=String.fromCharCode(...bytes.subarray(i,i+0x8000));return btoa(s)}
-function b64ToBytes(s){const raw=atob(s),out=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out}
-async function deriveRoomKey(code){const material=await crypto.subtle.importKey('raw',enc.encode(code),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt:enc.encode('EBE-Talkie-Talkie-v1'),iterations:150000,hash:'SHA-256'},material,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
-async function encryptSignal(obj){const iv=crypto.getRandomValues(new Uint8Array(12)),plain=enc.encode(JSON.stringify(obj)),cipher=await crypto.subtle.encrypt({name:'AES-GCM',iv},cryptoKey,plain);return JSON.stringify({v:1,iv:bytesToB64(iv),data:bytesToB64(new Uint8Array(cipher))})}
-async function decryptSignal(text){try{const box=JSON.parse(text);if(box.v!==1)return null;const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64ToBytes(box.iv)},cryptoKey,b64ToBytes(box.data));return JSON.parse(dec.decode(plain))}catch(_){return null}}
-function mqttString(str){const b=enc.encode(str),out=new Uint8Array(2+b.length);out[0]=(b.length>>8)&255;out[1]=b.length&255;out.set(b,2);return out}
-function concat(...arrays){const len=arrays.reduce((n,a)=>n+a.length,0),out=new Uint8Array(len);let o=0;for(const a of arrays){out.set(a,o);o+=a.length}return out}
-function remainingLength(n){const out=[];do{let d=n%128;n=Math.floor(n/128);if(n>0)d|=0x80;out.push(d)}while(n>0);return new Uint8Array(out)}
-function mqttPacket(type,body){return concat(new Uint8Array([type]),remainingLength(body.length),body)}
-function mqttConnectPacket(){const variable=concat(mqttString('MQTT'),new Uint8Array([4,2,0,30])),cid='ebe-'+myId.replace(/-/g,'').slice(0,18)+'-'+Math.floor(Math.random()*9999);return mqttPacket(0x10,concat(variable,mqttString(cid)))}
-function mqttSubscribePacket(topic){packetId=(packetId%65535)+1;const id=new Uint8Array([(packetId>>8)&255,packetId&255]);return mqttPacket(0x82,concat(id,mqttString(topic),new Uint8Array([0])))}
-function mqttPublishPacket(topic,payload){return mqttPacket(0x30,concat(mqttString(topic),enc.encode(payload)))}
-function sendRaw(bytes){if(ws&&ws.readyState===WebSocket.OPEN)ws.send(bytes)}
-function parseMqtt(buffer){const data=new Uint8Array(buffer);let i=0;while(i<data.length){const header=data[i++];let mult=1,rem=0,digit;do{if(i>=data.length)return;digit=data[i++];rem+=(digit&127)*mult;mult*=128}while(digit&128);const end=i+rem;if(end>data.length)return;const type=header>>4;if(type===2){sendRaw(mqttSubscribePacket(roomTopic))}else if(type===3){if(i+2<=end){const len=(data[i]<<8)|data[i+1];i+=2;const topic=dec.decode(data.slice(i,i+len));i+=len;const payload=dec.decode(data.slice(i,end));if(topic===roomTopic)onBrokerPayload(payload)}}else if(type===9){onMqttReady()}i=end}}
-function connectBroker(){clearTimeout(reconnectTimer);if(!joined)return;setStatus('CONNECTING','connecting');detail('Opening encrypted signaling link…');try{ws=new WebSocket(BROKER,['mqtt']);ws.binaryType='arraybuffer'}catch(e){scheduleReconnect('WebSocket unavailable');return}ws.onopen=()=>sendRaw(mqttConnectPacket());ws.onmessage=e=>parseMqtt(e.data);ws.onerror=()=>{};ws.onclose=()=>{mqttConnected=false;clearInterval(keepAliveTimer);if(joined)scheduleReconnect('Signaling link dropped — reconnecting…')}}
-function onMqttReady(){if(mqttConnected)return;mqttConnected=true;reconnectDelay=1000;setStatus('ONLINE','online');detail('Family channel connected. Hold the button to talk.','goodText');ui.ptt.disabled=false;ui.pttSub.textContent='PRESS + HOLD';clearInterval(keepAliveTimer);keepAliveTimer=setInterval(()=>sendRaw(new Uint8Array([0xC0,0])),20000);sendHello();clearInterval(helloTimer);helloTimer=setInterval(sendHello,8000);clearInterval(reapTimer);reapTimer=setInterval(reapPeers,5000);renderMembers()}
-function scheduleReconnect(message){setStatus('RECONNECTING','connecting');detail(message,'warning');ui.ptt.disabled=true;clearTimeout(reconnectTimer);reconnectTimer=setTimeout(connectBroker,reconnectDelay);reconnectDelay=Math.min(reconnectDelay*1.7,10000)}
-async function publishSignal(obj){if(!mqttConnected||!cryptoKey)return;obj.from=myId;obj.name=myName;obj.ts=Date.now();sendRaw(mqttPublishPacket(roomTopic,await encryptSignal(obj)))}
-async function onBrokerPayload(payload){const m=await decryptSignal(payload);if(!m||m.from===myId)return;if(m.to&&m.to!==myId)return;let peer=peers.get(m.from);if(m.type==='hello'){peer=ensurePeer(m.from,m.name);peer.lastSeen=Date.now();peer.name=m.name||'Unknown';renderMembers();if(myId.localeCompare(m.from)<0)maybeOffer(m.from)}else if(m.type==='bye'){removePeer(m.from)}else if(m.type==='offer'){peer=ensurePeer(m.from,m.name);peer.lastSeen=Date.now();await receiveOffer(peer,m.description)}else if(m.type==='answer'){peer=ensurePeer(m.from,m.name);peer.lastSeen=Date.now();await receiveAnswer(peer,m.description)}else if(m.type==='ice'){peer=ensurePeer(m.from,m.name);peer.lastSeen=Date.now();await receiveIce(peer,m.candidate)}else if(m.type==='ptt-start'||m.type==='ptt-heartbeat'){peer=ensurePeer(m.from,m.name);peer.lastSeen=Date.now();if(transmitting&&m.from.localeCompare(myId)<0)stopTransmit(true,'Another radio won the channel.');activeTalker={id:m.from,name:m.name||peer.name||'Radio'};activeTalkerSeen=Date.now();updateTalker();renderMembers();if(m.type==='ptt-start')buzz(22)}else if(m.type==='ptt-stop'){if(activeTalker?.id===m.from){activeTalker=null;activeTalkerSeen=0;updateTalker();renderMembers()}}}
-async function sendHello(){await publishSignal({type:'hello'})}
-function peerAudioId(id){return'audio-'+id.replace(/[^a-zA-Z0-9]/g,'')}
-function ensurePeer(id,name){let p=peers.get(id);if(p){p.lastSeen=Date.now();if(name)p.name=name;return p}const pc=new RTCPeerConnection({iceServers:ICE,iceCandidatePoolSize:4});p={id,name:name||'Radio',pc,lastSeen:Date.now(),pendingIce:[],offering:false,connected:false};peers.set(id,p);if(localStream)for(const track of localStream.getTracks())pc.addTrack(track,localStream);pc.onicecandidate=e=>{if(e.candidate)publishSignal({type:'ice',to:id,candidate:e.candidate.toJSON()})};pc.ontrack=e=>{let audio=$(peerAudioId(id));if(!audio){audio=document.createElement('audio');audio.id=peerAudioId(id);audio.autoplay=true;audio.playsInline=true;ui.audioBin.appendChild(audio)}audio.srcObject=e.streams[0];audio.play().catch(()=>{})};pc.onconnectionstatechange=()=>{p.connected=pc.connectionState==='connected';renderMembers();if(['failed','closed'].includes(pc.connectionState)){p.connected=false;if(pc.connectionState==='failed')restartPeer(id)}};renderMembers();return p}
-async function maybeOffer(id){const p=ensurePeer(id);if(p.offering||p.pc.signalingState!=='stable')return;p.offering=true;try{const offer=await p.pc.createOffer({offerToReceiveAudio:true});await p.pc.setLocalDescription(offer);await publishSignal({type:'offer',to:id,description:p.pc.localDescription})}catch(e){console.warn('offer',e)}finally{p.offering=false}}
-async function receiveOffer(p,desc){try{if(p.pc.signalingState!=='stable'){try{await p.pc.setLocalDescription({type:'rollback'})}catch(_){}}await p.pc.setRemoteDescription(desc);await flushIce(p);const answer=await p.pc.createAnswer();await p.pc.setLocalDescription(answer);await publishSignal({type:'answer',to:p.id,description:p.pc.localDescription})}catch(e){console.warn('receiveOffer',e);restartPeer(p.id)}}
-async function receiveAnswer(p,desc){try{if(p.pc.signalingState==='have-local-offer'){await p.pc.setRemoteDescription(desc);await flushIce(p)}}catch(e){console.warn('answer',e)}}
-async function receiveIce(p,candidate){if(!candidate)return;try{if(p.pc.remoteDescription)await p.pc.addIceCandidate(candidate);else p.pendingIce.push(candidate)}catch(e){console.warn('ice',e)}}
-async function flushIce(p){const list=p.pendingIce.splice(0);for(const c of list){try{await p.pc.addIceCandidate(c)}catch(_){}}}
-function restartPeer(id){const old=peers.get(id);if(!old)return;const name=old.name;try{old.pc.close()}catch(_){}peers.delete(id);const p=ensurePeer(id,name);p.lastSeen=Date.now();if(myId.localeCompare(id)<0)setTimeout(()=>maybeOffer(id),700)}
-function removePeer(id){const p=peers.get(id);if(!p)return;try{p.pc.close()}catch(_){}peers.delete(id);const audio=$(peerAudioId(id));if(audio)audio.remove();if(activeTalker?.id===id){activeTalker=null;activeTalkerSeen=0;updateTalker()}renderMembers()}
-function reapPeers(){const now=Date.now();for(const[id,p]of peers){if(now-p.lastSeen>28000)removePeer(id)}if(activeTalker&&now-activeTalkerSeen>2600){activeTalker=null;activeTalkerSeen=0;updateTalker();renderMembers()}}
-function renderMembers(){const items=[{id:myId,name:myName||'Me',connected:mqttConnected,self:true},...Array.from(peers.values()).map(p=>({id:p.id,name:p.name,connected:p.connected,self:false}))];ui.members.innerHTML='';for(const item of items){const el=document.createElement('span');el.className='member'+(activeTalker?.id===item.id?' talking':'');const dot=document.createElement('i');if(!item.connected)dot.style.background='#6b6172';el.append(dot,document.createTextNode((item.self?'YOU · ':'')+(item.name||'Radio')));ui.members.appendChild(el)}}
-function updateTalker(){if(transmitting){ui.talker.textContent=(myName||'YOU')+' — TRANSMITTING';ui.ptt.classList.add('transmitting');ui.pttSub.textContent='RELEASE TO LISTEN'}else if(activeTalker){ui.talker.textContent=activeTalker.name+' — TRANSMITTING';ui.ptt.classList.add('busy');ui.pttSub.textContent='CHANNEL BUSY'}else{ui.talker.textContent='CHANNEL CLEAR';ui.ptt.classList.remove('busy','transmitting');ui.pttSub.textContent=joined&&mqttConnected?'PRESS + HOLD':'CONNECT FIRST'}}
-async function startTransmit(){if(!joined||!mqttConnected||transmitting)return;if(activeTalker&&activeTalker.id!==myId&&Date.now()-activeTalkerSeen<2600){buzz(65);detail(activeTalker.name+' is talking. Wait for the channel to clear.','warning');return}transmitting=true;activeTalker={id:myId,name:myName};activeTalkerSeen=Date.now();for(const track of localStream.getAudioTracks())track.enabled=true;native?.setCommunicationMode?.(true);buzz(18);updateTalker();renderMembers();await publishSignal({type:'ptt-start'});clearInterval(txHeartbeat);txHeartbeat=setInterval(()=>publishSignal({type:'ptt-heartbeat'}),900)}
-async function stopTransmit(forced=false,message=''){if(!transmitting)return;transmitting=false;clearInterval(txHeartbeat);txHeartbeat=null;for(const track of localStream?.getAudioTracks?.()||[])track.enabled=false;await publishSignal({type:'ptt-stop'});if(activeTalker?.id===myId){activeTalker=null;activeTalkerSeen=0}updateTalker();renderMembers();if(forced){buzz(70);detail(message||'Channel busy.','warning')}else detail('Listening…','goodText')}
-async function join(){if(joining||joined)return;myName=sanitizeName(ui.name.value);roomCode=sanitizeRoom(ui.room.value);if(myName.length<1){detail('Enter your name first.','errorText');ui.name.focus();return}if(roomCode.length<8){detail('Room code must be at least 8 characters.','errorText');ui.room.focus();return}joining=true;ui.connect.disabled=true;ui.connect.textContent='CONNECTING…';try{native?.saveName?.(myName);native?.saveRoom?.(roomCode);if(native&&native.hasMicPermission&&!native.hasMicPermission()){native.requestMicPermission?.();throw new Error('Grant microphone permission, then tap Connect again.')}setStatus('MIC CHECK','connecting');detail('Opening microphone…');if(!navigator.mediaDevices?.getUserMedia)throw new Error('This Android WebView does not expose microphone WebRTC support.');localStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false});for(const track of localStream.getAudioTracks())track.enabled=false;cryptoKey=await deriveRoomKey(roomCode);const hash=await sha256Hex(roomCode);roomTopic='ebe-talkie-talkie/v1/'+hash.slice(0,40);joined=true;native?.setCommunicationMode?.(true);connectBroker();ui.name.disabled=true;ui.room.disabled=true;ui.connect.textContent='CONNECTED'}catch(e){joined=false;setStatus('OFFLINE','error');detail(e?.message||'Could not connect.','errorText');ui.connect.disabled=false;ui.connect.textContent='CONNECT TO FAMILY CHANNEL'}finally{joining=false}}
-ui.connect.addEventListener('click',join);ui.ptt.addEventListener('pointerdown',e=>{e.preventDefault();ui.ptt.setPointerCapture?.(e.pointerId);startTransmit()});ui.ptt.addEventListener('pointerup',e=>{e.preventDefault();stopTransmit()});ui.ptt.addEventListener('pointercancel',()=>stopTransmit());ui.ptt.addEventListener('lostpointercapture',()=>stopTransmit());window.addEventListener('blur',()=>stopTransmit());document.addEventListener('visibilitychange',()=>{if(document.hidden)stopTransmit()});window.addEventListener('beforeunload',()=>{try{publishSignal({type:'bye'});sendRaw(new Uint8Array([0xE0,0]))}catch(_){}});window.ebeMicPermissionChanged=ok=>{if(ok)detail('Microphone permission granted. Tap Connect.','goodText')};setStatus('OFFLINE');renderMembers();updateTalker();
+const ui = {
+  name: $('nameInput'), room: $('roomInput'), connect: $('connectBtn'), share: $('shareBtn'), disconnect: $('disconnectBtn'), background: $('backgroundChip'),
+  status: $('statusValue'), dot: $('statusDot'), members: $('members'), detail: $('networkDetail'),
+  ptt: $('ptt'), pttSub: $('pttSub'), talker: $('talkerName'), signal: $('signalMeter'), hint: $('hint'), audioBin: $('audioBin')
+};
+
+const enc = new TextEncoder();
+const dec = new TextDecoder();
+const native = window.EBEAndroid || null;
+const BROKER = 'wss://test.mosquitto.org:8081/mqtt';
+const ICE = [
+  {urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']},
+  {urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turns:openrelay.metered.ca:443'],username:'openrelayproject',credential:'openrelayproject'}
+];
+
+let myId = native?.getDeviceId?.() || crypto.randomUUID();
+let myName = native?.getSavedName?.() || '';
+let roomCode = native?.getDefaultRoom?.() || 'EBE-9WEN-F9H9-8EP3';
+let roomTopic = '';
+let cryptoKey = null;
+let localStream = null;
+let ws = null;
+let mqttConnected = false;
+let joining = false;
+let reconnectTimer = null;
+let keepAliveTimer = null;
+let helloTimer = null;
+let reapTimer = null;
+let reconnectDelay = 1000;
+let packetId = 1;
+let joined = false;
+let transmitting = false;
+let txHeartbeat = null;
+let activeTalker = null;
+let activeTalkerSeen = 0;
+let peers = new Map();
+
+ui.name.value = myName;
+ui.room.value = roomCode;
+
+function setStatus(text, state='') {
+  ui.status.textContent = text;
+  ui.dot.className = 'dot' + (state ? ' ' + state : '');
+}
+function detail(text, cls='') {
+  ui.detail.textContent = text;
+  ui.detail.className = 'mini' + (cls ? ' ' + cls : '');
+}
+function buzz(ms=30){ try{ native?.buzz?.(ms); }catch(_){} }
+function beep(kind=1){ try{ native?.beep?.(kind); }catch(_){} }
+function sanitizeName(v){ return (v || '').trim().replace(/[<>]/g,'').slice(0,32); }
+function sanitizeRoom(v){ return (v || '').trim().toUpperCase().replace(/[^A-Z0-9_-]/g,'').slice(0,64); }
+
+async function sha256Hex(text){
+  const digest = await crypto.subtle.digest('SHA-256', enc.encode(text));
+  return [...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function bytesToB64(bytes){ let s=''; for(let i=0;i<bytes.length;i+=0x8000)s+=String.fromCharCode(...bytes.subarray(i,i+0x8000)); return btoa(s); }
+function b64ToBytes(s){ const raw=atob(s); const out=new Uint8Array(raw.length); for(let i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i); return out; }
+async function deriveRoomKey(code){
+  const material = await crypto.subtle.importKey('raw', enc.encode(code), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt:enc.encode('EBE-Talkie-Talkie-v1'),iterations:150000,hash:'SHA-256'}, material, {name:'AES-GCM',length:256}, false, ['encrypt','decrypt']);
+}
+async function encryptSignal(obj){
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const plain=enc.encode(JSON.stringify(obj));
+  const cipher=await crypto.subtle.encrypt({name:'AES-GCM',iv},cryptoKey,plain);
+  return JSON.stringify({v:1,iv:bytesToB64(iv),data:bytesToB64(new Uint8Array(cipher))});
+}
+async function decryptSignal(text){
+  try{
+    const box=JSON.parse(text); if(box.v!==1)return null;
+    const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64ToBytes(box.iv)},cryptoKey,b64ToBytes(box.data));
+    return JSON.parse(dec.decode(plain));
+  }catch(_){ return null; }
+}
+
+function mqttString(str){ const b=enc.encode(str); const out=new Uint8Array(2+b.length); out[0]=(b.length>>8)&255; out[1]=b.length&255; out.set(b,2); return out; }
+function concat(...arrays){ const len=arrays.reduce((n,a)=>n+a.length,0); const out=new Uint8Array(len); let o=0; for(const a of arrays){out.set(a,o);o+=a.length;} return out; }
+function remainingLength(n){ const out=[]; do{let digit=n%128;n=Math.floor(n/128);if(n>0)digit|=0x80;out.push(digit);}while(n>0); return new Uint8Array(out); }
+function mqttPacket(type, body){ return concat(new Uint8Array([type]), remainingLength(body.length), body); }
+function mqttConnectPacket(){
+  const variable=concat(mqttString('MQTT'),new Uint8Array([4,2,0,30]));
+  const cid='ebe-'+myId.replace(/-/g,'').slice(0,18)+'-'+Math.floor(Math.random()*9999);
+  return mqttPacket(0x10,concat(variable,mqttString(cid)));
+}
+function mqttSubscribePacket(topic){
+  packetId=(packetId%65535)+1;
+  const id=new Uint8Array([(packetId>>8)&255,packetId&255]);
+  return mqttPacket(0x82,concat(id,mqttString(topic),new Uint8Array([0])));
+}
+function mqttPublishPacket(topic,payload){ return mqttPacket(0x30,concat(mqttString(topic),enc.encode(payload))); }
+function sendRaw(bytes){ if(ws && ws.readyState===WebSocket.OPEN) ws.send(bytes); }
+
+function parseMqtt(buffer){
+  const data=new Uint8Array(buffer); let i=0;
+  while(i<data.length){
+    const header=data[i++]; let mult=1, rem=0, digit;
+    do{ if(i>=data.length)return; digit=data[i++]; rem+=(digit&127)*mult; mult*=128; }while(digit&128);
+    const end=i+rem; if(end>data.length)return;
+    const type=header>>4;
+    if(type===2){ sendRaw(mqttSubscribePacket(roomTopic)); }
+    else if(type===3){
+      if(i+2<=end){ const len=(data[i]<<8)|data[i+1]; i+=2; const topic=dec.decode(data.slice(i,i+len)); i+=len; const payload=dec.decode(data.slice(i,end)); if(topic===roomTopic) onBrokerPayload(payload); }
+    } else if(type===9){ onMqttReady(); }
+    i=end;
+  }
+}
+
+function connectBroker(){
+  clearTimeout(reconnectTimer);
+  if(!joined)return;
+  setStatus('CONNECTING', 'connecting');
+  detail('Opening encrypted signaling link…');
+  try{ ws=new WebSocket(BROKER,['mqtt']); ws.binaryType='arraybuffer'; }
+  catch(e){ scheduleReconnect('WebSocket unavailable'); return; }
+  ws.onopen=()=>{ sendRaw(mqttConnectPacket()); };
+  ws.onmessage=(e)=>parseMqtt(e.data);
+  ws.onerror=()=>{};
+  ws.onclose=()=>{ mqttConnected=false; clearInterval(keepAliveTimer); if(joined)scheduleReconnect('Signaling link dropped — reconnecting…'); };
+}
+function onMqttReady(){
+  if(mqttConnected)return;
+  mqttConnected=true; reconnectDelay=1000;
+  setStatus('ONLINE', 'online');
+  detail('Family channel connected. Hold the button to talk.', 'goodText');
+  ui.ptt.disabled=false; ui.pttSub.textContent='PRESS + HOLD';
+  ui.background.classList.remove('hidden'); ui.disconnect.classList.remove('hidden'); ui.share.classList.remove('hidden');
+  try{ native?.startBackgroundListening?.(); }catch(_){}
+  clearInterval(keepAliveTimer); keepAliveTimer=setInterval(()=>sendRaw(new Uint8Array([0xC0,0])),20000);
+  sendHello(); clearInterval(helloTimer); helloTimer=setInterval(sendHello,8000);
+  clearInterval(reapTimer); reapTimer=setInterval(reapPeers,5000);
+  renderMembers();
+}
+function scheduleReconnect(message){
+  setStatus('RECONNECTING','connecting'); detail(message,'warning'); ui.ptt.disabled=true;
+  clearTimeout(reconnectTimer); reconnectTimer=setTimeout(connectBroker,reconnectDelay); reconnectDelay=Math.min(reconnectDelay*1.7,10000);
+}
+async function publishSignal(obj){
+  if(!mqttConnected || !cryptoKey)return;
+  obj.from=myId; obj.name=myName; obj.ts=Date.now();
+  const payload=await encryptSignal(obj);
+  sendRaw(mqttPublishPacket(roomTopic,payload));
+}
+async function onBrokerPayload(payload){
+  const m=await decryptSignal(payload); if(!m || m.from===myId)return;
+  if(m.to && m.to!==myId)return;
+  let peer=peers.get(m.from);
+  if(m.type==='hello'){
+    peer=ensurePeer(m.from,m.name); peer.lastSeen=Date.now(); peer.name=m.name||'Unknown';
+    renderMembers();
+    if(myId.localeCompare(m.from)<0) maybeOffer(m.from);
+  } else if(m.type==='bye'){
+    removePeer(m.from);
+  } else if(m.type==='offer'){
+    peer=ensurePeer(m.from,m.name); peer.lastSeen=Date.now(); await receiveOffer(peer,m.description);
+  } else if(m.type==='answer'){
+    peer=ensurePeer(m.from,m.name); peer.lastSeen=Date.now(); await receiveAnswer(peer,m.description);
+  } else if(m.type==='ice'){
+    peer=ensurePeer(m.from,m.name); peer.lastSeen=Date.now(); await receiveIce(peer,m.candidate);
+  } else if(m.type==='ptt-start' || m.type==='ptt-heartbeat'){
+    peer=ensurePeer(m.from,m.name); peer.lastSeen=Date.now();
+    if(transmitting && m.from.localeCompare(myId)<0) stopTransmit(true,'Another radio won the channel.');
+    activeTalker={id:m.from,name:m.name||peer.name||'Radio'}; activeTalkerSeen=Date.now(); updateTalker(); renderMembers();
+    if(m.type==='ptt-start'){buzz(22);beep(1);}
+  } else if(m.type==='ptt-stop'){
+    if(activeTalker?.id===m.from){ activeTalker=null; activeTalkerSeen=0; beep(2); updateTalker(); renderMembers(); }
+  }
+}
+
+async function sendHello(){ await publishSignal({type:'hello'}); }
+function peerAudioId(id){return 'audio-'+id.replace(/[^a-zA-Z0-9]/g,'');}
+function ensurePeer(id,name){
+  let p=peers.get(id); if(p){p.lastSeen=Date.now();if(name)p.name=name;return p;}
+  const pc=new RTCPeerConnection({iceServers:ICE,iceCandidatePoolSize:4});
+  p={id,name:name||'Radio',pc,lastSeen:Date.now(),pendingIce:[],offering:false,connected:false}; peers.set(id,p);
+  if(localStream) for(const track of localStream.getTracks()) pc.addTrack(track,localStream);
+  pc.onicecandidate=(e)=>{ if(e.candidate) publishSignal({type:'ice',to:id,candidate:e.candidate.toJSON()}); };
+  pc.ontrack=(e)=>{
+    let audio=$(peerAudioId(id)); if(!audio){audio=document.createElement('audio');audio.id=peerAudioId(id);audio.autoplay=true;audio.playsInline=true;ui.audioBin.appendChild(audio);}
+    audio.srcObject=e.streams[0]; audio.play().catch(()=>{});
+  };
+  pc.onconnectionstatechange=()=>{
+    p.connected=['connected'].includes(pc.connectionState);
+    renderMembers();
+    if(['failed','closed'].includes(pc.connectionState)){ p.connected=false; if(pc.connectionState==='failed') restartPeer(id); }
+  };
+  renderMembers();
+  return p;
+}
+async function maybeOffer(id){
+  const p=ensurePeer(id); if(p.offering || p.pc.signalingState!=='stable')return;
+  p.offering=true;
+  try{
+    const offer=await p.pc.createOffer({offerToReceiveAudio:true});
+    await p.pc.setLocalDescription(offer);
+    await publishSignal({type:'offer',to:id,description:p.pc.localDescription});
+  }catch(e){ console.warn('offer',e); }
+  finally{p.offering=false;}
+}
+async function receiveOffer(p,desc){
+  try{
+    if(p.pc.signalingState!=='stable'){
+      try{await p.pc.setLocalDescription({type:'rollback'});}catch(_){}
+    }
+    await p.pc.setRemoteDescription(desc); await flushIce(p);
+    const answer=await p.pc.createAnswer(); await p.pc.setLocalDescription(answer);
+    await publishSignal({type:'answer',to:p.id,description:p.pc.localDescription});
+  }catch(e){console.warn('receiveOffer',e); restartPeer(p.id);}
+}
+async function receiveAnswer(p,desc){
+  try{ if(p.pc.signalingState==='have-local-offer'){await p.pc.setRemoteDescription(desc);await flushIce(p);} }catch(e){console.warn('answer',e);}
+}
+async function receiveIce(p,candidate){
+  if(!candidate)return;
+  try{ if(p.pc.remoteDescription) await p.pc.addIceCandidate(candidate); else p.pendingIce.push(candidate); }catch(e){console.warn('ice',e);}
+}
+async function flushIce(p){
+  const list=p.pendingIce.splice(0); for(const c of list){try{await p.pc.addIceCandidate(c);}catch(_){}}
+}
+function restartPeer(id){
+  const old=peers.get(id); if(!old)return; const name=old.name; try{old.pc.close();}catch(_){} peers.delete(id);
+  const p=ensurePeer(id,name); p.lastSeen=Date.now(); if(myId.localeCompare(id)<0)setTimeout(()=>maybeOffer(id),700);
+}
+function removePeer(id){
+  const p=peers.get(id); if(!p)return; try{p.pc.close();}catch(_){} peers.delete(id);
+  const audio=$(peerAudioId(id)); if(audio)audio.remove();
+  if(activeTalker?.id===id){activeTalker=null;activeTalkerSeen=0;updateTalker();}
+  renderMembers();
+}
+function reapPeers(){
+  const now=Date.now(); for(const [id,p] of peers){if(now-p.lastSeen>28000)removePeer(id);}
+  if(activeTalker && now-activeTalkerSeen>2600){activeTalker=null;activeTalkerSeen=0;updateTalker();renderMembers();}
+}
+function renderMembers(){
+  const items=[{id:myId,name:myName||'Me',connected:mqttConnected,self:true},...Array.from(peers.values()).map(p=>({id:p.id,name:p.name,connected:p.connected,self:false}))];
+  ui.members.innerHTML='';
+  for(const item of items){const el=document.createElement('span');el.className='member'+(activeTalker?.id===item.id?' talking':'');const dot=document.createElement('i');if(!item.connected)dot.style.background='#6b6172';const tx=document.createTextNode((item.self?'YOU · ':'')+(item.name||'Radio'));el.append(dot,tx);ui.members.appendChild(el);}
+}
+function updateTalker(){
+  const active=transmitting || !!activeTalker; ui.signal.classList.toggle('active',active);
+  if(transmitting){ui.talker.textContent=(myName||'YOU')+' — TRANSMITTING';ui.ptt.classList.remove('busy');ui.ptt.classList.add('transmitting');ui.pttSub.textContent='RELEASE TO LISTEN';}
+  else if(activeTalker){ui.talker.textContent=activeTalker.name+' — TRANSMITTING';ui.ptt.classList.remove('transmitting');ui.ptt.classList.add('busy');ui.pttSub.textContent='CHANNEL BUSY';}
+  else{ui.talker.textContent='CHANNEL CLEAR';ui.ptt.classList.remove('busy','transmitting');ui.pttSub.textContent=joined&&mqttConnected?'PRESS + HOLD':'CONNECT FIRST';}
+}
+
+async function startTransmit(){
+  if(!joined || !mqttConnected || transmitting)return;
+  if(activeTalker && activeTalker.id!==myId && Date.now()-activeTalkerSeen<2600){buzz(65);detail(activeTalker.name+' is talking. Wait for the channel to clear.','warning');return;}
+  transmitting=true; activeTalker={id:myId,name:myName}; activeTalkerSeen=Date.now();
+  for(const track of localStream.getAudioTracks())track.enabled=true;
+  native?.setCommunicationMode?.(true); buzz(18); beep(1); updateTalker();renderMembers();
+  await publishSignal({type:'ptt-start'});
+  clearInterval(txHeartbeat); txHeartbeat=setInterval(()=>publishSignal({type:'ptt-heartbeat'}),900);
+}
+async function stopTransmit(forced=false,message=''){
+  if(!transmitting)return;
+  transmitting=false; clearInterval(txHeartbeat); txHeartbeat=null;
+  for(const track of localStream?.getAudioTracks?.()||[])track.enabled=false;
+  await publishSignal({type:'ptt-stop'});
+  if(activeTalker?.id===myId){activeTalker=null;activeTalkerSeen=0;}
+  updateTalker();renderMembers();
+  if(forced){buzz(70);detail(message||'Channel busy.','warning');} else {beep(2);detail('Listening…','goodText');}
+}
+
+async function join(){
+  if(joining || joined)return;
+  myName=sanitizeName(ui.name.value); roomCode=sanitizeRoom(ui.room.value);
+  if(myName.length<1){detail('Enter your name first.','errorText');ui.name.focus();return;}
+  if(roomCode.length<8){detail('Room code must be at least 8 characters.','errorText');ui.room.focus();return;}
+  joining=true; ui.connect.disabled=true; ui.connect.textContent='CONNECTING…';
+  try{
+    native?.saveName?.(myName); native?.saveRoom?.(roomCode);
+    if(native && native.hasMicPermission && !native.hasMicPermission()){ native.requestMicPermission?.(); throw new Error('Grant microphone permission, then tap Connect again.'); }
+    setStatus('MIC CHECK','connecting'); detail('Opening microphone…');
+    if(!navigator.mediaDevices?.getUserMedia)throw new Error('This Android WebView does not expose microphone WebRTC support.');
+    localStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false});
+    for(const track of localStream.getAudioTracks())track.enabled=false;
+    cryptoKey=await deriveRoomKey(roomCode);
+    const hash=await sha256Hex(roomCode); roomTopic='ebe-talkie-talkie/v1/'+hash.slice(0,40);
+    joined=true; native?.setCommunicationMode?.(true); connectBroker();
+    ui.name.disabled=true;ui.room.disabled=true;ui.connect.textContent='CONNECTED'; ui.connect.disabled=true; ui.disconnect.classList.remove('hidden');
+  }catch(e){
+    joined=false; setStatus('OFFLINE','error'); detail(e?.message||'Could not connect.','errorText'); ui.connect.disabled=false;ui.connect.textContent='CONNECT TO FAMILY CHANNEL';
+  }finally{joining=false;}
+}
+
+async function disconnect(){
+  if(!joined)return;
+  try{await stopTransmit(); await publishSignal({type:'bye'});}catch(_){}
+  joined=false; mqttConnected=false; clearTimeout(reconnectTimer); clearInterval(keepAliveTimer); clearInterval(helloTimer); clearInterval(reapTimer); clearInterval(txHeartbeat);
+  try{if(ws && ws.readyState===WebSocket.OPEN)sendRaw(new Uint8Array([0xE0,0])); ws?.close();}catch(_){} ws=null;
+  for(const id of Array.from(peers.keys())) removePeer(id);
+  for(const track of localStream?.getTracks?.()||[])try{track.stop();}catch(_){} localStream=null; cryptoKey=null;
+  try{native?.stopBackgroundListening?.();native?.setCommunicationMode?.(false);}catch(_){}
+  ui.name.disabled=false;ui.room.disabled=false;ui.connect.disabled=false;ui.connect.textContent='CONNECT TO FAMILY CHANNEL';ui.disconnect.classList.add('hidden');ui.background.classList.add('hidden');ui.ptt.disabled=true;
+  setStatus('OFFLINE');detail('Disconnected. Your saved room is still here.');activeTalker=null;activeTalkerSeen=0;updateTalker();renderMembers();
+}
+
+function shareRoom(){
+  const code=sanitizeRoom(ui.room.value)||roomCode;
+  try{native?.shareRoom?.(code);}catch(_){detail('Room code: '+code,'goodText');}
+}
+
+ui.connect.addEventListener('click',join);
+ui.share.addEventListener('click',shareRoom);
+ui.disconnect.addEventListener('click',disconnect);
+ui.ptt.addEventListener('pointerdown',(e)=>{e.preventDefault();ui.ptt.setPointerCapture?.(e.pointerId);startTransmit();});
+ui.ptt.addEventListener('pointerup',(e)=>{e.preventDefault();stopTransmit();});
+ui.ptt.addEventListener('pointercancel',()=>stopTransmit());
+ui.ptt.addEventListener('lostpointercapture',()=>stopTransmit());
+window.addEventListener('blur',()=>stopTransmit());
+window.addEventListener('online',()=>{if(joined&&!mqttConnected){reconnectDelay=500;connectBroker();}});
+window.addEventListener('offline',()=>{if(joined){mqttConnected=false;setStatus('NO INTERNET','error');detail('Waiting for internet — the channel will reconnect automatically.','warning');ui.ptt.disabled=true;}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)stopTransmit();});
+window.addEventListener('beforeunload',()=>{try{publishSignal({type:'bye'});sendRaw(new Uint8Array([0xE0,0]));}catch(_){}});
+window.ebeMicPermissionChanged=(ok)=>{if(ok)detail('Microphone permission granted. Tap Connect.','goodText');};
+
+setStatus('OFFLINE'); renderMembers(); updateTalker();
+if(myName && native?.shouldAutoConnect?.()){setTimeout(()=>{if(!joined&&!joining)join();},650);}
 })();
 </script>
 </body>
