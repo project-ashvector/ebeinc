@@ -8,6 +8,7 @@ export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 export const PRESENCE_TTL_MS = 35_000;
 export const MAX_AVATAR_CHARS = 190_000;
 export const USER_RE = /^[a-z0-9_]{3,24}$/;
+export const PBKDF2_ITERATIONS = 100_000;
 const ROOM_NAME_MAX = 48;
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
@@ -71,7 +72,7 @@ export async function sha256Hex(value) {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(value)));
   return toHex(new Uint8Array(digest));
 }
-export async function pbkdf2Hex(secret, salt, iterations = 210_000) {
+export async function pbkdf2Hex(secret, salt, iterations = PBKDF2_ITERATIONS) {
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey("raw", enc.encode(secret), "PBKDF2", false, ["deriveBits"]);
   const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: enc.encode(salt), iterations }, key, 256);
