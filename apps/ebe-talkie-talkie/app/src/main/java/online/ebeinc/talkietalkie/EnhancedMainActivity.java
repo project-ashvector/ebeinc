@@ -28,11 +28,11 @@ import java.security.SecureRandom;
 import java.util.Locale;
 
 /**
- * v0.1.3 shell layered over the proven v0.1.2 radio core.
+ * v0.1.4 shell layered over the proven radio core.
  *
- * The original MainActivity remains responsible for microphone/WebRTC/MQTT behavior.
- * This activity only adds persistent named room bookmarks and remote-talker alerts,
- * keeping the known-good audio path isolated from the new UI/features.
+ * MainActivity remains responsible for microphone/WebRTC/MQTT behavior.
+ * This activity adds persistent named rooms, call-aware talk alerts, and the
+ * saved-room presence UI while keeping the known-good audio path isolated.
  */
 public class EnhancedMainActivity extends MainActivity {
     private static final String PREFS = "ebe_talkie_talkie";
@@ -70,7 +70,6 @@ public class EnhancedMainActivity extends MainActivity {
                 webView.getSettings().setOffscreenPreRaster(true);
             }
 
-            // MainActivity only installed a default client, so replacing it is safe.
             webView.setWebViewClient(new WebViewClient() {
                 @Override
                 public void onPageFinished(WebView view, String url) {
@@ -79,8 +78,6 @@ public class EnhancedMainActivity extends MainActivity {
                 }
             });
 
-            // Covers the very small race where the local page finished before the
-            // subclass could replace the WebViewClient.
             mainHandler.postDelayed(this::injectEnhancements, 900L);
         }
     }
@@ -122,7 +119,7 @@ public class EnhancedMainActivity extends MainActivity {
     private void injectEnhancements() {
         if (webView == null) return;
         try {
-            String script = readAsset("enhancements-v013.js");
+            String script = readAsset("enhancements-v014.js");
             if (script != null && !script.isEmpty()) {
                 webView.evaluateJavascript(script, null);
             }
@@ -288,10 +285,6 @@ public class EnhancedMainActivity extends MainActivity {
 
         String me = prefs.getString("name", "");
         if (me != null && !me.trim().isEmpty() && name.equalsIgnoreCase(me.trim())) return;
-
-        // The user's Discord case is covered by communicationAudioBusy().
-        // The background check is an intentional fallback because some VoIP apps/OEMs
-        // do not expose MODE_IN_COMMUNICATION consistently to other apps.
         if (activityVisible && !communicationAudioBusy()) return;
 
         long now = System.currentTimeMillis();
