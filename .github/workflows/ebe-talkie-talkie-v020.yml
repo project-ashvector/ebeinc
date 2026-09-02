@@ -45,39 +45,44 @@ jobs:
           API_URL="$(grep -Eo 'https://[A-Za-z0-9._-]+\.workers\.dev' deploy.log | tail -1 || true)"
           CLAIM_URL="$(grep -Eo 'https://dash\.cloudflare\.com/claim-preview\?claimToken=[^[:space:]\"<>]+' deploy.log | tail -1 || true)"
 
-          if [ -z "$API_URL" ]; then
-            echo "Could not find workers.dev deployment URL in Wrangler output." >&2
-            exit 1
-          fi
-          if [ -z "$CLAIM_URL" ]; then
-            echo "Could not find Cloudflare claim URL in Wrangler output." >&2
-            exit 1
-          fi
+          test -n "$API_URL" || { echo "Could not find workers.dev deployment URL" >&2; exit 1; }
+          test -n "$CLAIM_URL" || { echo "Could not find Cloudflare claim URL" >&2; exit 1; }
 
           echo "api_url=$API_URL" >> "$GITHUB_OUTPUT"
           echo "claim_url=$CLAIM_URL" >> "$GITHUB_OUTPUT"
           {
             echo "EBE Talkie Talkie v0.2.0 Social Backend"
-            echo ""
+            echo
             echo "Backend URL: $API_URL"
-            echo ""
+            echo
             echo "CLAIM THIS BACKEND WITHIN 60 MINUTES:"
             echo "$CLAIM_URL"
-            echo ""
-            echo "The Android APK built in this workflow is permanently configured to use the Backend URL above."
+            echo
+            echo "The Android APK built in this workflow is configured to use the Backend URL above."
           } > ../../../EBE-Talkie-Talkie-v0.2.0-BACKEND-CLAIM.txt
 
-      - name: Verify live social backend
+      - name: Wait for and verify live social backend
         env:
           API_URL: ${{ steps.backend.outputs.api_url }}
+        shell: bash
         run: |
           set -euo pipefail
-          echo "Testing $API_URL"
-          curl --retry 5 --retry-delay 2 --fail --silent --show-error "$API_URL/health" | tee backend-health.json
+          echo "Waiting for $API_URL to propagate"
+          ready=0
+          for attempt in $(seq 1 45); do
+            code="$(curl --connect-timeout 8 --max-time 15 --silent --show-error --output backend-health.json --write-out '%{http_code}' "$API_URL/health" || true)"
+            body="$(cat backend-health.json 2>/dev/null || true)"
+            echo "health attempt $attempt: HTTP $code $body"
+            if [ "$code" = "200" ] && printf '%s' "$body" | grep -q '"ok":true'; then
+              ready=1
+              break
+            fi
+            sleep 2
+          done
+          test "$ready" = "1" || { echo "Worker hostname did not become healthy in time" >&2; exit 1; }
+
+          curl --connect-timeout 8 --max-time 20 --fail --silent --show-error "$API_URL/__selftest" | tee backend-selftest.json
           echo
-          curl --retry 5 --retry-delay 2 --fail --silent --show-error "$API_URL/__selftest" | tee backend-selftest.json
-          echo
-          grep -q '"ok":true' backend-health.json
           grep -q '"sqlite":true' backend-selftest.json
 
       - name: Smoke test accounts friends rooms and PIN gate
@@ -115,9 +120,7 @@ jobs:
           printf '%s' "$DISCOVERY" | grep -q 'CI Locked Room'
           printf '%s' "$DISCOVERY" | grep -q '"locked":true'
 
-          set +e
-          WRONG_CODE="$(curl --silent --output wrong-pin.json --write-out '%{http_code}' -H 'content-type: application/json' -H "authorization: Bearer $T2" -d '{"pin":"0000"}' "$API_URL/v1/rooms/$ROOM_ID/join")"
-          set -e
+          WRONG_CODE="$(curl --silent --output wrong-pin.json --write-out '%{http_code}' -H 'content-type: application/json' -H "authorization: Bearer $T2" -d '{"pin":"0000"}' "$API_URL/v1/rooms/$ROOM_ID/join" || true)"
           test "$WRONG_CODE" = "403"
           grep -q 'Incorrect room PIN' wrong-pin.json
 
@@ -129,7 +132,6 @@ jobs:
           post_json "$API_URL/v1/presence" "{\"roomId\":\"$ROOM_ID\"}" "$T2" >/dev/null
           PRESENCE="$(curl --fail --silent --show-error -H "authorization: Bearer $T1" "$API_URL/v1/rooms")"
           printf '%s' "$PRESENCE" | grep -q '"online":2'
-
           echo "Social API smoke test PASS"
 
       - name: Set up Java 17
