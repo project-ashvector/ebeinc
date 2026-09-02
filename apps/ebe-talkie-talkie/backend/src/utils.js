@@ -73,9 +73,10 @@ export async function sha256Hex(value) {
   return toHex(new Uint8Array(digest));
 }
 export async function pbkdf2Hex(secret, salt, iterations = PBKDF2_ITERATIONS) {
+  const rounds = Math.max(1, Math.min(Number(iterations) || PBKDF2_ITERATIONS, PBKDF2_ITERATIONS));
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey("raw", enc.encode(secret), "PBKDF2", false, ["deriveBits"]);
-  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: enc.encode(salt), iterations }, key, 256);
+  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: enc.encode(salt), iterations: rounds }, key, 256);
   return toHex(new Uint8Array(bits));
 }
 export function timingSafeEqualHex(a, b) {
