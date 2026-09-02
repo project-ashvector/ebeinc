@@ -1,25 +1,29 @@
-# EBE Talkie Talkie v0.1.1
+# EBE Talkie Talkie v0.1.2 — Install Fix
 
 Android family push-to-talk app for Cody, Mom, and Girlfriend.
 
-## v0.1.1 upgrades
+## Install repair
 
-- Keeps the proven v0.1.0 WebRTC + encrypted signaling transport.
-- Version code 2 so the APK updates the existing v0.1.0 debug install in place.
-- Foreground listening service and ongoing notification for better background reliability.
-- Partial wake lock while connected so Android is less likely to suspend the family channel.
-- Saved name and family room, plus automatic reconnect on later launches after a successful connection.
-- Explicit disconnect control to stop background listening and auto-connect.
-- Share Room Code button using Android's share sheet.
-- Clearer current-speaker UI with an animated transmission meter.
-- Start/stop radio beeps and vibration feedback.
-- Network online/offline recovery messaging and automatic broker reconnect.
-- Proper EBE Talkie Talkie launcher/notification icon.
+v0.1.0 and v0.1.1 were GitHub Actions debug builds. Separate CI runners generated separate temporary Android debug signing keys, so Android could reject a later APK with **App not installed** because the package name matched but the signing certificate did not.
 
-## Privacy / transport
+v0.1.2 fixes that by:
 
-Signaling uses encrypted AES-256-GCM payloads derived from the shared room code over MQTT/WebSocket. WebRTC media uses DTLS-SRTP. The current family build still relies on public Mosquitto signaling plus public STUN/TURN infrastructure; this is suitable for family testing but should be moved to EBE-controlled infrastructure before production-scale use.
+- using the proper release application ID `online.ebeinc.talkietalkie` instead of the old `.debug` test package;
+- signing family builds with one stable family-test certificate so future builds from this family branch can update in place;
+- building a signed release APK and verifying its certificate and package identity in CI;
+- embedding the new detailed purple EBE Talkie Talkie walkie-talkie icon.
 
-## Test
+Because the old test app used `online.ebeinc.talkietalkie.debug`, v0.1.2 can install beside it. After v0.1.2 is verified working, the old debug app can be removed.
 
-Install v0.1.1 over v0.1.0 on all participating Android phones. Keep the same family room code, connect, confirm two-way PTT, then put one listener phone on the home screen with the screen locked and verify incoming speech still plays. Reopen the app and verify it returns to the saved room automatically.
+## v0.1.1 functionality retained
+
+- WebRTC push-to-talk and encrypted signaling.
+- Background listening foreground service and ongoing Android notification.
+- Saved call sign and room code with automatic rejoin.
+- Explicit disconnect and room-code sharing.
+- Clear current-speaker UI, transmission meter, beeps and vibration feedback.
+- Network reconnect handling.
+
+## Security note
+
+The family-test signing key is intended only for this sideloaded family build. Before a public or Play Store release, migrate to a private production signing key and EBE-controlled signaling/TURN infrastructure.
