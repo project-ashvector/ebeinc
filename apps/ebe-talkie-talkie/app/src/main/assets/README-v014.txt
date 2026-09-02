@@ -1,0 +1,1 @@
+EBE Talkie Talkie v0.1.4 adds live online counts for all saved rooms. The room list monitors the app's existing encrypted room heartbeats and expires stale devices after roughly 22 seconds. No microphone/audio connection is opened for rooms that are only being monitored.
