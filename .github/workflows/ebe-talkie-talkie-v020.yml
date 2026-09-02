@@ -1,0 +1,186 @@
+name: Build EBE Talkie Talkie v0.2.0 Social
+
+on:
+  push:
+    branches:
+      - feature/ebe-talkie-talkie-v0.2.0-social
+    paths:
+      - 'apps/ebe-talkie-talkie/**'
+      - '.github/workflows/ebe-talkie-talkie-v020.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy-and-build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate social JavaScript
+        run: |
+          set -euo pipefail
+          node --check apps/ebe-talkie-talkie/app/src/main/assets/social-v020.js
+          for file in apps/ebe-talkie-talkie/backend/src/*.js; do
+            echo "Checking $file"
+            node --check "$file"
+          done
+
+      - name: Install backend dependencies
+        working-directory: apps/ebe-talkie-talkie/backend
+        run: npm install --no-audit --no-fund
+
+      - name: Deploy temporary Cloudflare social backend
+        id: backend
+        working-directory: apps/ebe-talkie-talkie/backend
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler deploy --temporary 2>&1 | tee deploy.raw.log
+          sed -r 's/\x1B\[[0-9;]*[mK]//g' deploy.raw.log > deploy.log || cp deploy.raw.log deploy.log
+          cat deploy.log
+
+          API_URL="$(grep -Eo 'https://[A-Za-z0-9._-]+\.workers\.dev' deploy.log | tail -1 || true)"
+          CLAIM_URL="$(grep -Eo 'https://dash\.cloudflare\.com/claim-preview\?claimToken=[^[:space:]\"<>]+' deploy.log | tail -1 || true)"
+
+          if [ -z "$API_URL" ]; then
+            echo "Could not find workers.dev deployment URL in Wrangler output." >&2
+            exit 1
+          fi
+          if [ -z "$CLAIM_URL" ]; then
+            echo "Could not find Cloudflare claim URL in Wrangler output." >&2
+            exit 1
+          fi
+
+          echo "api_url=$API_URL" >> "$GITHUB_OUTPUT"
+          echo "claim_url=$CLAIM_URL" >> "$GITHUB_OUTPUT"
+          {
+            echo "EBE Talkie Talkie v0.2.0 Social Backend"
+            echo ""
+            echo "Backend URL: $API_URL"
+            echo ""
+            echo "CLAIM THIS BACKEND WITHIN 60 MINUTES:"
+            echo "$CLAIM_URL"
+            echo ""
+            echo "The Android APK built in this workflow is permanently configured to use the Backend URL above."
+          } > ../../../EBE-Talkie-Talkie-v0.2.0-BACKEND-CLAIM.txt
+
+      - name: Verify live social backend
+        env:
+          API_URL: ${{ steps.backend.outputs.api_url }}
+        run: |
+          set -euo pipefail
+          echo "Testing $API_URL"
+          curl --retry 5 --retry-delay 2 --fail --silent --show-error "$API_URL/health" | tee backend-health.json
+          echo
+          curl --retry 5 --retry-delay 2 --fail --silent --show-error "$API_URL/__selftest" | tee backend-selftest.json
+          echo
+          grep -q '"ok":true' backend-health.json
+          grep -q '"sqlite":true' backend-selftest.json
+
+      - name: Smoke test accounts friends rooms and PIN gate
+        env:
+          API_URL: ${{ steps.backend.outputs.api_url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          U1="ci_owner_${GITHUB_RUN_ID}"
+          U2="ci_friend_${GITHUB_RUN_ID}"
+          P1="TestPass140A"
+          P2="TestPass140B"
+
+          post_json() {
+            local url="$1" body="$2" token="${3:-}"
+            if [ -n "$token" ]; then
+              curl --fail --silent --show-error -H 'content-type: application/json' -H "authorization: Bearer $token" -d "$body" "$url"
+            else
+              curl --fail --silent --show-error -H 'content-type: application/json' -d "$body" "$url"
+            fi
+          }
+
+          A1="$(post_json "$API_URL/v1/signup" "{\"username\":\"$U1\",\"password\":\"$P1\"}")"
+          A2="$(post_json "$API_URL/v1/signup" "{\"username\":\"$U2\",\"password\":\"$P2\"}")"
+          T1="$(printf '%s' "$A1" | python3 -c 'import sys,json;print(json.load(sys.stdin)["token"])')"
+          T2="$(printf '%s' "$A2" | python3 -c 'import sys,json;print(json.load(sys.stdin)["token"])')"
+
+          post_json "$API_URL/v1/friends/request" "{\"username\":\"$U2\"}" "$T1" >/dev/null
+          post_json "$API_URL/v1/friends/accept" "{\"username\":\"$U1\"}" "$T2" >/dev/null
+
+          ROOM="$(post_json "$API_URL/v1/rooms" '{"name":"CI Locked Room","visibility":"friends","locked":true,"pin":"1401"}' "$T1")"
+          ROOM_ID="$(printf '%s' "$ROOM" | python3 -c 'import sys,json;print(json.load(sys.stdin)["room"]["id"])')"
+
+          DISCOVERY="$(curl --fail --silent --show-error -H "authorization: Bearer $T2" "$API_URL/v1/rooms")"
+          printf '%s' "$DISCOVERY" | grep -q 'CI Locked Room'
+          printf '%s' "$DISCOVERY" | grep -q '"locked":true'
+
+          set +e
+          WRONG_CODE="$(curl --silent --output wrong-pin.json --write-out '%{http_code}' -H 'content-type: application/json' -H "authorization: Bearer $T2" -d '{"pin":"0000"}' "$API_URL/v1/rooms/$ROOM_ID/join")"
+          set -e
+          test "$WRONG_CODE" = "403"
+          grep -q 'Incorrect room PIN' wrong-pin.json
+
+          JOINED="$(post_json "$API_URL/v1/rooms/$ROOM_ID/join" '{"pin":"1401"}' "$T2")"
+          printf '%s' "$JOINED" | grep -q '"ok":true'
+          printf '%s' "$JOINED" | grep -q '"code":"EBE-'
+
+          post_json "$API_URL/v1/presence" "{\"roomId\":\"$ROOM_ID\"}" "$T1" >/dev/null
+          post_json "$API_URL/v1/presence" "{\"roomId\":\"$ROOM_ID\"}" "$T2" >/dev/null
+          PRESENCE="$(curl --fail --silent --show-error -H "authorization: Bearer $T1" "$API_URL/v1/rooms")"
+          printf '%s' "$PRESENCE" | grep -q '"online":2'
+
+          echo "Social API smoke test PASS"
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android platform
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Build signed v0.2.0 APK against live backend
+        working-directory: apps/ebe-talkie-talkie
+        env:
+          API_URL: ${{ steps.backend.outputs.api_url }}
+        run: gradle --no-daemon --stacktrace -PTALKIE_API_URL="$API_URL" assembleRelease
+
+      - name: Verify APK signature package and version
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="apps/ebe-talkie-talkie/app/build/outputs/apk/release/app-release.apk"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs "$APK" | tee apk-signature.txt
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | tee apk-badging.txt
+          grep -q "name='online.ebeinc.talkietalkie'" apk-badging.txt
+          grep -q "versionCode='6'" apk-badging.txt
+          grep -q "versionName='0.2.0'" apk-badging.txt
+          grep -qi '58cfeff979440e8b30696e066de3fc207e10529228c956468e816198e5e9495a' apk-signature.txt
+
+      - name: Stage release artifacts
+        run: |
+          cp apps/ebe-talkie-talkie/app/build/outputs/apk/release/app-release.apk EBE-Talkie-Talkie-v0.2.0-SOCIAL.apk
+          sha256sum EBE-Talkie-Talkie-v0.2.0-SOCIAL.apk | tee EBE-Talkie-Talkie-v0.2.0-SHA256.txt
+          printf '\nBackend health:\n' >> EBE-Talkie-Talkie-v0.2.0-BACKEND-CLAIM.txt
+          cat backend-health.json >> EBE-Talkie-Talkie-v0.2.0-BACKEND-CLAIM.txt
+
+      - name: Upload v0.2.0 APK and backend claim info
+        uses: actions/upload-artifact@v4
+        with:
+          name: EBE-Talkie-Talkie-v0.2.0-SOCIAL
+          path: |
+            EBE-Talkie-Talkie-v0.2.0-SOCIAL.apk
+            EBE-Talkie-Talkie-v0.2.0-SHA256.txt
+            EBE-Talkie-Talkie-v0.2.0-BACKEND-CLAIM.txt
+          if-no-files-found: error
+          retention-days: 14
