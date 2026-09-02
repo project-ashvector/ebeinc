@@ -50,8 +50,16 @@ export async function createRoom(store, request, me) {
     return fail("Room PIN must be 4-12 digits");
   }
 
+  const requestedCode = String(body.code || "").trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "");
   let code;
-  do code = randomCode(); while (store.roomByCode(code));
+  if (requestedCode) {
+    if (requestedCode.length < 8 || requestedCode.length > 64) return fail("Imported room code is invalid");
+    if (store.roomByCode(requestedCode)) return fail("That room code is already registered", 409);
+    code = requestedCode;
+  } else {
+    do code = randomCode(); while (store.roomByCode(code));
+  }
+
   const roomId = crypto.randomUUID();
   const now = Date.now();
   let pinSalt = null;
