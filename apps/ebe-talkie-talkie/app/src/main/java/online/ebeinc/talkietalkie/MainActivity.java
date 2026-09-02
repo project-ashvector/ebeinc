@@ -3,10 +3,12 @@ package online.ebeinc.talkietalkie;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
+import android.media.ToneGenerator;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.VibrationEffect;
@@ -35,6 +37,7 @@ import java.util.concurrent.Executors;
 
 public class MainActivity extends Activity {
     private static final int MIC_PERMISSION_REQUEST = 140;
+    private static final int NOTIFICATION_PERMISSION_REQUEST = 141;
     private static final int PREFERRED_PORT = 17777;
     private static final String PREFS = "ebe_talkie_talkie";
     private static final String DEFAULT_ROOM = "EBE-9WEN-F9H9-8EP3";
@@ -70,7 +73,7 @@ public class MainActivity extends Activity {
         settings.setAllowFileAccess(false);
         settings.setAllowContentAccess(false);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-        settings.setUserAgentString(settings.getUserAgentString() + " EBE-Talkie-Talkie/0.1.0");
+        settings.setUserAgentString(settings.getUserAgentString() + " EBE-Talkie-Talkie/0.1.1");
 
         webView.addJavascriptInterface(new AndroidBridge(), "EBEAndroid");
         webView.setWebViewClient(new WebViewClient());
@@ -123,6 +126,13 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
                 checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, MIC_PERMISSION_REQUEST);
+        }
+    }
+
+    private void requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= 33 &&
+                checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, NOTIFICATION_PERMISSION_REQUEST);
         }
     }
 
@@ -179,6 +189,17 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void startListeningService() {
+        requestNotificationPermissionIfNeeded();
+        Intent intent = new Intent(this, TalkieListeningService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent);
+        else startService(intent);
+    }
+
+    private void stopListeningService() {
+        stopService(new Intent(this, TalkieListeningService.class));
+    }
+
     public final class AndroidBridge {
         @JavascriptInterface
         public String getDeviceId() {
@@ -218,6 +239,16 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public boolean shouldAutoConnect() {
+            return prefs.getBoolean("auto_connect", false);
+        }
+
+        @JavascriptInterface
+        public void setAutoConnect(boolean enabled) {
+            prefs.edit().putBoolean("auto_connect", enabled).apply();
+        }
+
+        @JavascriptInterface
         public boolean hasMicPermission() {
             return checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
         }
@@ -233,6 +264,36 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public void startBackgroundListening() {
+            runOnUiThread(() -> {
+                prefs.edit().putBoolean("auto_connect", true).apply();
+                startListeningService();
+            });
+        }
+
+        @JavascriptInterface
+        public void stopBackgroundListening() {
+            runOnUiThread(() -> {
+                prefs.edit().putBoolean("auto_connect", false).apply();
+                stopListeningService();
+            });
+        }
+
+        @JavascriptInterface
+        public void shareRoom(String room) {
+            final String safeRoom = room == null ? DEFAULT_ROOM : room.trim().toUpperCase();
+            runOnUiThread(() -> {
+                Intent send = new Intent(Intent.ACTION_SEND);
+                send.setType("text/plain");
+                send.putExtra(Intent.EXTRA_SUBJECT, "EBE Talkie Talkie family channel");
+                send.putExtra(Intent.EXTRA_TEXT,
+                        "Join me on EBE Talkie Talkie. Use family room code: " + safeRoom +
+                                "\nInstall the EBE Talkie Talkie APK, enter your name, use this code, and connect.");
+                startActivity(Intent.createChooser(send, "Share EBE Talkie Talkie room"));
+            });
+        }
+
+        @JavascriptInterface
         public void buzz(int millis) {
             int duration = Math.max(10, Math.min(250, millis));
             Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -242,6 +303,17 @@ public class MainActivity extends Activity {
             } else {
                 vibrator.vibrate(duration);
             }
+        }
+
+        @JavascriptInterface
+        public void beep(int kind) {
+            final int tone = kind == 2 ? ToneGenerator.TONE_PROP_ACK : ToneGenerator.TONE_PROP_BEEP;
+            final int duration = kind == 2 ? 70 : 45;
+            runOnUiThread(() -> {
+                ToneGenerator generator = new ToneGenerator(AudioManager.STREAM_MUSIC, 55);
+                generator.startTone(tone, duration);
+                webView.postDelayed(generator::release, duration + 80L);
+            });
         }
     }
 
