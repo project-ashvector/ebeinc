@@ -3,7 +3,7 @@ name: Build EBE Talkie Talkie
 on:
   push:
     branches:
-      - feature/ebe-talkie-talkie-v0.1.0
+      - feature/ebe-talkie-talkie-v0.1.1
     paths:
       - 'apps/ebe-talkie-talkie/**'
       - '.github/workflows/ebe-talkie-talkie-build.yml'
@@ -40,12 +40,12 @@ jobs:
         run: gradle --no-daemon --stacktrace assembleDebug
 
       - name: Stage APK
-        run: cp apps/ebe-talkie-talkie/app/build/outputs/apk/debug/app-debug.apk EBE-Talkie-Talkie-v0.1.0.apk
+        run: cp apps/ebe-talkie-talkie/app/build/outputs/apk/debug/app-debug.apk EBE-Talkie-Talkie-v0.1.1.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: EBE-Talkie-Talkie-v0.1.0
-          path: EBE-Talkie-Talkie-v0.1.0.apk
+          name: EBE-Talkie-Talkie-v0.1.1
+          path: EBE-Talkie-Talkie-v0.1.1.apk
           if-no-files-found: error
           retention-days: 14
