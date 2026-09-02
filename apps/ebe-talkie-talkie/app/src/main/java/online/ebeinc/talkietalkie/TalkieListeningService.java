@@ -55,8 +55,8 @@ public class TalkieListeningService extends Service {
     }
 
     private Notification buildNotification() {
-        Intent openIntent = new Intent(this, MainActivity.class);
-        openIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        Intent openIntent = new Intent(this, EnhancedMainActivity.class);
+        openIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent openPending = PendingIntent.getActivity(
                 this,
                 1401,
