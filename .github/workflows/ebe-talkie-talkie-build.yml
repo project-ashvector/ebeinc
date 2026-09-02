@@ -3,7 +3,7 @@ name: Build EBE Talkie Talkie
 on:
   push:
     branches:
-      - feature/ebe-talkie-talkie-v0.1.2-install-fix
+      - feature/ebe-talkie-talkie-v0.1.3-rooms-call-alerts
     paths:
       - 'apps/ebe-talkie-talkie/**'
       - '.github/workflows/ebe-talkie-talkie-build.yml'
@@ -46,12 +46,12 @@ jobs:
           "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | head -20
 
       - name: Stage APK
-        run: cp apps/ebe-talkie-talkie/app/build/outputs/apk/release/app-release.apk EBE-Talkie-Talkie-v0.1.2-INSTALL-FIX.apk
+        run: cp apps/ebe-talkie-talkie/app/build/outputs/apk/release/app-release.apk EBE-Talkie-Talkie-v0.1.3-ROOMS-CALL-ALERTS.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: EBE-Talkie-Talkie-v0.1.2-INSTALL-FIX
-          path: EBE-Talkie-Talkie-v0.1.2-INSTALL-FIX.apk
+          name: EBE-Talkie-Talkie-v0.1.3-ROOMS-CALL-ALERTS
+          path: EBE-Talkie-Talkie-v0.1.3-ROOMS-CALL-ALERTS.apk
           if-no-files-found: error
           retention-days: 14
