@@ -2,6 +2,9 @@ plugins {
     id 'com.android.application'
 }
 
+def talkieApiUrl = project.findProperty('TALKIE_API_URL') ?: 'https://ebe-talkie-social.invalid'
+def escapedTalkieApiUrl = talkieApiUrl.replace('\\', '\\\\').replace('"', '\\"')
+
 android {
     namespace 'online.ebeinc.talkietalkie'
     compileSdk 35
@@ -10,8 +13,13 @@ android {
         applicationId 'online.ebeinc.talkietalkie'
         minSdk 26
         targetSdk 35
-        versionCode 5
-        versionName '0.1.4'
+        versionCode 6
+        versionName '0.2.0'
+        buildConfigField 'String', 'TALKIE_API_URL', '"' + escapedTalkieApiUrl + '"'
+    }
+
+    buildFeatures {
+        buildConfig true
     }
 
     signingConfigs {
