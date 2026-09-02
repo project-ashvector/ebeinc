@@ -18,6 +18,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Validate v0.1.4 room presence script
+        run: node --check apps/ebe-talkie-talkie/app/src/main/assets/enhancements-v014.js
+
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
