@@ -11,8 +11,8 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/ebe_talkie_icon"
-        android:roundIcon="@drawable/ebe_talkie_icon"
+        android:icon="@drawable/ebe_talkie_detail"
+        android:roundIcon="@drawable/ebe_talkie_detail"
         android:label="EBE Talkie Talkie"
         android:usesCleartextTraffic="true"
         android:theme="@android:style/Theme.Material.NoActionBar">
