@@ -10,17 +10,27 @@ android {
         applicationId 'online.ebeinc.talkietalkie'
         minSdk 26
         targetSdk 35
-        versionCode 2
-        versionName '0.1.1'
+        versionCode 3
+        versionName '0.1.2'
+    }
+
+    signingConfigs {
+        familyTest {
+            storeFile file('signing/ebe-talkie-family.jks')
+            storePassword 'EBETalkieFamily2026!'
+            keyAlias 'ebe-talkie'
+            keyPassword 'EBETalkieFamily2026!'
+        }
     }
 
     buildTypes {
         release {
             minifyEnabled false
+            signingConfig signingConfigs.familyTest
         }
         debug {
-            applicationIdSuffix '.debug'
-            versionNameSuffix '-debug'
+            minifyEnabled false
+            signingConfig signingConfigs.familyTest
         }
     }
 }
