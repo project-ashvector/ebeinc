@@ -73,7 +73,7 @@ public class MainActivity extends Activity {
         settings.setAllowFileAccess(false);
         settings.setAllowContentAccess(false);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-        settings.setUserAgentString(settings.getUserAgentString() + " EBE-Talkie-Talkie/0.1.1");
+        settings.setUserAgentString(settings.getUserAgentString() + " EBE-Talkie-Talkie/0.2.1");
 
         webView.addJavascriptInterface(new AndroidBridge(), "EBEAndroid");
         webView.setWebViewClient(new WebViewClient());
