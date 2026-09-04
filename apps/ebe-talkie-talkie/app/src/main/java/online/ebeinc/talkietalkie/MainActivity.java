@@ -191,7 +191,7 @@ public class MainActivity extends Activity {
 
     private void startListeningService() {
         requestNotificationPermissionIfNeeded();
-        Intent intent = new Intent(this, TalkieListeningService.class);
+        Intent intent = new Intent(this, TalkieListeningService.class).setAction(TalkieListeningService.ACTION_ARM);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent);
         else startService(intent);
     }
