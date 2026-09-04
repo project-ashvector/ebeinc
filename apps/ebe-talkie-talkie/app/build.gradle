@@ -2,7 +2,7 @@ plugins {
     id 'com.android.application'
 }
 
-def talkieApiUrl = project.findProperty('TALKIE_API_URL') ?: 'https://ebe-talkie-social.invalid'
+def talkieApiUrl = project.findProperty('TALKIE_API_URL') ?: 'https://ebe-talkie-talkie-social.peat-leather.workers.dev'
 def escapedTalkieApiUrl = talkieApiUrl.replace('\\', '\\\\').replace('"', '\\"')
 
 android {
@@ -13,8 +13,8 @@ android {
         applicationId 'online.ebeinc.talkietalkie'
         minSdk 26
         targetSdk 35
-        versionCode 6
-        versionName '0.2.0'
+        versionCode 7
+        versionName '0.2.1'
         buildConfigField 'String', 'TALKIE_API_URL', '"' + escapedTalkieApiUrl + '"'
     }
 
@@ -40,5 +40,10 @@ android {
             minifyEnabled false
             signingConfig signingConfigs.familyTest
         }
+    }
+
+    dependencies {
+        implementation 'io.github.webrtc-sdk:android:150.7871.01'
+        implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     }
 }
