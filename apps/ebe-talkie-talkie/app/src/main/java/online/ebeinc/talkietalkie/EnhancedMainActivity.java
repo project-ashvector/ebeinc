@@ -303,6 +303,48 @@ public class EnhancedMainActivity extends MainActivity {
         }
 
         @JavascriptInterface
+        public void setActiveRoom(String roomId, String roomName, String roomCode, String ownerUsername) {
+            String id = roomId == null ? "" : roomId.trim();
+            String name = roomName == null ? "" : roomName.trim();
+            String code = roomCode == null ? "" : roomCode.trim().toUpperCase();
+            String owner = ownerUsername == null ? "" : ownerUsername.trim();
+            SharedPreferences.Editor edit = prefs.edit();
+            if (!id.isEmpty()) edit.putString("active_social_room_id", id);
+            if (!name.isEmpty()) edit.putString("active_room_name", name);
+            if (!code.isEmpty()) {
+                edit.putString("room", code);
+                edit.putBoolean("auto_connect", true);
+            }
+            if (!owner.isEmpty()) edit.putString("active_room_owner", owner);
+            edit.apply();
+        }
+
+        @JavascriptInterface
+        public String getActiveRoomJson() {
+            try {
+                JSONObject room = new JSONObject();
+                room.put("id", prefs.getString("active_social_room_id", ""));
+                room.put("name", prefs.getString("active_room_name", ""));
+                room.put("code", prefs.getString("room", ""));
+                room.put("owner", prefs.getString("active_room_owner", ""));
+                room.put("armed", prefs.getBoolean("auto_connect", false));
+                return room.toString();
+            } catch (Exception ignored) {
+                return "{}";
+            }
+        }
+
+        @JavascriptInterface
+        public void clearActiveRoom() {
+            prefs.edit()
+                    .putBoolean("auto_connect", false)
+                    .remove("active_social_room_id")
+                    .remove("active_room_name")
+                    .remove("active_room_owner")
+                    .apply();
+        }
+
+        @JavascriptInterface
         public void pickAvatar() {
             mainHandler.post(EnhancedMainActivity.this::launchAvatarPicker);
         }
