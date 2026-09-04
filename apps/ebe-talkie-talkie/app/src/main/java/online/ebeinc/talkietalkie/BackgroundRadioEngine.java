@@ -42,7 +42,7 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import okhttp3.ByteString;
+import okio.ByteString;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
