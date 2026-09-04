@@ -1,0 +1,112 @@
+name: Build EBE Talkie Talkie v0.2.1 Always-On
+
+on:
+  push:
+    branches:
+      - feature/ebe-talkie-talkie-v0.2.1-persistent-listening
+    paths:
+      - 'apps/ebe-talkie-talkie/**'
+      - '.github/workflows/ebe-talkie-talkie-v021.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate JavaScript handoff and social UI
+        run: |
+          set -euo pipefail
+          node --check apps/ebe-talkie-talkie/app/src/main/assets/social-v020.js
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html=Path('apps/ebe-talkie-talkie/app/src/main/assets/index.html').read_text()
+          scripts=re.findall(r'<script>(.*?)</script>', html, re.S)
+          assert scripts, 'No inline script found'
+          Path('/tmp/talkie-index.js').write_text('\n'.join(scripts))
+          PY
+          node --check /tmp/talkie-index.js
+          grep -q 'ebeSuspendForBackground' /tmp/talkie-index.js
+          grep -q 'ebeResumeFromBackground' /tmp/talkie-index.js
+          grep -q 'setActiveRoom' apps/ebe-talkie-talkie/app/src/main/assets/social-v020.js
+
+      - name: Verify permanent social backend
+        run: |
+          set -euo pipefail
+          API='https://ebe-talkie-talkie-social.peat-leather.workers.dev'
+          curl --retry 5 --retry-all-errors --retry-delay 2 --fail --silent --show-error "$API/health" | tee backend-health.json
+          grep -q '"ok":true' backend-health.json
+
+      - name: Verify persistent-service invariants
+        run: |
+          set -euo pipefail
+          SERVICE='apps/ebe-talkie-talkie/app/src/main/java/online/ebeinc/talkietalkie/TalkieListeningService.java'
+          ENGINE='apps/ebe-talkie-talkie/app/src/main/java/online/ebeinc/talkietalkie/BackgroundRadioEngine.java'
+          grep -q 'START_STICKY' "$SERVICE"
+          grep -q 'onTaskRemoved' "$SERVICE"
+          grep -q 'ACTION_ACTIVITY_BACKGROUND' "$SERVICE"
+          grep -q 'ACTION_ACTIVITY_FOREGROUND' "$SERVICE"
+          grep -q 'PeerConnectionFactory' "$ENGINE"
+          grep -q 'RECV_ONLY' "$ENGINE"
+          if grep -q 'newWakeLock' "$SERVICE"; then
+            echo "Permanent wake lock reintroduced" >&2
+            exit 1
+          fi
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android platform
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Build signed v0.2.1 APK
+        working-directory: apps/ebe-talkie-talkie
+        run: gradle --no-daemon --stacktrace assembleRelease
+
+      - name: Verify APK signature package version and service
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="apps/ebe-talkie-talkie/app/build/outputs/apk/release/app-release.apk"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs "$APK" | tee apk-signature.txt
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | tee apk-badging.txt
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump xmltree "$APK" AndroidManifest.xml | tee apk-manifest.txt
+          grep -q "name='online.ebeinc.talkietalkie'" apk-badging.txt
+          grep -q "versionCode='7'" apk-badging.txt
+          grep -q "versionName='0.2.1'" apk-badging.txt
+          grep -qi '58cfeff979440e8b30696e066de3fc207e10529228c956468e816198e5e9495a' apk-signature.txt
+          grep -q 'PersistentMainActivity' apk-manifest.txt
+          grep -q 'TalkieListeningService' apk-manifest.txt
+          grep -q 'mediaPlayback' apk-manifest.txt || true
+
+      - name: Stage APK
+        run: |
+          cp apps/ebe-talkie-talkie/app/build/outputs/apk/release/app-release.apk EBE-Talkie-Talkie-v0.2.1-ALWAYS-ON.apk
+          sha256sum EBE-Talkie-Talkie-v0.2.1-ALWAYS-ON.apk | tee EBE-Talkie-Talkie-v0.2.1-SHA256.txt
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: EBE-Talkie-Talkie-v0.2.1-ALWAYS-ON
+          path: |
+            EBE-Talkie-Talkie-v0.2.1-ALWAYS-ON.apk
+            EBE-Talkie-Talkie-v0.2.1-SHA256.txt
+          if-no-files-found: error
+          retention-days: 14
