@@ -61,10 +61,7 @@ public class PersistentMainActivity extends EnhancedMainActivity {
 
             if (shouldStay) {
                 evaluate("window.ebeSuspendForBackground && window.ebeSuspendForBackground();");
-                handler.postDelayed(
-                        () -> sendServiceAction(TalkieListeningService.ACTION_ACTIVITY_BACKGROUND),
-                        450L
-                );
+                sendServiceAction(TalkieListeningService.ACTION_ACTIVITY_BACKGROUND);
             }
         }
         super.onStop();
