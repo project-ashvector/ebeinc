@@ -533,6 +533,7 @@ public final class BackgroundRadioEngine {
 
     private void createOffer(PeerState peer) {
         if (!running || !mqttReady || peer == null || peer.offering) return;
+        if (peer.pc == null || peer.pc.signalingState() != PeerConnection.SignalingState.STABLE) return;
         peer.offering = true;
         peer.pc.createOffer(new SimpleSdpObserver() {
             @Override
