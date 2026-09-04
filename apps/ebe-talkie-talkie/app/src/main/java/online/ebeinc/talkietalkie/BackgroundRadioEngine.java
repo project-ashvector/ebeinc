@@ -100,6 +100,8 @@ public final class BackgroundRadioEngine {
     private ScheduledFuture<?> helloTask;
     private ScheduledFuture<?> reapTask;
     private ScheduledFuture<?> reconnectTask;
+    private String activeTalkerId;
+    private long activeTalkerSeen;
 
     public BackgroundRadioEngine(Context context, Listener listener) {
         this.context = context.getApplicationContext();
@@ -291,7 +293,13 @@ public final class BackgroundRadioEngine {
     }
 
     private void reapPeers() {
-        long cutoff = System.currentTimeMillis() - 28_000L;
+        long now = System.currentTimeMillis();
+        long cutoff = now - 28_000L;
+        if (activeTalkerId != null && now - activeTalkerSeen > 2_800L) {
+            activeTalkerId = null;
+            activeTalkerSeen = 0L;
+            listener.onTalkerStopped();
+        }
         List<String> stale = new ArrayList<>();
         synchronized (peers) {
             for (Map.Entry<String, PeerState> entry : peers.entrySet()) {
@@ -378,12 +386,23 @@ public final class BackgroundRadioEngine {
             } else if ("ptt-start".equals(type)) {
                 peer = ensurePeer(from, name);
                 peer.lastSeen = System.currentTimeMillis();
+                activeTalkerId = from;
+                activeTalkerSeen = System.currentTimeMillis();
                 listener.onTalker(name);
             } else if ("ptt-heartbeat".equals(type)) {
                 peer = ensurePeer(from, name);
                 peer.lastSeen = System.currentTimeMillis();
+                boolean newTalker = activeTalkerId == null || !from.equals(activeTalkerId)
+                        || System.currentTimeMillis() - activeTalkerSeen > 2_800L;
+                activeTalkerId = from;
+                activeTalkerSeen = System.currentTimeMillis();
+                if (newTalker) listener.onTalker(name);
             } else if ("ptt-stop".equals(type)) {
-                listener.onTalkerStopped();
+                if (from.equals(activeTalkerId)) {
+                    activeTalkerId = null;
+                    activeTalkerSeen = 0L;
+                    listener.onTalkerStopped();
+                }
             }
         } catch (Exception ignored) {
         }
@@ -503,6 +522,11 @@ public final class BackgroundRadioEngine {
         if (peer != null) {
             try { peer.pc.close(); } catch (Exception ignored) {}
             try { peer.pc.dispose(); } catch (Exception ignored) {}
+        }
+        if (id.equals(activeTalkerId)) {
+            activeTalkerId = null;
+            activeTalkerSeen = 0L;
+            listener.onTalkerStopped();
         }
         listener.onPeerCount(peers.size());
     }
