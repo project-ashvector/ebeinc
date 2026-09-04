@@ -6,6 +6,7 @@
   const social = window.EBESocial;
   const extras = window.EBEExtras;
   const android = window.EBEAndroid;
+  const persistent = window.EBEPersistent;
   if (!social) return;
 
   const $ = (id) => document.getElementById(id);
@@ -83,10 +84,15 @@
     <section class="social-card" id="currentRoomCard">
       <div class="social-title" style="margin-bottom:10px">CURRENT RADIO ROOM</div>
       <div class="current-room"><div class="avatar" id="currentOwnerAvatar"></div><div class="current-room-main"><div class="current-room-name" id="currentRoomName">Not connected</div><div class="current-room-meta" id="currentRoomMeta">Choose a room above.</div></div><button class="small-btn warn social-hidden" id="socialDisconnect">LEAVE</button></div>
+    </section>
+    <section class="social-card" id="alwaysOnCard">
+      <div class="social-head"><div><div class="social-title">ALWAYS-ON LISTENING</div><div class="social-sub">Stay reachable after the app is swiped away or the screen is locked</div></div><span class="badge green" id="alwaysOnStatus">ARMED</span></div>
+      <div class="empty-box" id="alwaysOnDetail">When you stay in a room, EBE keeps a foreground listener connected and reconnects automatically after network or process interruptions.</div>
+      <div class="profile-actions"><button class="small-btn purple" id="alwaysOnEnable">MAXIMIZE SAMSUNG RELIABILITY</button></div>
     </section>`;
   if (app && setupCard) app.insertBefore(socialRoot, setupCard);
   if (setupCard) setupCard.classList.add('social-hidden');
-  if (footer) footer.textContent = 'EBE TALKIE TALKIE v0.2.0 · SOCIAL FAMILY BUILD';
+  if (footer) footer.textContent = 'EBE TALKIE TALKIE v0.2.1 · ALWAYS-ON SOCIAL BUILD';
 
   const ui = {
     auth, loginTab: $('loginTab'), signupTab: $('signupTab'), authUser: $('authUsername'), authPass: $('authPassword'), authSubmit: $('authSubmit'), authMsg: $('authMessage'),
@@ -94,6 +100,7 @@
     friendUsername: $('friendUsername'), addFriend: $('addFriendBtn'), friendMsg: $('friendMessage'), friendCount: $('friendCount'), incoming: $('incomingWrap'), friendList: $('friendsList'),
     roomList: $('roomList'), newRoom: $('newRoomBtn'), joinCode: $('joinCodeInput'), joinCodeBtn: $('joinCodeBtn'), roomMsg: $('roomMessage'),
     currentAvatar: $('currentOwnerAvatar'), currentName: $('currentRoomName'), currentMeta: $('currentRoomMeta'), socialDisconnect: $('socialDisconnect'),
+    alwaysOnStatus: $('alwaysOnStatus'), alwaysOnDetail: $('alwaysOnDetail'), alwaysOnEnable: $('alwaysOnEnable'),
   };
 
   let authMode = 'login';
@@ -341,17 +348,40 @@
     if (disconnectBtn && !disconnectBtn.classList.contains('hidden')) { disconnectBtn.click(); await new Promise((r) => setTimeout(r, 450)); }
     if (nameInput) { nameInput.disabled = false; nameInput.value = me.username; nameInput.dispatchEvent(new Event('input', { bubbles:true })); }
     if (roomInput) { roomInput.disabled = false; roomInput.value = room.code; roomInput.dispatchEvent(new Event('input', { bubbles:true })); }
-    currentRoom = room; renderCurrentRoom(); setTimeout(() => connectBtn?.click(), 90);
+    currentRoom = room;
+    try { social.setActiveRoom?.(room.id || '', room.name || '', room.code || '', room.owner?.username || ''); } catch (_) {}
+    renderCurrentRoom(); renderAlwaysOn(); setTimeout(() => connectBtn?.click(), 90);
   }
 
   async function leavePresence(roomId) { if (!roomId || !token) return; try { await api('/v1/presence/leave', { method:'POST', body:JSON.stringify({ roomId }) }); } catch (_) {} }
-  async function leaveCurrentRoom() { if (currentRoom) await leavePresence(currentRoom.id); currentRoom = null; if (disconnectBtn && !disconnectBtn.classList.contains('hidden')) disconnectBtn.click(); renderCurrentRoom(); renderRooms(); }
+  async function leaveCurrentRoom() {
+    if (currentRoom) await leavePresence(currentRoom.id);
+    currentRoom = null;
+    try { social.clearActiveRoom?.(); } catch (_) {}
+    if (disconnectBtn && !disconnectBtn.classList.contains('hidden')) disconnectBtn.click();
+    renderCurrentRoom(); renderRooms(); renderAlwaysOn();
+  }
 
   function renderCurrentRoom() {
     if (!currentRoom) { ui.currentName.textContent = 'Not connected'; ui.currentMeta.textContent = 'Choose a room above.'; fillAvatar(ui.currentAvatar, null); ui.socialDisconnect.classList.add('social-hidden'); return; }
     ui.currentName.textContent = currentRoom.name;
-    ui.currentMeta.textContent = `@${currentRoom.owner?.username || 'unknown'} · ${currentRoom.locked ? 'PIN locked' : 'Open'} · ${currentRoom.online || 0} online`;
+    const armed = !!android?.shouldAutoConnect?.();
+    ui.currentMeta.textContent = `@${currentRoom.owner?.username || 'unknown'} · ${currentRoom.locked ? 'PIN locked' : 'Open'} · ${currentRoom.online || 0} online${armed ? ' · Always-on armed' : ''}`;
     fillAvatar(ui.currentAvatar, currentRoom.owner); ui.socialDisconnect.classList.remove('social-hidden');
+  }
+
+  function renderAlwaysOn() {
+    if (!ui.alwaysOnStatus || !ui.alwaysOnEnable) return;
+    let exempt = false;
+    try { exempt = !!persistent?.isAlwaysOnReliabilityEnabled?.(); } catch (_) {}
+    const armed = !!android?.shouldAutoConnect?.();
+    ui.alwaysOnStatus.textContent = armed ? 'ARMED' : 'IDLE';
+    ui.alwaysOnStatus.className = 'badge ' + (armed ? 'green' : '');
+    ui.alwaysOnDetail.textContent = armed
+      ? 'This room stays armed when you leave the app. The foreground listener takes over receive-only WebRTC, keeps presence alive, and reconnects automatically.'
+      : 'Join a room to arm always-on listening. It stays armed until you explicitly tap LEAVE.';
+    ui.alwaysOnEnable.textContent = exempt ? 'BATTERY RELIABILITY ENABLED' : 'MAXIMIZE SAMSUNG RELIABILITY';
+    ui.alwaysOnEnable.disabled = exempt || !persistent;
   }
 
   async function migrateLegacyRoomIfNeeded() {
@@ -366,9 +396,24 @@
     try {
       const [friendData, roomData] = await Promise.all([api('/v1/friends'), api('/v1/rooms')]); friends = friendData; rooms = roomData.rooms || [];
       if (initial && !rooms.length) { await migrateLegacyRoomIfNeeded(); rooms = (await api('/v1/rooms')).rooms || []; }
-      if (currentRoom) { const newer = rooms.find((r) => r.id === currentRoom.id); if (newer) currentRoom = { ...currentRoom, ...newer, code: newer.code || currentRoom.code }; }
-      else { const currentCode = cleanCode(roomInput?.value); const match = rooms.find((r) => r.code && r.code === currentCode && (statusValue?.textContent || '').includes('ONLINE')); if (match) currentRoom = match; }
-      renderFriends(); renderRooms(); renderCurrentRoom(); updateTalkerAvatar();
+      if (currentRoom) {
+        const newer = rooms.find((r) => r.id === currentRoom.id);
+        if (newer) currentRoom = { ...currentRoom, ...newer, code: newer.code || currentRoom.code };
+      } else {
+        let saved = {};
+        try { saved = JSON.parse(String(social.getActiveRoomJson?.() || '{}')); } catch (_) {}
+        let match = saved?.armed && saved?.id ? rooms.find((r) => r.id === saved.id) : null;
+        if (match) currentRoom = { ...match, code: match.code || saved.code || '' };
+        if (!currentRoom) {
+          const currentCode = cleanCode(roomInput?.value);
+          match = rooms.find((r) => r.code && r.code === currentCode && (statusValue?.textContent || '').includes('ONLINE'));
+          if (match) currentRoom = match;
+        }
+      }
+      if (currentRoom?.code) {
+        try { social.setActiveRoom?.(currentRoom.id || '', currentRoom.name || '', currentRoom.code, currentRoom.owner?.username || ''); } catch (_) {}
+      }
+      renderFriends(); renderRooms(); renderCurrentRoom(); renderAlwaysOn(); updateTalkerAvatar();
     } catch (e) { if (e.status === 401) return showAuth('Session expired. Log in again.'); msg(ui.roomMsg, `Sync: ${e.message}`); }
     finally { syncing = false; }
   }
@@ -381,7 +426,7 @@
   async function logout() {
     try { if (token) await api('/v1/logout', { method:'POST', body:'{}' }); } catch (_) {}
     if (currentRoom) await leavePresence(currentRoom.id);
-    token = ''; me = null; friends = {accepted:[],incoming:[],outgoing:[]}; rooms=[]; currentRoom=null; social.clearAuthToken?.(); showAuth('Logged out.');
+    token = ''; me = null; friends = {accepted:[],incoming:[],outgoing:[]}; rooms=[]; currentRoom=null; social.clearAuthToken?.(); social.clearActiveRoom?.(); showAuth('Logged out.');
   }
 
   async function addFriend() {
@@ -418,6 +463,8 @@
   ui.changeAvatar.addEventListener('click', () => social.pickAvatar?.());
   ui.removeAvatar.addEventListener('click', async () => { try { const data=await api('/v1/profile/avatar',{method:'POST',body:JSON.stringify({dataUrl:''})}); me=data.user;renderProfile();await syncAll(); } catch(e){msg(ui.friendMsg,e.message);} });
   ui.logout.addEventListener('click', logout); ui.socialDisconnect.addEventListener('click', leaveCurrentRoom);
+  ui.alwaysOnEnable?.addEventListener('click', () => { try { persistent?.requestAlwaysOnReliability?.(); } catch (_) {} });
+  window.addEventListener('focus', () => setTimeout(renderAlwaysOn, 350));
 
   if (talkerName) new MutationObserver(updateTalkerAvatar).observe(talkerName, { childList:true, characterData:true, subtree:true });
   if (statusValue) new MutationObserver(() => { if (String(statusValue.textContent || '').includes('ONLINE')) heartbeatPresence(); }).observe(statusValue, { childList:true, characterData:true,subtree:true });
