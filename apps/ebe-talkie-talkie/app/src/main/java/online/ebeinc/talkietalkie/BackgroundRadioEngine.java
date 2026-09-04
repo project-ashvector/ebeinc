@@ -141,6 +141,9 @@ public final class BackgroundRadioEngine {
 
     private void stopInternal(boolean sendBye) {
         boolean wasRunning = running;
+        if (sendBye && wasRunning && mqttReady) {
+            try { publishSignal(new JSONObject().put("type", "bye")); } catch (Exception ignored) {}
+        }
         running = false;
         mqttReady = false;
         cancel(reconnectTask);
@@ -148,10 +151,6 @@ public final class BackgroundRadioEngine {
         cancel(helloTask);
         cancel(reapTask);
         reconnectTask = keepAliveTask = helloTask = reapTask = null;
-
-        if (sendBye && wasRunning) {
-            try { publishSignal(new JSONObject().put("type", "bye")); } catch (Exception ignored) {}
-        }
 
         if (socket != null) {
             try { socket.send(ByteString.of(new byte[]{(byte) 0xE0, 0x00})); } catch (Exception ignored) {}
