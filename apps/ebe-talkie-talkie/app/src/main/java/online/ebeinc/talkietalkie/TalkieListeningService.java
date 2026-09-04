@@ -83,7 +83,18 @@ public class TalkieListeningService extends Service implements BackgroundRadioEn
     public int onStartCommand(Intent intent, int flags, int startId) {
         startForeground(NOTIFICATION_ID, buildStatusNotification("Room armed · waiting in background"));
 
-        String action = intent == null ? "" : intent.getAction();
+        // START_STICKY can recreate the service with a null Intent after Android
+        // kills the process. The old Activity cannot still be visible in that
+        // case, so discard a stale ui_visible flag and recover the armed room.
+        if (intent == null) {
+            prefs.edit().putBoolean("ui_visible", false).apply();
+            if (prefs.getBoolean("auto_connect", false)) {
+                worker.schedule(this::startBackgroundEngine, 250, TimeUnit.MILLISECONDS);
+            }
+            return START_STICKY;
+        }
+
+        String action = intent.getAction();
         if (ACTION_LEAVE_ROOM.equals(action)) {
             leaveRoomAndStop();
             return START_NOT_STICKY;
