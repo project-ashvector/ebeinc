@@ -98,7 +98,9 @@ public class TalkieListeningService extends Service implements BackgroundRadioEn
 
         if (ACTION_ACTIVITY_BACKGROUND.equals(action)) {
             prefs.edit().putBoolean("ui_visible", false).apply();
-            if (prefs.getBoolean("auto_connect", false)) startBackgroundEngine();
+            if (prefs.getBoolean("auto_connect", false)) {
+                worker.schedule(this::startBackgroundEngine, 500, TimeUnit.MILLISECONDS);
+            }
             return START_STICKY;
         }
 
@@ -117,7 +119,7 @@ public class TalkieListeningService extends Service implements BackgroundRadioEn
     public void onTaskRemoved(Intent rootIntent) {
         prefs.edit().putBoolean("ui_visible", false).apply();
         if (prefs.getBoolean("auto_connect", false)) {
-            startBackgroundEngine();
+            worker.schedule(this::startBackgroundEngine, 550, TimeUnit.MILLISECONDS);
         }
         super.onTaskRemoved(rootIntent);
     }
