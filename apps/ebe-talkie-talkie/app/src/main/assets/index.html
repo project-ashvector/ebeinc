@@ -386,6 +386,33 @@ async function disconnect(){
   setStatus('OFFLINE');detail('Disconnected. Your saved room is still here.');activeTalker=null;activeTalkerSeen=0;updateTalker();renderMembers();
 }
 
+async function suspendForBackground(){
+  if(transmitting){try{await stopTransmit();}catch(_){}}
+  if(joined){
+    try{await publishSignal({type:'bye'});}catch(_){}
+  }
+  joined=false; mqttConnected=false;
+  clearTimeout(reconnectTimer); clearInterval(keepAliveTimer); clearInterval(helloTimer); clearInterval(reapTimer); clearInterval(txHeartbeat);
+  reconnectTimer=null; keepAliveTimer=null; helloTimer=null; reapTimer=null; txHeartbeat=null;
+  try{if(ws && ws.readyState===WebSocket.OPEN)sendRaw(new Uint8Array([0xE0,0])); ws?.close();}catch(_){} ws=null;
+  for(const id of Array.from(peers.keys())) removePeer(id);
+  for(const track of localStream?.getTracks?.()||[])try{track.stop();}catch(_){}
+  localStream=null; cryptoKey=null; activeTalker=null; activeTalkerSeen=0;
+  try{native?.setCommunicationMode?.(false);}catch(_){}
+  ui.ptt.disabled=true; ui.pttSub.textContent='BACKGROUND LISTENING';
+  setStatus('BACKGROUND','online');
+  detail('Always-on listener has the room. Reopen the app to push-to-talk.','goodText');
+  updateTalker(); renderMembers();
+}
+
+window.ebeSuspendForBackground=()=>suspendForBackground();
+window.ebeResumeFromBackground=()=>{
+  if(joined||joining)return;
+  if(native?.shouldAutoConnect?.()){
+    setTimeout(()=>{if(!joined&&!joining)join();},180);
+  }
+};
+
 function shareRoom(){
   const code=sanitizeRoom(ui.room.value)||roomCode;
   try{native?.shareRoom?.(code);}catch(_){detail('Room code: '+code,'goodText');}
