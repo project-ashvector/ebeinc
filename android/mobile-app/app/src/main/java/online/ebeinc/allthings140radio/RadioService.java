@@ -56,6 +56,7 @@ public final class RadioService extends MediaLibraryService {
             ? "https://account-aware-alerts-vc19.ebeinc-uqt.pages.dev/api/public/alert-catalog"
             : "https://allthings140radio.online/api/public/alert-catalog";
     private static final long BUFFERING_STALL_MS = 15_000L;
+    private static final long STREAM_WATCHDOG_MS = 10_000L;
     private static final long[] RETRY_DELAYS_MS = {5_000L, 10_000L, 20_000L, 30_000L, 60_000L};
     private static final long POLICY_REFRESH_MS = 5 * 60_000L;
     private static final long ENTITLEMENT_GRACE_MS = 60 * 60_000L;
@@ -74,11 +75,15 @@ public final class RadioService extends MediaLibraryService {
     private long alertIntervalMs = 900_000L;
     private boolean clientAlertsEnabled;
     private boolean alertPlaying;
+    private boolean alertAuthorizationInFlight;
     private boolean protectedAlertsEnabled = true;
     private boolean protectedStateKnown;
     private String protectedUserId = "";
     private long protectedStateAt;
+    private long entitlementGeneration;
     private int streamRecoveryAttempt;
+    private boolean qaEntitlementOverride;
+    private String qaAccountType = "anonymous";
 
     private static final class AlertItem {
         final String id;
@@ -98,6 +103,17 @@ public final class RadioService extends MediaLibraryService {
         player.setMediaItem(liveItem());
         player.prepare();
         player.play();
+    };
+    private final Runnable streamWatchdogRunnable = new Runnable() {
+        @Override public void run() {
+            if (player != null && player.getPlayWhenReady() && !player.isPlaying()
+                    && player.getPlaybackState() != Player.STATE_BUFFERING) {
+                Log.w(TAG, "Continuous stream watchdog found non-playing state "
+                        + player.getPlaybackState());
+                scheduleRecovery(0L);
+            }
+            mainHandler.postDelayed(this, STREAM_WATCHDOG_MS);
+        }
     };
     private final Runnable alertDueRunnable = this::playDueAlert;
     private final Runnable policyRefreshRunnable = new Runnable() {
@@ -170,6 +186,9 @@ public final class RadioService extends MediaLibraryService {
                     scheduleRecovery(BUFFERING_STALL_MS);
                 } else if (state == Player.STATE_READY) {
                     mainHandler.removeCallbacks(recoveryRunnable);
+                } else if (state == Player.STATE_ENDED || state == Player.STATE_IDLE) {
+                    Log.w(TAG, "Continuous stream terminated in state " + state);
+                    scheduleRecovery(1_000L);
                 }
             }
 
@@ -209,12 +228,17 @@ public final class RadioService extends MediaLibraryService {
         });
         authClient = new SupabaseAuthClient(this);
         alertPrefs = getSharedPreferences(ALERT_PREFS, MODE_PRIVATE);
+        if (BuildConfig.DEBUG) {
+            qaEntitlementOverride = alertPrefs.getBoolean("qa_entitlement_override", false);
+            qaAccountType = alertPrefs.getString("qa_account_type", "anonymous");
+        }
         IntentFilter filter = new IntentFilter(SupabaseAuthClient.ACTION_ACCOUNT_STATE_CHANGED);
         if (Build.VERSION.SDK_INT >= 33) registerReceiver(accountReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
         else registerReceiver(accountReceiver, filter);
         fetchAlertCatalog();
         refreshAlertPolicy();
         mainHandler.postDelayed(policyRefreshRunnable, POLICY_REFRESH_MS);
+        mainHandler.postDelayed(streamWatchdogRunnable, STREAM_WATCHDOG_MS);
 
         PendingIntent openApp = PendingIntent.getActivity(
                 this,
@@ -254,9 +278,17 @@ public final class RadioService extends MediaLibraryService {
                 boolean enabled = body.optBoolean("client_account_alerts_enabled", false);
                 mainHandler.post(() -> {
                     alerts.clear();
-                    alerts.addAll(loaded);
                     boolean qaEnabled = BuildConfig.DEBUG && alertPrefs.getBoolean("qa_client_alerts", false);
-                    alertIntervalMs = qaEnabled ? Math.min(interval, 60_000L) : interval;
+                    if (qaEnabled) {
+                        int resource = getResources().getIdentifier("at140_qa_alert", "raw", getPackageName());
+                        if (resource != 0) {
+                            loaded.clear();
+                            loaded.add(new AlertItem("00000000000000000000000000000000",
+                                    "android.resource://" + getPackageName() + "/" + resource));
+                        }
+                    }
+                    alerts.addAll(loaded);
+                    alertIntervalMs = qaEnabled ? 15_000L : interval;
                     clientAlertsEnabled = enabled || qaEnabled;
                     Log.i(TAG, "Alert catalog loaded: " + loaded.size()
                             + " items; client delivery " + (clientAlertsEnabled ? "enabled" : "disabled"));
@@ -270,7 +302,7 @@ public final class RadioService extends MediaLibraryService {
                         alerts.clear();
                         alerts.add(new AlertItem("00000000000000000000000000000000",
                                 "android.resource://" + getPackageName() + "/" + resource));
-                        alertIntervalMs = 60_000L;
+                        alertIntervalMs = 15_000L;
                         clientAlertsEnabled = true;
                         scheduleAlert();
                     });
@@ -280,6 +312,17 @@ public final class RadioService extends MediaLibraryService {
     }
 
     private void refreshAlertPolicy() {
+        final long refreshGeneration = ++entitlementGeneration;
+        if (BuildConfig.DEBUG && qaEntitlementOverride) {
+            protectedUserId = "qa:" + qaAccountType;
+            protectedStateKnown = true;
+            protectedAlertsEnabled = alertPrefs.getBoolean("qa_alert_ads_enabled", true);
+            protectedStateAt = System.currentTimeMillis();
+            if (!protectedAlertsEnabled) cancelActiveAlert("qa_entitlement_off");
+            scheduleAlert();
+            Log.i(TAG, "[ADS_QA] authority role=" + qaAccountType + " enabled=" + protectedAlertsEnabled);
+            return;
+        }
         String userId = authClient.userId();
         if (!authClient.signedIn()) {
             protectedUserId = "";
@@ -296,13 +339,14 @@ public final class RadioService extends MediaLibraryService {
             cancelActiveAlert("account_changed");
         }
         authClient.loadRole((ok, role, status, email, accountClass, accountType, alertAdsPreference, alertAdsEnabled) -> mainHandler.post(() -> {
-            if (ok && userId.equals(authClient.userId())) {
+            if (refreshGeneration == entitlementGeneration && ok && userId.equals(authClient.userId())) {
                 protectedAlertsEnabled = alertAdsEnabled;
                 protectedStateKnown = true;
                 protectedStateAt = System.currentTimeMillis();
                 if (!alertAdsEnabled) cancelActiveAlert("entitlement_off");
                 scheduleAlert();
-            } else if (System.currentTimeMillis() - protectedStateAt > ENTITLEMENT_GRACE_MS) {
+            } else if (refreshGeneration == entitlementGeneration
+                    && System.currentTimeMillis() - protectedStateAt > ENTITLEMENT_GRACE_MS) {
                 // Never infer ad-free authority from editable local state.
                 // While signed in but unvalidated, defer client alerts.
                 protectedStateKnown = false;
@@ -331,17 +375,83 @@ public final class RadioService extends MediaLibraryService {
         if (BuildConfig.DEBUG && intent != null && ACTION_ALERT_QA.equals(intent.getAction())) {
             boolean enabled = intent.getBooleanExtra("enabled", false);
             alertPrefs.edit().putBoolean("qa_client_alerts", enabled).apply();
+            if (intent.hasExtra("account_type")) {
+                qaAccountType = intent.getStringExtra("account_type");
+                if (qaAccountType == null || qaAccountType.isEmpty()) qaAccountType = "anonymous";
+                qaEntitlementOverride = true;
+                boolean entitlementEnabled = intent.getBooleanExtra("alert_ads_enabled", true);
+                alertPrefs.edit()
+                        .putBoolean("qa_entitlement_override", true)
+                        .putString("qa_account_type", qaAccountType)
+                        .putBoolean("qa_alert_ads_enabled", entitlementEnabled)
+                        .apply();
+                refreshAlertPolicy();
+            }
+            if (intent.getBooleanExtra("clear_entitlement_override", false)) {
+                qaEntitlementOverride = false;
+                alertPrefs.edit().remove("qa_entitlement_override").remove("qa_account_type")
+                        .remove("qa_alert_ads_enabled").apply();
+                refreshAlertPolicy();
+            }
             if (!enabled) {
                 clientAlertsEnabled = false;
                 alerts.clear();
                 cancelActiveAlert("qa_disabled");
             }
             fetchAlertCatalog();
+            if (intent.getBooleanExtra("force_opportunity", false)) {
+                mainHandler.postDelayed(() -> {
+                    Log.i(TAG, "[ADS_QA] opportunity role=" + qaAccountType);
+                    playDueAlert();
+                }, 1000L);
+            }
         }
         return super.onStartCommand(intent, flags, startId);
     }
 
     private void playDueAlert() {
+        if (!shouldPlayAlerts()) {
+            String reason = protectedStateKnown ? "ad_free_entitlement" : "authority_unknown";
+            Log.i(TAG, "[ADS] playback blocked reason=" + reason);
+            scheduleAlert();
+            return;
+        }
+        if (alertPlaying || alertAuthorizationInFlight || player == null || !player.isPlaying()
+                || alerts.isEmpty()) {
+            scheduleAlert();
+            return;
+        }
+        if ((BuildConfig.DEBUG && qaEntitlementOverride) || !authClient.signedIn()) {
+            startAuthorizedAlert();
+            return;
+        }
+        // The scheduled callback is not playback authority. Resolve the
+        // protected server entitlement again at the final pre-play boundary.
+        alertAuthorizationInFlight = true;
+        String expectedUserId = authClient.userId();
+        long expectedGeneration = entitlementGeneration;
+        authClient.loadRole((ok, role, status, email, accountClass, accountType,
+                             alertAdsPreference, alertAdsEnabled) -> mainHandler.post(() -> {
+            alertAuthorizationInFlight = false;
+            if (expectedGeneration != entitlementGeneration || !ok || !expectedUserId.equals(authClient.userId())) {
+                protectedStateKnown = false;
+                cancelActiveAlert("authority_unknown");
+                Log.i(TAG, "[ADS] playback blocked reason=authority_unknown");
+                return;
+            }
+            protectedStateKnown = true;
+            protectedAlertsEnabled = alertAdsEnabled;
+            protectedStateAt = System.currentTimeMillis();
+            if (!alertAdsEnabled) {
+                cancelActiveAlert("ad_free_entitlement");
+                Log.i(TAG, "[ADS] playback blocked reason=ad_free_entitlement");
+                return;
+            }
+            startAuthorizedAlert();
+        }));
+    }
+
+    private void startAuthorizedAlert() {
         if (alertPlaying || player == null || !player.isPlaying() || !shouldPlayAlerts() || alerts.isEmpty()) {
             scheduleAlert();
             return;
@@ -376,6 +486,7 @@ public final class RadioService extends MediaLibraryService {
 
     private void cancelActiveAlert(String reason) {
         mainHandler.removeCallbacks(alertDueRunnable);
+        alertAuthorizationInFlight = false;
         if (alertPlaying) finishAlert(reason);
     }
 

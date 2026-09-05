@@ -58,16 +58,6 @@ public final class SupabaseAuthClient {
         });
     }
 
-    public void setAlertAdsPreference(String preference, Callback callback) {
-        try {
-            rpc("set_alert_ads_preference", new JSONObject().put("p_preference", preference),
-                    (ok, json, message) -> {
-                        if (ok) notifyAccountStateChanged();
-                        callback.complete(ok, ok ? "Station alert preference saved." : message);
-                    });
-        } catch (Exception error) { callback.complete(false, "Alert preference could not be saved."); }
-    }
-
     public void rpc(String name, JSONObject body, JsonCallback callback) {
         new Thread(() -> {
             try {
