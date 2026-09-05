@@ -35,3 +35,43 @@ The pre-change website artifact was recreated from `d94ae1b^` with `git archive`
 ## Required next step
 
 Deploy the compatible `tools/server.py` migration/API to Oracle through its backup-first service procedure, validate the new endpoint and database migration in a controlled window, then redeploy the tracked website artifact. Until then, the four commits remain validated local changes but are not production-active.
+
+## Coordinated Oracle API + frontend deployment (2026-09-05)
+
+### Root cause of first deployment failure
+
+The first frontend called `POST /api/public/takeover-application`; the pre-change Oracle server did not implement that route and its fallback returned `Guest link is invalid`. The matching API now validates the public payload, writes the authoritative `/var/lib/allthings140radio/station.db` `takeovers` row as `pending`, and leaves publication to the authenticated DJ approval endpoint.
+
+### Oracle
+
+- Host: `allthings140radio-vnic` (`64.181.235.228`)
+- Active service: `allthings140radio-server.service`
+- ExecStart: `/usr/bin/python3 /opt/allthings140radio-server/server.py`
+- API ports: private `14080`, public gateway `14082`
+- Database: `/var/lib/allthings140radio/station.db` (unchanged)
+- Rollback backup: `/opt/allthings140radio-server/server.py.before-coordinated-20260905T171732Z`
+- Backup SHA-256: `6a9ad3d80cb46e731960cdcbf5d0601a0b5258b4959741648f4aa92e2b96b448`
+- Backend deployed: YES; API-only service restart: YES; radio interruption: NO observed
+
+### Backend tests
+
+Health PASS; takeover submission PASS; approval-queue insertion PASS; auto-publish prevention PASS; live/recorded fields PASS; schedule/timezone/socials/visuals/rights validation PASS. A uniquely marked test row was confirmed `pending`, absent from the public schedule, and removed.
+
+Non-expiring/one-time/revocable link semantics are implemented in code; no production invite was consumed during testing.
+
+### Website and production
+
+- Matching artifact deployed: `733533d0.ebeinc-uqt.pages.dev` (Pages project `ebeinc`, branch `main`)
+- Homepage, Community, Visuals, and Green Room: HTTP 200
+- Public form markers and fields present; public test submission succeeded and was cleaned up
+- Status: `online=true`, `mode=autodj`
+- Oracle health after deployment: AutoDJ running, Icecast online, cache healthy, silence monitor healthy
+- Stream returned audio bytes (curl timeout is expected for a continuing stream)
+- Visuals tests: 2 passed
+- Alert-entitlement code: NOT modified
+- Global alert injector: NOT modified
+- 69 untracked entries: NOT modified
+- Database reconciliation: NOT performed
+- Android/signing: NOT modified
+
+Final coordinated result: BACKEND + FRONTEND COMPATIBLE = PASS; NEW FEATURES PRODUCTION ACTIVE = YES; PRODUCTION RADIO HEALTHY = PASS; ROLLBACK AVAILABLE = YES.
