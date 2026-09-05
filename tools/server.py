@@ -844,7 +844,7 @@ def public_write(handler: BaseHTTPRequestHandler, path: str, data: dict[str, Any
         token = secrets.token_urlsafe(32)
         now = int(time.time())
         with DB_LOCK, db_connect() as db:
-            db.execute("INSERT INTO takeover_invites(token_hash,label,status,created_by,created_at,expires_at,email) VALUES(?,?,'open',NULL,?,?,?)", (hashlib.sha256(token.encode()).hexdigest(), "Interested artist", now, now + 14 * 86400, email))
+            db.execute("INSERT INTO takeover_invites(token_hash,label,status,created_by,created_at,expires_at,email) VALUES(?,?,'open',NULL,?,?,?)", (hashlib.sha256(token.encode()).hexdigest(), "Interested artist", now, 0, email))
             db.commit()
         event_log("public_takeover_interest", client=client_hash[:12])
         return {"ok": True, "email": email, "link": f"https://allthings140radio.online/takeover/#{token}", "message": "Check your email for your private takeover form."}, 201, 0
