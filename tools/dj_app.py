@@ -1409,12 +1409,17 @@ class DJApp(tk.Tk):
         filename = self.selected_ad()
         if not filename:
             return messagebox.showinfo("Select an ad", "Select an advertisement first.")
-        try:
-            self.api.request("POST", f"/api/ads/{urllib.parse.quote(filename)}/{action}")
-            self.ads_status.config(text=f"Advertisement {action}: {filename}", fg="#7ce5ad")
-            self.refresh_ads()
-        except Exception as exc:
-            messagebox.showerror("Advertisement action failed", str(exc))
+        if getattr(self, "ad_action_running", False): return
+        self.ad_action_running = True
+        def work():
+            try:
+                self.api.request("POST", f"/api/ads/{urllib.parse.quote(filename)}/{action}", timeout=60)
+                self.post_ui(lambda: self.ads_status.config(text=f"Advertisement {action}: {filename}", fg="#7ce5ad"))
+                self.post_ui(self.refresh_ads)
+            except Exception as exc:
+                self.post_ui(lambda: messagebox.showerror("Advertisement action failed", str(exc)))
+            finally: self.post_ui(lambda: setattr(self, "ad_action_running", False))
+        threading.Thread(target=work, daemon=True).start()
 
     def toggle_ad(self):
         filename = self.selected_ad()
