@@ -295,3 +295,10 @@ PASS stream: HTTP 200; received 4096 bytes
 - Tailscale: allthings140radio-server active direct, allthings140-visuals-realtime connected ✓
 - Catalog state: HEALTHY — 569 eligible tracks playable ✓
 - Production visuals SHA-256: `4ca1a32e74c2b319fa8c7979b2e68e1486166a2d105c53158f2a417bf976ef32` ✓ (preserved, not changed)
+# 2026-09-02 continuity update
+
+- Website long-session reconnection repair is live on production Cloudflare Pages deployment `68a789d0` (shell 3.0.1, service-worker cache v72).
+- Android 1.3.7/versionCode 23 is active on Google Play Internal testing; Production remains unpublished.
+- Android 1.3.7/versionCode 23 is installed on the production-package Samsung test phone with its real ADMIN session preserved; live Media3 playback verified.
+- Oracle broadcast source remained continuously healthy during investigation; no server/Icecast restart was required.
+- Extended real-listener confirmation of web and Android 1.3.7 is pending.

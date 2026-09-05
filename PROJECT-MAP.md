@@ -1,5 +1,18 @@
 # ALLTHINGS140 Project Map
 
+## Disabled temporary Visuals authority (2026-08-26)
+
+Oracle VM2 is capacity-blocked. A laptop fallback was prepared, then disabled and rolled back at user request:
+
+- Realtime source: `visuals-realtime/app.py`
+- Runtime/state: `~/.local/share/allthings140-visuals-laptop/`
+- Protected configuration: `~/.config/allthings140-visuals-laptop/`
+- User services: `allthings140-visuals-realtime-laptop.service`, `allthings140-visuals-tunnel-laptop.service` (currently active; verify with `systemctl --user is-active`)
+- Local origin: `127.0.0.1:14142`
+- Public health: `https://visuals-realtime-staging.allthings140radio.online/health`
+
+Do not run a second connector for the same Visuals tunnel when Oracle VM2 returns; migrate authority deliberately, verify Oracle health, then stop the laptop tunnel.
+
 Updated: 2026-08-26
 
 Canonical project root: `/home/ebmarah/Projects/AllThings140Radio`
@@ -12,8 +25,8 @@ This repository is intentionally a multi-application workspace. Several paths ar
 |---|---|---|
 | `radio/` | Public Cloudflare Pages website, persistent radio shell, Account, Green Room, and Visuals routes | Production website source; main Pages project `ebeinc` |
 | `radio/visuals/` | Public Visuals selector targets: known-good legacy HLS plus dormant shared compositor | Public selector currently `legacy` |
-| `radio/room/` | Public Green Room route, moderated chat bridge, and shared compositor client | Public selector currently `legacy` |
-| `visuals-app/` | Canonical Tauri Visuals workstation/editor/publisher | Source and installed package version 0.1.43 |
+| `radio/room/` | Public Green Room route, moderated chat bridge, and shared compositor client | Workstation live scene with automatic fallback; chat remains isolated to Room |
+| `visuals-app/` | Canonical Tauri Visuals Green Room workstation/editor/publisher | Source and per-user installed version 0.2.0; launcher uses `~/.local/bin/allthings140radio-visuals` |
 | `visuals-green/` | Canonical isolated Green renderer source | Shared renderer core; staging-only |
 | `visuals-green-pages-dist/` | Generated/sanitized Green Pages deployment artifact | Deploy only to `allthings140-visuals-green` |
 | `visuals-realtime/` | aiohttp realtime/layout/renderer-truth service and systemd/deployment files | Oracle VM2 service, version 0.2.0-staging |
@@ -61,12 +74,12 @@ This repository is intentionally a multi-application workspace. Several paths ar
 ## Current component summary
 
 - Website: tabbed layout live from commit `28f3c3d`.
-- Visuals workstation: 0.1.43, canonical source `visuals-app/`.
+- Visuals workstation: 0.2.0, canonical source `visuals-app/`. It is the single live scene authority for Green Room and full-width `/visuals/`, with the existing `/visuals/` HLS background as automatic fallback. Laptop services are `allthings140-visuals-realtime-laptop.service` and `allthings140-visuals-tunnel-laptop.service`. The secure public path is the named Cloudflare Tunnel configured under `~/.config/allthings140-visuals-laptop/`; never place its credentials in source or reports.
 - Visuals renderer: one shared `stage.js` core across Green, Room, and public Visuals sources.
 - Realtime: 0.2.0-staging on isolated Oracle VM2; health must pass before Green promotion.
 - Android listener: canonical source `android/mobile-app/`; release artifacts are organized under `/home/ebmarah/Documents/AT140 Builds/Android/`.
 - Mic: separate project `/home/ebmarah/Projects/ALLTHINGS140-Mic`; do not merge it into listener/Visuals source.
-- Reports: canonical new collection `/home/ebmarah/Documents/ALLTHINGS140 Reports/`; older report paths remain intact for compatibility.
+- Reports: organized collection `/home/ebmarah/Documents/ALLTHINGS140-Reports/` with `Reports/`, `Evidence/`, and `Prompts/`; current handoff is `/home/ebmarah/Documents/00-ALLTHINGS140-NEXT-HANDOFF-PROMPT.md`.
 
 ## Safe organization policy
 

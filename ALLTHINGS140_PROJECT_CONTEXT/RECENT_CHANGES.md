@@ -426,3 +426,10 @@ While workstation layout publish, media synchronization, and Green Staging brows
 **Update after future work:** When meaningful changes are completed, update `CURRENT_STATUS.md`, `RECENT_CHANGES.md`, `OPEN_ISSUES.md`, `APPLICATIONS.md`, and `ARCHITECTURE.md` as appropriate.
 
 **Do not let these become fictional AI notes.** Only write verified information.
+# 2026-09-02 — Long-session listener continuity repair
+
+- Proved the Oracle broadcast authority, encoder, and Icecast source were continuous (`NRestarts=0`, zero watchdog recoveries); the reported stop was a listener reconnection defect.
+- Added persistent-shell recovery for stalled, waiting, error, EOF, unexpected pause, and online restoration, with bounded retries, fresh HTTP requests, and an intentional-pause guard.
+- Updated production shell asset reference to 3.0.1 and service-worker cache to v72; deployed Cloudflare Pages production `68a789d0.ebeinc-uqt.pages.dev`.
+- Added Android EOF/idle recovery and a continuous-stream watchdog; released signed 1.3.7/23 to Google Play Internal testing only. Tester list `at140radio` (8 users) preserved; Production not published.
+- Full evidence: `ALLTHINGS140-LONG-SESSION-PLAYBACK-REPAIR.md`.
