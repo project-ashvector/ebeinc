@@ -13,13 +13,16 @@ Why authoritative: it is the sole current related Git repository; it has the new
 | Branch | `main` |
 | Local HEAD at snapshot | `a52ce63898cf7ded7752d992b7a3d0a2f27e26fc` |
 | GitHub HEAD | `d6638c398fb51d7d7f316cb457cdc79bf7100555` |
-| Ahead / behind | 86 / 0 after consolidation/report commits; the original 79 / 0 was verified against live GitHub in an isolated full clone |
+| Ahead / behind | 87 / 0 after finalization; the original 79 / 0 was verified against live GitHub in an isolated full clone |
 | Upstream issue | Local `origin/main` was stale, but live GitHub is the same ancestor |
-| Local-only commits | Original 79 valid descendant commits plus seven audit/consolidation commits across web/auth, radio/server, Supabase, Android, Visuals, and documentation |
+| Local-only commits | Original 79 valid descendant commits plus eight audit/consolidation/finalization commits across web/auth, radio/server, Supabase, Android, Visuals, and documentation |
 | Stashes | none |
 | Tracked modifications before | 51 |
 | Individual untracked files before | 2,553 |
 | Staged before | 0 |
+| Tracked modifications after | 0 |
+| Individual untracked files after | 2,529 intentionally retained historical/media/build/evidence candidates |
+| Commits reconciled locally | 8 logical audit/consolidation/finalization commits |
 | GitHub pushed | NO — intentionally withheld pending final user review |
 | Force push used | NO |
 
