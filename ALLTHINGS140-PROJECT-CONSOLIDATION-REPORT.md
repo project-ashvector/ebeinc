@@ -13,9 +13,9 @@ Why authoritative: it is the sole current related Git repository; it has the new
 | Branch | `main` |
 | Local HEAD at snapshot | `a52ce63898cf7ded7752d992b7a3d0a2f27e26fc` |
 | GitHub HEAD | `d6638c398fb51d7d7f316cb457cdc79bf7100555` |
-| Ahead / behind | 84 / 0 after consolidation commits; the original 79 / 0 was verified against live GitHub in an isolated full clone |
+| Ahead / behind | 86 / 0 after consolidation/report commits; the original 79 / 0 was verified against live GitHub in an isolated full clone |
 | Upstream issue | Local `origin/main` was stale, but live GitHub is the same ancestor |
-| Local-only commits | Original 79 valid descendant commits plus five logical consolidation commits across web/auth, radio/server, Supabase, Android, and Visuals |
+| Local-only commits | Original 79 valid descendant commits plus seven audit/consolidation commits across web/auth, radio/server, Supabase, Android, Visuals, and documentation |
 | Stashes | none |
 | Tracked modifications before | 51 |
 | Individual untracked files before | 2,553 |
@@ -23,7 +23,7 @@ Why authoritative: it is the sole current related Git repository; it has the new
 | GitHub pushed | NO — intentionally withheld pending final user review |
 | Force push used | NO |
 
-Why GitHub is behind: development continued locally on `main`; the configured GitHub branch did not change or diverge. A normal fast-forward is structurally possible. Current source changes were preserved in five logical commits, but pushing is intentionally withheld pending final review of the large historical/untracked boundary.
+Why GitHub is behind: development continued locally on `main`; the configured GitHub branch did not change or diverge. A normal fast-forward is structurally possible. Current source changes were preserved in subsystem-specific commits, but pushing is intentionally withheld pending final review of the large historical/untracked boundary.
 
 The local-only range passed a high-confidence secret-pattern scan. Generic findings were code variables, not embedded credentials. Ignored `.env` and signing material remain outside Git.
 
