@@ -1,4 +1,4 @@
-const CACHE = "allthings140-radio-v70";
+const CACHE = "allthings140-radio-v73";
 const SHELL = [
   "./",
   "index.html",
@@ -8,11 +8,11 @@ const SHELL = [
   "background-renderer.js?v=1.0.0",
   "support.js?v=1.1.0",
   "persistent-shell.html",
-  "persistent-shell.css?v=2.0.0",
-  "persistent-shell.js?v=1.0.0",
+  "persistent-shell.css?v=3.1.0",
+  "persistent-shell.js?v=3.0.1",
   "vendor-supabase-2.112.3.min.js",
   "supabase-config.js?v=1.0.0",
-  "persistent-auth.js?v=1.0.0",
+  "persistent-auth.js?v=3.1.0",
   "persistent-route.js?v=1.0.0",
   "persistent-audio-adapter.js?v=1.0.0",
   "manifest.webmanifest",
@@ -23,8 +23,8 @@ const SHELL = [
   "room/index.html",
   "room/stage.css?v=2.5.0",
   "room/overlay.css?v=2.4.0",
-  "room/config.js?v=2.2.0",
-  "room/stage.js?v=2.5.0",
+  "room/config.js?v=3.0.0",
+  "room/workstation-stage.js?v=3.0.0",
   "room/chat-bridge.js?v=1.0.0"
 ];
 
@@ -96,6 +96,7 @@ self.addEventListener("fetch", event => {
     url.pathname.endsWith("/sw-v47.js") ||
     url.pathname.endsWith("/sw.js") ||
     url.pathname.includes("/room/stage.js") ||
+    url.pathname.includes("/room/workstation-stage.js") ||
     url.pathname.includes("/room/config.js") ||
     url.pathname.includes("/room/stage.css") ||
     url.pathname.includes("/room/overlay.css") ||

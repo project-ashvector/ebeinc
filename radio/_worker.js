@@ -2,6 +2,7 @@ const PUBLIC_API_ORIGIN = "https://status.ebeinc.online";
 const OBS_STREAM_ORIGIN = "https://stream.ebeinc.online/live.mp3";
 const PUBLIC_GET_PATH = /^\/api\/public\/(?:status|schedule|support(?:\/status)?|takeover-invite\/[A-Za-z0-9_-]+|takeover-logo\/[a-f0-9]{32}\.(?:png|jpg|webp)|archive(?:\/[^/]+\/(?:audio|waveform))?|alerts|alert-catalog|alert-media\/[a-f0-9]{32}\.mp3)$/;
 const PUBLIC_POST_PATH = /^\/api\/public\/(?:support\/(?:checkout|webhook)|requests|submissions|newsletter|takeover-interest|takeover-invite\/[A-Za-z0-9_-]+)$/;
+const ACCOUNT_BILLING_PATH = /^\/api\/account\/plus\/(?:status|checkout|portal)$/;
 const MAILCHIMP_SERVER = "us7";
 const MAILCHIMP_AUDIENCE = "b9ed48d509";
 const WELCOME_TAG = "Welcome Sent";
@@ -22,8 +23,8 @@ async function clientAlertCatalog(request, env) {
   const origin = new URL(request.url).origin;
   return Response.json({
     ...manifest,
-    server_stream_alert_injection_enabled: env.SERVER_STREAM_ALERT_INJECTION_ENABLED !== "false",
-    client_account_alerts_enabled: env.CLIENT_ACCOUNT_ALERTS_ENABLED === "true",
+    server_stream_alert_injection_enabled: env.SERVER_STREAM_ALERT_INJECTION_ENABLED === "true",
+    client_account_alerts_enabled: env.CLIENT_ACCOUNT_ALERTS_ENABLED !== "false",
     server_time: Math.floor(Date.now() / 1000),
     alerts: (manifest.alerts || []).map((alert) => ({
       ...alert,
@@ -304,17 +305,16 @@ async function handlePublicVisualsRoutingGet(request, env) {
 }
 
 async function servePublicVisuals(request, env) {
-  const state = await readRoutingState(env);
-  // Use extensionless Pages asset routes. Fetching the .html paths produces a
-  // 308 canonical redirect that leaks the internal asset URL to the listener.
-  // index.html remains intentionally avoided because it recurses to /visuals/.
-  const target = state.visuals === "new" ? "/visuals/live" : "/visuals/legacy";
+  // One adaptive document owns both modes. It preserves the existing HLS/mobile
+  // background until a fresh workstation lease and decoded scene are ready,
+  // then returns to that same fallback automatically on lease loss.
+  const target = "/visuals/adaptive";
   const assetUrl = new URL(request.url);
   assetUrl.pathname = target;
   const response = await env.ASSETS.fetch(new Request(assetUrl, request));
   const headers = new Headers(response.headers);
   headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
-  headers.set("X-AT140-Visuals-Mode", state.visuals === "new" ? "live-compositor" : "legacy-hls");
+  headers.set("X-AT140-Visuals-Mode", "adaptive-workstation-with-legacy-hls-fallback");
   return new Response(request.method === "HEAD" ? null : response.body, {
     status: response.status,
     statusText: response.statusText,
@@ -483,9 +483,10 @@ export default {
       return handleVisualHealth(request, env);
     }
 
-    const mayProxy = request.method === "GET"
+    const accountBillingProxy = ACCOUNT_BILLING_PATH.test(url.pathname) && ["GET", "POST"].includes(request.method);
+    const mayProxy = accountBillingProxy || (request.method === "GET"
       ? PUBLIC_GET_PATH.test(url.pathname)
-      : request.method === "POST" && PUBLIC_POST_PATH.test(url.pathname);
+      : request.method === "POST" && PUBLIC_POST_PATH.test(url.pathname));
 
     if (url.pathname === "/api/public/newsletter/status" && request.method === "GET") {
       if (!env.MAILCHIMP_API_KEY) return Response.json({ configured: false, connected: false }, { status: 503 });

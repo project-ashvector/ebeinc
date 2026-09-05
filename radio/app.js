@@ -459,7 +459,7 @@
   });
   audio.addEventListener("waiting", () => setBufferingState());
   audio.addEventListener("error", () => { if (desiredPlay) scheduleAudioReconnect("audio-error"); });
-  audio.addEventListener("stalled", () => { if (desiredPlay) scheduleAudioReconnect("audio-stalled"); });
+  audio.addEventListener("stalled", () => { if (desiredPlay && audio.readyState < 3) setBufferingState(); });
   audio.addEventListener("ended", () => { if (desiredPlay) scheduleAudioReconnect("audio-ended"); });
   audio.addEventListener("pause", () => {
     if (desiredPlay && !reconnectTimer && !isResolving) {

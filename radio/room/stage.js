@@ -405,6 +405,19 @@
     if (!host || !composition) return;
     const rect = host.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
+
+    if (document.documentElement.classList.contains('visuals-only') || C.rendererRole === 'visuals-page-renderer') {
+      composition.style.position = 'absolute';
+      composition.style.inset = '0';
+      composition.style.left = '0';
+      composition.style.top = '0';
+      composition.style.width = '100%';
+      composition.style.height = '100%';
+      composition.style.maxWidth = '100vw';
+      composition.style.maxHeight = '100dvh';
+      return;
+    }
+
     const designWidth = numberOr(layout?.composition?.width, 1920);
     const designHeight = numberOr(layout?.composition?.height, 1080);
     const ratio = designWidth > 0 && designHeight > 0 ? designWidth / designHeight : (16 / 9);
@@ -1055,8 +1068,14 @@ Track: ${currentStationStatus?.current_title || 'LIVE RADIO'} (Seq: ${currentSta
       $('#mode').textContent = isLive ? 'NOW LIVE' : '24/7 PLAYLIST';
       $('#track').textContent = isLive ? '' : (d.current_title || 'LIVE RADIO');
       $('#artist').textContent = isLive ? host : (d.current_artist || 'ALLTHINGS140');
-      $('#modeLogo').src = take?.logo_url || 'https://allthings140radio.online/assets/takeover-fallback-logo.webp';
-      $('#modeLogo').alt = (isLive ? host : 'ALLTHINGS140Radio') + ' logo';
+      if ($('#modeLogo')) {
+        $('#modeLogo').src = take?.logo_url || 'https://allthings140radio.online/assets/takeover-fallback-logo.webp';
+        $('#modeLogo').alt = (isLive ? host : 'ALLTHINGS140Radio') + ' logo';
+      }
+      if ($('#visualsTopLogo')) {
+        $('#visualsTopLogo').src = take?.logo_url || 'https://allthings140radio.online/assets/takeover-fallback-logo.webp';
+        $('#visualsTopLogo').alt = (isLive ? host : 'ALLTHINGS140Radio') + ' logo';
+      }
 
       // Check for licensed track music video mapping
       checkTrackMusicVideoSync(d);

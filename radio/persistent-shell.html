@@ -7,7 +7,7 @@
 <meta name="description" content="AllThings140Radio — persistent 24/7 heavy bass transmission.">
 <title>AllThings140Radio</title>
 <link rel="icon" href="/assets/allthings140-logo-64.png" sizes="64x64" type="image/png">
-<link rel="stylesheet" href="/persistent-shell.css?v=3.0.0">
+<link rel="stylesheet" href="/persistent-shell.css?v=3.1.0">
 </head>
 <body>
 <iframe id="routeFrame" title="AllThings140Radio page"></iframe>
@@ -79,7 +79,13 @@
       </nav>
       <section class="account-view" data-account-view-panel="account" hidden>
         <h3>ACCOUNT</h3><p class="account-copy">Your credentials remain in Supabase Auth. Community status and staff authority are enforced server-side.</p>
-        <div class="membership-card"><span>MEMBERSHIP / STATUS</span><div><small>ACCOUNT TYPE</small><strong id="profileAccountType">REGULAR</strong></div><div><small>ALERT ADS</small><strong id="profileAlertAds">ON</strong><em id="profileAlertNote">Regular accounts include station alerts.</em><fieldset id="alertPreferenceControl" class="alert-preference" hidden><legend>Station alert preference</legend><button type="button" data-alert-preference="off">OFF</button><button type="button" data-alert-preference="on">ON</button></fieldset></div></div>
+        <div class="membership-card"><span>MEMBERSHIP / STATUS</span><div><small>ACCOUNT TYPE</small><strong id="profileAccountType">REGULAR</strong></div><div><small>ALERT ADS</small><strong id="profileAlertAds">ON</strong><em id="profileAlertNote">Regular accounts include station alerts.</em></div></div>
+        <div id="plusMembership" class="plus-membership">
+          <div><span>ALLTHINGS140 PLUS</span><strong>$5 / MONTH</strong></div>
+          <p id="plusMembershipCopy">Automatically renews monthly until canceled. Cancel anytime from the secure billing portal.</p>
+          <button id="plusSubscribe" class="account-primary" type="button">GET PLUS — $5/MONTH</button>
+          <button id="plusManage" type="button" hidden>MANAGE MEMBERSHIP</button>
+        </div>
         <div class="profile-grid"><span>EMAIL</span><strong id="profileEmail">—</strong><span>ACCOUNT STATUS</span><strong id="profileStatus">ACTIVE</strong><span>SECURITY ROLE</span><strong id="profileRole">USER</strong></div>
       </section>
       <form id="profileForm" class="account-view" data-account-view-panel="profile">
@@ -114,10 +120,10 @@
     </section>
   </div>
 </dialog>
-<script src="/persistent-shell.js?v=3.0.0"></script>
+<script src="/persistent-shell.js?v=3.0.1"></script>
 <script src="/vendor-supabase-2.112.3.min.js"></script>
 <script src="/supabase-config.js?v=1.0.0"></script>
-<script src="/persistent-auth.js?v=3.0.0"></script>
+<script src="/persistent-auth.js?v=3.1.0"></script>
 <script src="/role-console.js?v=3.0.0"></script>
 </body>
 </html>

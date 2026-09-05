@@ -4,7 +4,9 @@
 
   const STREAM_FALLBACK = "https://stream.ebeinc.online/live.mp3";
   const ROUTE_PARAM = "at140_route";
-  const routes = new Set(["/", "/submit-audio/", "/takeovers/", "/community/", "/visuals/", "/room/", "/roadmap/"]);
+  const ALERT_QA = !["allthings140radio.online", "www.allthings140radio.online"].includes(location.hostname)
+    && new URL(location.href).searchParams.get("alert_qa") === "1";
+  const routes = new Set(["/", "/plus/", "/submit-audio/", "/takeovers/", "/community/", "/visuals/", "/room/", "/roadmap/"]);
   const frame = document.getElementById("routeFrame");
   const status = document.getElementById("routeStatus");
   const audio = document.getElementById("siteRadio");
@@ -22,6 +24,12 @@
   let currentClient = null;
   let desiredPlay = false;
   let generation = 0;
+  let streamUrl = STREAM_FALLBACK;
+  let streamRecoveryTimer = 0;
+  let streamRecoveryAttempt = 0;
+  let streamRecovering = false;
+  const STREAM_STALL_MS = 12000;
+  const STREAM_RETRY_MS = [1000, 2000, 5000, 10000, 20000, 30000];
   const shellRoute = new URL(location.href).searchParams.get("route") || "/";
   const initialRoute = new URL(shellRoute, location.origin);
   document.body.dataset.route = canonicalPath(initialRoute);
@@ -53,9 +61,69 @@
     for (const client of clients.values()) client.dispatch(type);
   }
 
-  for (const type of ["playing", "pause", "waiting", "error", "stalled", "ended", "volumechange", "loadedmetadata"]) {
-    audio.addEventListener(type, () => dispatch(type));
+  function clearStreamRecovery() {
+    if (streamRecoveryTimer) clearTimeout(streamRecoveryTimer);
+    streamRecoveryTimer = 0;
   }
+
+  function scheduleStreamRecovery(reason, delayMs) {
+    if (!desiredPlay || streamRecoveryTimer) return;
+    const retryDelay = Number.isFinite(delayMs)
+      ? delayMs
+      : STREAM_RETRY_MS[Math.min(streamRecoveryAttempt, STREAM_RETRY_MS.length - 1)];
+    console.warn("AT140 stream recovery scheduled.", reason, retryDelay);
+    streamRecoveryTimer = setTimeout(() => reconnectStream(reason), retryDelay);
+  }
+
+  async function reconnectStream(reason) {
+    streamRecoveryTimer = 0;
+    if (!desiredPlay || streamRecovering) return;
+    streamRecovering = true;
+    streamRecoveryAttempt += 1;
+    try {
+      // A dead Icecast request can leave HTMLMediaElement paused or buffering
+      // forever. A new URL forces a genuinely new HTTP request instead of
+      // replaying the browser's stale MediaSource connection.
+      const next = new URL(streamUrl || STREAM_FALLBACK, location.href);
+      next.searchParams.set("at140_reconnect", String(Date.now()));
+      audio.pause();
+      audio.src = next.href;
+      audio.load();
+      generation += 1;
+      await audio.play();
+      console.info("AT140 stream connection restored.", reason, streamRecoveryAttempt);
+    } catch (error) {
+      console.warn("AT140 stream reconnect failed.", reason, String(error));
+      scheduleStreamRecovery("retry");
+    } finally {
+      streamRecovering = false;
+    }
+  }
+
+  for (const type of ["playing", "pause", "waiting", "error", "stalled", "ended", "volumechange", "loadedmetadata"]) {
+    audio.addEventListener(type, () => {
+      dispatch(type);
+      if (type === "playing") {
+        clearStreamRecovery();
+        streamRecoveryAttempt = 0;
+      } else if (type === "waiting" || type === "stalled") {
+        scheduleStreamRecovery(type, STREAM_STALL_MS);
+      } else if (type === "error" || type === "ended") {
+        scheduleStreamRecovery(type);
+      } else if (type === "pause" && desiredPlay && !streamRecovering) {
+        scheduleStreamRecovery("unexpected-pause");
+      }
+    });
+  }
+  addEventListener("online", () => {
+    clearStreamRecovery();
+    scheduleStreamRecovery("network-online", 0);
+  });
+  setInterval(() => {
+    if (desiredPlay && !streamRecovering && (audio.paused || audio.readyState < HTMLMediaElement.HAVE_CURRENT_DATA)) {
+      scheduleStreamRecovery("continuity-watchdog", STREAM_STALL_MS);
+    }
+  }, 10000);
 
   const authority = {
     get desiredPlay() { return desiredPlay; },
@@ -64,14 +132,19 @@
     play() {
       desiredPlay = true;
       if (!audio.src) {
-        audio.src = STREAM_FALLBACK;
+        audio.src = streamUrl;
         audio.load();
         generation += 1;
       }
-      return audio.play();
+      return audio.play().catch((error) => {
+        scheduleStreamRecovery("play-rejected");
+        throw error;
+      });
     },
     pause() {
       desiredPlay = false;
+      clearStreamRecovery();
+      streamRecoveryAttempt = 0;
       audio.pause();
     },
     client(owner) {
@@ -97,6 +170,7 @@
         get src() { return audio.src; },
         set src(value) {
           const next = new URL(value || STREAM_FALLBACK, location.href).href;
+          streamUrl = next;
           if (audio.src !== next) { audio.src = next; generation += 1; }
         },
         get volume() { return listenerVolume; },
@@ -126,6 +200,8 @@
         effectiveVolume: audio.volume,
         muted: audio.muted,
         generation,
+        recoveryAttempt: streamRecoveryAttempt,
+        recoveryPending: Boolean(streamRecoveryTimer),
         src: audio.currentSrc || audio.src,
         route: publicUrl(location.href).pathname + publicUrl(location.href).search + publicUrl(location.href).hash,
       };
@@ -137,11 +213,14 @@
   class AccountAlertScheduler {
     constructor() {
       this.catalog = null;
-      this.identity = Object.freeze({ signedIn: false });
+      this.identity = Object.freeze({ signedIn: false, authState: "AUTH_UNKNOWN", entitlementResolved: false });
       this.alertPlayer = new Audio();
       this.alertPlayer.preload = "auto";
       this.timer = 0;
       this.playing = false;
+      this.playbackStarts = 0;
+      this.playbackAttempts = 0;
+      this.qaIdentityOverride = false;
       this.tabId = crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`;
       this.peers = new Map();
       this.channel = typeof BroadcastChannel === "function" ? new BroadcastChannel("at140-radio-owner-v1") : null;
@@ -171,7 +250,10 @@
         this.unsubscribeAuth = window.AT140Auth.subscribe((identity) => {
           const switched = this.identity.signedIn && identity.signedIn && this.identity.userId !== identity.userId;
           this.identity = identity;
-          if (!identity.signedIn || switched) this.cancelActive();
+          if (!identity.entitlementResolved || !identity.alertAdsEnabled || !identity.signedIn || switched) {
+            this.cancelActive();
+            console.info(`[ADS] pending alert cancelled reason=${identity.entitlementResolved ? "entitlement_changed" : "authority_unknown"}`);
+          }
           this.schedule();
         });
         return true;
@@ -182,13 +264,12 @@
     }
 
     enabledForAccount() {
-      return !this.identity.signedIn || this.identity.alertAdsEnabled === true;
+      return this.identity.entitlementResolved === true && this.identity.alertAdsEnabled === true;
     }
 
     clientFeatureEnabled() {
       if (this.catalog?.client_account_alerts_enabled === true) return true;
-      const preview = !["allthings140radio.online", "www.allthings140radio.online"].includes(location.hostname);
-      return preview && new URL(location.href).searchParams.get("alert_qa") === "1";
+      return ALERT_QA;
     }
 
     isOwner() {
@@ -210,9 +291,7 @@
     }
 
     intervalMs() {
-      const qa = !["allthings140radio.online", "www.allthings140radio.online"].includes(location.hostname)
-        && new URL(location.href).searchParams.get("alert_qa") === "1";
-      return (qa ? 60 : Math.max(60, Number(this.catalog?.interval_seconds) || 900)) * 1000;
+      return (ALERT_QA ? 15 : Math.max(60, Number(this.catalog?.interval_seconds) || 900)) * 1000;
     }
 
     schedule() {
@@ -229,18 +308,54 @@
 
     async playDue() {
       this.timer = 0;
-      if (this.playing || !this.clientFeatureEnabled() || !this.enabledForAccount() || !this.isOwner() || audio.paused) return this.schedule();
+      const eventId = crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+      const scheduledAt = Date.now();
+      this.playbackAttempts += 1;
+      const trace = (result, reason) => console.info("[ADS EVENT]", JSON.stringify({
+        eventId, timestamp: Date.now(), accountRole: this.identity?.accountType || this.identity?.role || "unknown",
+        authenticated: this.identity?.signedIn === true, adsAllowed: this.enabledForAccount(), schedulerId: this.tabId,
+        scheduledAt, playbackAttempt: this.playbackAttempts, result, reason: reason || null,
+      }));
+      if (this.playing || !this.clientFeatureEnabled() || !this.enabledForAccount() || !this.isOwner() || audio.paused) {
+        trace("BLOCKED", "scheduler_state");
+        return this.schedule();
+      }
+      // A timer is only a prompt to re-authorize. The protected RPC remains
+      // authoritative at the final boundary immediately before audio starts.
+      if (this.identity.signedIn && !(ALERT_QA && this.qaIdentityOverride)) {
+        const identity = await window.AT140Auth?.refreshRole?.();
+        if (!identity?.entitlementResolved || identity.alertAdsEnabled !== true) {
+          trace("BLOCKED", identity?.entitlementResolved ? "ad_free_entitlement" : "authority_unknown");
+          console.info(`[ADS] playback blocked reason=${identity?.entitlementResolved ? "ad_free_entitlement" : "authority_unknown"}`);
+          return this.schedule();
+        }
+        this.identity = identity;
+      }
+      if (!this.enabledForAccount() || !this.isOwner() || audio.paused) {
+        trace("BLOCKED", "state_changed");
+        console.info("[ADS] playback blocked reason=state_changed");
+        return this.schedule();
+      }
       const alerts = this.catalog?.alerts || [];
       if (!alerts.length) return;
       const previous = localStorage.getItem("at140-alert-last-id-v1");
       const choices = alerts.filter((item) => item.id !== previous);
       const selected = (choices.length ? choices : alerts)[Math.floor(Math.random() * (choices.length || alerts.length))];
       this.playing = true;
+      console.log("[AT140_DELIVERY] CLIENT_ALERT_START", JSON.stringify({
+        alertId: selected.id,
+        timestamp: Date.now(),
+        accountIdentifier: this.identity?.userId ? this.identity.userId.slice(0, 8) : "anonymous",
+        eligible: this.enabledForAccount(),
+        source: "CLIENT_OVERLAY",
+      }));
       alertDuckFactor = 0.34;
       applyListenerVolume(listenerVolume);
       this.alertPlayer.src = new URL(selected.url, location.origin).href;
       try {
         await this.alertPlayer.play();
+        this.playbackStarts += 1;
+        trace("PLAYED", "authorized");
         localStorage.setItem("at140-alert-last-played-v1", String(Date.now()));
         localStorage.setItem("at140-alert-last-id-v1", selected.id);
       } catch (error) {
@@ -275,6 +390,9 @@
         accountEligible: this.enabledForAccount(),
         owner: this.isOwner(),
         playing: this.playing,
+        playbackStarts: this.playbackStarts,
+        playbackAttempts: this.playbackAttempts,
+        timerScheduled: Boolean(this.timer),
         intervalSeconds: this.intervalMs() / 1000,
         serverInjectionEnabled: this.catalog?.server_stream_alert_injection_enabled !== false,
       });
@@ -288,10 +406,30 @@
       this.unsubscribeAuth?.();
       this.channel?.close();
     }
+
+    qaSetIdentity(identity) {
+      if (!ALERT_QA) throw new Error("qa_only");
+      this.qaIdentityOverride = true;
+      this.identity = Object.freeze({ entitlementResolved: true, ...identity });
+      if (!this.identity.alertAdsEnabled) this.cancelActive();
+      this.schedule();
+    }
+
+    qaForceDue() {
+      if (!ALERT_QA) throw new Error("qa_only");
+      this.cancel();
+      return this.playDue();
+    }
   }
 
   const alertScheduler = new AccountAlertScheduler();
-  window.AT140Alerts = Object.freeze({ inspect: () => alertScheduler.inspect() });
+  window.AT140Alerts = Object.freeze({
+    inspect: () => alertScheduler.inspect(),
+    ...(ALERT_QA ? {
+      setTestIdentity: identity => alertScheduler.qaSetIdentity(identity),
+      forceDue: () => alertScheduler.qaForceDue(),
+    } : {}),
+  });
 
   function releaseRoute() {
     if (currentClient) {
@@ -347,9 +485,10 @@
   function syncRouteLayout() {
     const doc = frame.contentDocument;
     if (!doc?.documentElement) return;
-    const wide = window.innerWidth > 680;
     const accountWidth = accountShell?.getBoundingClientRect().width || 0;
-    doc.documentElement.style.setProperty("--persistent-account-clearance", wide ? `${Math.ceil(accountWidth + 24)}px` : "12px");
+    const wide = window.innerWidth > 680;
+    const clearance = accountWidth > 0 ? `${Math.ceil(accountWidth + (wide ? 20 : 12))}px` : (wide ? "24px" : "12px");
+    doc.documentElement.style.setProperty("--persistent-account-clearance", clearance);
   }
 
   const accountResizeObserver = typeof ResizeObserver === "function" && accountShell

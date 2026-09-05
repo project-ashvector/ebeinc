@@ -504,7 +504,6 @@
     else if (!reconnectTimer) scheduleReconnect();
   });
   audio.addEventListener("error", () => { if (desiredPlay) scheduleReconnect(); });
-  audio.addEventListener("stalled", () => { if (desiredPlay) scheduleReconnect(); });
   
   if (miniMute) {
     miniMute.addEventListener("click", () => {

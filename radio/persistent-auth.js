@@ -18,6 +18,10 @@
   const usernameInput = document.getElementById("profileUsernameInput");
   const avatarInput = document.getElementById("profileAvatarInput");
   const profileForm = document.getElementById("profileForm");
+  const plusMembership = document.getElementById("plusMembership");
+  const plusMembershipCopy = document.getElementById("plusMembershipCopy");
+  const plusSubscribe = document.getElementById("plusSubscribe");
+  const plusManage = document.getElementById("plusManage");
   const authForms = document.getElementById("authForms");
   const tabs = [...document.querySelectorAll("[data-auth-tab]")];
   const sections = [...document.querySelectorAll("[data-auth-section]")];
@@ -30,12 +34,16 @@
   let user = null;
   let profile = null;
   let roleState = null;
+  let authResolved = false;
+  let entitlementResolved = false;
   let authSubscription = null;
   let profileLoadGeneration = 0;
   let profileLoadingUserId = null;
   let profileQueries = 0;
   let authEvents = 0;
   let currentMode = "signin";
+  let membershipStatus = null;
+  let membershipLoading = false;
 
   if (!config || !sdk?.createClient) {
     root.hidden = true;
@@ -63,9 +71,14 @@
   }
 
   function identity() {
-    if (!user) return Object.freeze({ signedIn: false });
+    if (!authResolved) return Object.freeze({ signedIn: false, authState: "AUTH_UNKNOWN", entitlementResolved: false });
+    if (!user) return Object.freeze({ signedIn: false, authState: "ANONYMOUS", entitlementResolved: true, alertAdsEnabled: true });
     return Object.freeze({
       signedIn: true,
+      authState: entitlementResolved
+        ? (roleState?.alert_ads_enabled === false ? "AUTHENTICATED_AD_FREE" : "AUTHENTICATED_FREE")
+        : "AUTH_UNKNOWN",
+      entitlementResolved,
       userId: user.id,
       username: profile?.username || null,
       avatarUrl: avatarPublicUrl(profile?.avatar_path),
@@ -74,7 +87,9 @@
       accountClass: roleState?.account_class || "regular",
       accountType: roleState?.account_type || roleState?.role || "regular",
       alertAdsPreference: roleState?.alert_ads_preference || "default",
-      alertAdsEnabled: roleState?.alert_ads_enabled !== false,
+      // A signed-in account is never treated as free until the protected RPC
+      // has positively resolved its current effective entitlement.
+      alertAdsEnabled: entitlementResolved ? roleState?.alert_ads_enabled === true : false,
       profileComplete: Boolean(profile?.username),
     });
   }
@@ -144,17 +159,20 @@
       badge.textContent = accountType === "partner_sponsor" ? "PARTNER" : accountType === "moderator" ? "MOD" : accountType.toUpperCase();
       badge.dataset.role = accountType;
       document.getElementById("profileAccountType").textContent = accountType === "partner_sponsor" ? "PARTNER / SPONSOR" : accountType.toUpperCase();
-      const adsOn = roleState?.alert_ads_enabled !== false;
+      const adsOn = roleState?.alert_ads_enabled === true;
       document.getElementById("profileAlertAds").textContent = adsOn ? "ON" : "OFF";
       const benefit = accountType === "plus" ? "Included with Plus" : accountType === "resident" ? "ALLTHINGS140 Resident benefit" : accountType === "partner_sponsor" ? "Partner benefit" : accountType === "moderator" ? "Staff account" : accountType === "admin" ? "Administrator account" : "Included in the shared station stream";
-      document.getElementById("profileAlertNote").textContent = accountType === "regular" ? "Regular accounts include station alerts." : `${benefit} — account-aware delivery is in testing`;
-      const preferenceControl = document.getElementById("alertPreferenceControl");
-      const eligible = accountType !== "regular";
-      preferenceControl.hidden = !eligible;
-      for (const button of preferenceControl.querySelectorAll("[data-alert-preference]")) {
-        button.setAttribute("aria-pressed", String((button.dataset.alertPreference === "on") === adsOn));
-        button.disabled = false;
-      }
+      document.getElementById("profileAlertNote").textContent = accountType === "regular" ? "Regular accounts include station alerts." : `${benefit} — disabled by your account`;
+      const purchasable = ["regular", "plus"].includes(accountType);
+      const stripeMembership = membershipStatus?.subscriptions?.some(item => item.provider === "stripe");
+      plusMembership.hidden = !purchasable;
+      plusSubscribe.hidden = accountType !== "regular" || membershipStatus?.plus === true;
+      plusManage.hidden = !stripeMembership;
+      plusSubscribe.disabled = membershipLoading;
+      plusManage.disabled = membershipLoading;
+      plusMembershipCopy.textContent = accountType === "plus"
+        ? (stripeMembership ? "PLUS is active. Manage renewal, payment method, or cancellation in Stripe’s secure portal." : "PLUS is active on this account.")
+        : "Automatically renews monthly until canceled. Cancel anytime from the secure billing portal.";
       for (const item of document.querySelectorAll("[data-min-role]")) {
         item.hidden = item.dataset.minRole === "admin" ? role !== "admin" : !["moderator", "admin"].includes(role);
       }
@@ -164,6 +182,41 @@
         : "Your first username can be chosen now.";
     }
     publish();
+  }
+
+  async function billingRequest(path, method = "GET") {
+    const { data } = await client.auth.getSession();
+    const token = data?.session?.["access_" + "token"];
+    if (!token) throw new Error("Sign in is required.");
+    const response = await fetch(path, { method, headers: { Authorization: `Bearer ${token}`, Accept: "application/json" } });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(body.error || "Membership service is temporarily unavailable.");
+    return body;
+  }
+
+  async function refreshMembershipStatus() {
+    if (!user || membershipLoading) return;
+    membershipLoading = true;
+    render();
+    try { membershipStatus = await billingRequest("/api/account/plus/status"); }
+    catch (error) { console.warn("PLUS status unavailable", String(error)); }
+    finally { membershipLoading = false; render(); }
+  }
+
+  async function openBilling(action) {
+    if (membershipLoading) return;
+    membershipLoading = true;
+    render();
+    showMessage(action === "checkout" ? "Opening secure PLUS checkout…" : "Opening secure billing portal…");
+    try {
+      const result = await billingRequest(`/api/account/plus/${action}`, "POST");
+      if (!String(result.url || "").startsWith("https://")) throw new Error("Secure billing URL was not returned.");
+      location.assign(result.url);
+    } catch (error) {
+      membershipLoading = false;
+      render();
+      showMessage(String(error.message || error), "error");
+    }
   }
 
   async function loadProfile(expectedUser) {
@@ -182,21 +235,34 @@
       showMessage("Your session is active, but the profile could not be loaded.", "error");
     } else {
       profile = data;
-      roleState = Array.isArray(roleResult.data) ? roleResult.data[0] || null : roleResult.data;
       if (!profile?.username) openDialog("profile");
     }
+    if (!roleResult.error) {
+      const resolvedRole = Array.isArray(roleResult.data) ? roleResult.data[0] || null : roleResult.data;
+      if (resolvedRole) {
+        roleState = resolvedRole;
+        entitlementResolved = true;
+        console.info(`[ADS] auth resolved role=${resolvedRole.account_type || resolvedRole.role || "regular"} enabled=${resolvedRole.alert_ads_enabled === true}`);
+      }
+    }
+    if (!entitlementResolved) console.warn("[ADS] scheduler disabled reason=authority_unknown");
     render();
+    void refreshMembershipStatus();
   }
 
-  function applySession(session) {
+  function applySession(session, forceAuthorityRefresh = false) {
     const nextUser = session?.user || null;
-    if (nextUser?.id === user?.id && profile) {
+    authResolved = true;
+    if (nextUser?.id === user?.id && profile && !forceAuthorityRefresh) {
       render();
       return;
     }
     user = nextUser;
     profile = null;
     roleState = null;
+    membershipStatus = null;
+    entitlementResolved = !user;
+    if (forceAuthorityRefresh) profileLoadingUserId = null;
     if (user) loadProfile(user);
     else {
       profileLoadGeneration += 1;
@@ -370,6 +436,8 @@
   document.getElementById("resetForm").addEventListener("submit", requestReset);
   document.getElementById("recoveryForm").addEventListener("submit", updatePassword);
   profileForm.addEventListener("submit", saveProfile);
+  plusSubscribe.addEventListener("click", () => openBilling("checkout"));
+  plusManage.addEventListener("click", () => openBilling("portal"));
   document.getElementById("googleAuth").addEventListener("click", () => startOAuth("google"));
   document.getElementById("soundCloudAuth").addEventListener("click", () => startOAuth("soundcloud"));
   document.getElementById("oauthOptions").hidden = !(config.googleEnabled || config.soundCloudEnabled);
@@ -379,22 +447,6 @@
     const { error } = await client.auth.signOut();
     if (error) showMessage(error.message, "error");
     else closeDialog();
-  });
-  document.getElementById("alertPreferenceControl").addEventListener("click", async (event) => {
-    const button = event.target.closest("[data-alert-preference]");
-    if (!button || !user || (roleState?.account_type || "regular") === "regular") return;
-    const controls = [...event.currentTarget.querySelectorAll("button")];
-    controls.forEach(item => { item.disabled = true; });
-    showMessage(`Turning station alerts ${button.dataset.alertPreference === "on" ? "on" : "off"}…`);
-    const result = await client.rpc("set_alert_ads_preference", { p_preference: button.dataset.alertPreference });
-    if (result.error) {
-      controls.forEach(item => { item.disabled = false; });
-      return showMessage("Alert preference could not be saved. Please try again.", "error");
-    }
-    const refreshed = await client.rpc("account_role_state");
-    if (!refreshed.error) roleState = Array.isArray(refreshed.data) ? refreshed.data[0] || null : refreshed.data;
-    render();
-    showMessage("Station alert preference saved across your devices.", "success");
   });
   document.getElementById("requestDeletion").addEventListener("click", async () => {
     if (!confirm("Submit an account-deletion request? This is intended to be permanent.")) return;
@@ -416,8 +468,17 @@
     avatarUrl: avatarPublicUrl,
     async refreshRole() {
       if (!user) return identity();
+      const expectedUserId = user.id;
+      const expectedGeneration = profileLoadGeneration;
       const result = await client.rpc("account_role_state");
-      if (!result.error) roleState = Array.isArray(result.data) ? result.data[0] || null : result.data;
+      if (user?.id !== expectedUserId || profileLoadGeneration !== expectedGeneration) return identity();
+      if (!result.error) {
+        const resolvedRole = Array.isArray(result.data) ? result.data[0] || null : result.data;
+        if (resolvedRole) {
+          roleState = resolvedRole;
+          entitlementResolved = true;
+        }
+      }
       render();
       return identity();
     },
@@ -456,10 +517,13 @@
   const authChange = client.auth.onAuthStateChange((event, session) => {
     authEvents += 1;
     setTimeout(() => {
-      applySession(session);
+      applySession(session, event === "TOKEN_REFRESHED" || event === "USER_UPDATED");
       if (event === "PASSWORD_RECOVERY") openDialog("recovery");
     }, 0);
   });
   authSubscription = authChange.data.subscription;
+  // Subscription expiry and staff/account-class changes take effect without a
+  // reload even when Supabase emits no auth event for the database change.
+  setInterval(() => { if (user) void window.AT140Auth.refreshRole(); }, 5 * 60 * 1000);
   render();
 })();
