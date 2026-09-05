@@ -1,4 +1,4 @@
-const CACHE = "allthings140-radio-v73";
+const CACHE = "allthings140-radio-v74";
 const SHELL = [
   "./",
   "index.html",
@@ -7,6 +7,7 @@ const SHELL = [
   "app.js?v=2.0.3",
   "background-renderer.js?v=1.0.0",
   "support.js?v=1.1.0",
+  "takeover-apply.js?v=1.0.0",
   "persistent-shell.html",
   "persistent-shell.css?v=3.1.0",
   "persistent-shell.js?v=3.0.1",

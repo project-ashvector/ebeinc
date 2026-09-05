@@ -381,7 +381,7 @@ class DJApp(tk.Tk):
         notebook = ttk.Notebook(root)
         notebook.pack(fill="both", expand=True, padx=18, pady=16)
         self.tabs = {}
-        for key, title in (("home","On Air"),("ops","Operations"),("schedule","Takeover Schedule"),("live","Live DJ"),("guests","Guest DJs"),("library","Catalog Library"),("integrity","Catalog Integrity"),("ads","Station Ads"),("archive","Past Streams"),("test","Catalog Setup"),("review","Submissions"),("discover","SoundCloud Discovery"),("support","Support"),("settings","Settings"),("setup","Setup & Help")):
+        for key, title in (("home","On Air"),("ops","Operations"),("schedule","Takeover Schedule"),("live","Live DJ"),("guests","Guest DJs"),("library","Catalog Library"),("integrity","Catalog Integrity"),("ads","Station Ads"),("archive","Past Streams"),("test","Catalog Setup"),("review","Submissions"),("support","Support"),("settings","Settings"),("setup","Setup & Help")):
             frame = tk.Frame(notebook, bg="#100b18", padx=18, pady=18)
             notebook.add(frame, text=title)
             self.tabs[key] = frame
@@ -397,7 +397,6 @@ class DJApp(tk.Tk):
             "archive": self.build_archive,
             "test": self.build_test_rotation,
             "review": self.build_review,
-            "discover": self.build_discover,
             "support": self.build_support,
             "settings": self.build_settings,
             "setup": self.build_setup,
@@ -567,6 +566,11 @@ class DJApp(tk.Tk):
         logo_box=tk.Frame(form,bg="#171020");logo_box.grid(row=row,column=1,columnspan=3,sticky="ew")
         ttk.Entry(logo_box,textvariable=self.takeover_logo_path,state="readonly").pack(side="left",fill="x",expand=True)
         ttk.Button(logo_box,text="CHOOSE IMAGE",command=self.choose_takeover_logo).pack(side="left",padx=(6,0))
+        row=7
+        tk.Label(form,text="Format",bg="#171020",fg="#cdbed6").grid(row=row,column=0,sticky="e",padx=(8,5),pady=4)
+        self.takeover_submission_type=ttk.Combobox(form,values=("live","recorded_mix"),state="readonly",width=31); self.takeover_submission_type.set("live"); self.takeover_submission_type.grid(row=row,column=1,sticky="ew",pady=4)
+        tk.Label(form,text="Visuals",bg="#171020",fg="#cdbed6").grid(row=row,column=2,sticky="e",padx=(8,5),pady=4)
+        self.takeover_visuals=ttk.Combobox(form,values=("Use station visuals","Audio only"),state="readonly",width=31); self.takeover_visuals.set("Use station visuals"); self.takeover_visuals.grid(row=row,column=3,sticky="ew",pady=4)
         form.columnconfigure(1,weight=1); form.columnconfigure(3,weight=1)
         buttons=tk.Frame(f,bg="#100b18");buttons.pack(fill="x",pady=10)
         ttk.Button(buttons,text="PUBLISH TAKEOVER",command=self.publish_takeover).pack(side="left")
@@ -596,7 +600,7 @@ class DJApp(tk.Tk):
         except ValueError as exc:
             raise APIError("Choose a date, start time, end time, and timezone") from exc
         socials=[{"platform":key.title() if key!="x" else "X","url":values[key]} for key in ("instagram","twitch","soundcloud","youtube","x") if values[key]]
-        payload={"artist":values["artist"],"title":values["title"],"details":values["details"],"starts_at":starts,"ends_at":ends,"timezone":self.takeover_timezone.get(),"socials":socials}
+        payload={"artist":values["artist"],"title":values["title"],"details":values["details"],"starts_at":starts,"ends_at":ends,"timezone":self.takeover_timezone.get(),"socials":socials,"submission_type":self.takeover_submission_type.get(),"visuals_enabled":self.takeover_visuals.get() == "Use station visuals"}
         if self.takeover_logo_path.get():
             path=Path(self.takeover_logo_path.get());mime=mimetypes.guess_type(path.name)[0] or ""
             if mime not in {"image/png","image/jpeg","image/webp"} or path.stat().st_size>2*1024*1024:raise APIError("Logo must be a PNG, JPEG, or WebP smaller than 2 MB")
@@ -639,10 +643,10 @@ class DJApp(tk.Tk):
     def create_takeover_form(self):
         label=self.takeover_fields["artist"].get().strip() or "Guest DJ"
         try:
-            result=self.api.request("POST","/api/takeover-invites",{"label":label,"expires_days":14})
+            result=self.api.request("POST","/api/takeover-invites",{"label":label,"expires_days":0})
             self.copy_text(result["link"])
             self.takeover_feedback.config(text="Private artist form link copied to clipboard.")
-            messagebox.showinfo("Artist form link copied",f"Send this private link to {label}:\n\n{result['link']}\n\nIt expires in 14 days and can be submitted once.",parent=self)
+            messagebox.showinfo("Artist form link copied",f"Send this artist form to {label}:\n\n{result['link']}\n\nThis link remains available until submitted once or revoked.",parent=self)
         except APIError as exc: messagebox.showerror("Could not create artist form",str(exc),parent=self)
 
     def refresh_takeovers(self):
@@ -1366,8 +1370,21 @@ class DJApp(tk.Tk):
     def refresh_ads(self):
         if not hasattr(self, "ads_tree"):
             return
+        if getattr(self, "ads_refresh_running", False):
+            return
+        self.ads_refresh_running = True
+        def fetch():
+            try:
+                result = self.api.request("GET", "/api/ads", timeout=20)
+                self.post_ui(lambda: self._render_ads(result))
+            except Exception as exc:
+                self.post_ui(lambda: self.ads_status.config(text=f"Ads unavailable: {exc}", fg="#ff9ca8"))
+            finally:
+                self.post_ui(lambda: setattr(self, "ads_refresh_running", False))
+        threading.Thread(target=fetch, daemon=True).start()
+
+    def _render_ads(self, result):
         try:
-            result = self.api.request("GET", "/api/ads")
             self.ad_interval.set(str(result.get("interval_seconds", 420)))
             self.ads_tree.delete(*self.ads_tree.get_children())
             for ad in result.get("ads", []):

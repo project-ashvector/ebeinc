@@ -350,6 +350,31 @@
   </div>
 </section>
 
+<!-- Simple artist takeover application shared with the DJ scheduler. -->
+<section class="section wrap takeover-apply" id="takeoverApply">
+  <div class="section-heading"><div><p class="kicker">ARTIST UPLINK</p><h2>TAKE OVER THE STATION.</h2></div><p>Choose a live mix or send a recorded set. Every request is reviewed by the station team before broadcast.</p></div>
+  <form id="takeoverApplicationForm" class="takeover-application" novalidate>
+    <label>Artist / DJ name *<input name="artist" maxlength="100" required autocomplete="name"></label>
+    <label>Email *<input name="email" type="email" maxlength="240" required autocomplete="email"></label>
+    <label>Show title<input name="title" maxlength="140"></label>
+    <label>Format *<select name="submission_type"><option value="live">Live mix (guest link)</option><option value="recorded_mix">Recorded mix</option></select></label>
+    <label>Preferred date<input name="date" type="date"></label>
+    <label>Start time<input name="start_time" type="time"></label>
+    <label>End time<input name="end_time" type="time"></label>
+    <label>Timezone<select name="timezone"><option>America/Los_Angeles</option><option>America/Denver</option><option>America/Chicago</option><option>America/New_York</option><option>UTC</option></select></label>
+    <label class="wide">Recorded mix URL (required for recorded mix)<input name="recording_url" type="url" maxlength="1000" placeholder="https://…"></label>
+    <label>Mix length (minutes)<input name="duration_minutes" type="number" min="1" max="720"></label>
+    <label>Use station visuals?<select name="visuals_enabled"><option value="1">Yes — use my visuals/logo</option><option value="0">No — audio only</option></select></label>
+    <label class="wide">Transparent logo (PNG/WebP, max 2 MB)<input name="logo" type="file" accept="image/png,image/webp"></label>
+    <label class="wide">Social links (one per line)<textarea name="socials" rows="3" maxlength="2500" placeholder="https://instagram.com/…"></textarea></label>
+    <label class="wide">Notes / bio<textarea name="details" rows="3" maxlength="500"></textarea></label>
+    <label class="wide takeover-consent"><input name="rights_confirmed" type="checkbox"> I have the right to broadcast this mix and its recordings.</label>
+    <input name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="trap-field">
+    <button class="btn primary wide" type="submit">SEND TAKEOVER REQUEST ↗</button>
+    <p id="takeoverApplicationFeedback" class="form-feedback wide" role="status"></p>
+  </form>
+</section>
+
 <!-- Community & Discord -->
 <section class="section wrap" id="discord">
   <div class="discord-card">
@@ -457,6 +482,7 @@
 <script src="app.js?v=2.0.3"></script>
 <script src="background-renderer.js?v=1.0.0"></script>
 <script src="support.js?v=1.1.0"></script>
+<script src="takeover-apply.js?v=1.0.0"></script>
 <script src="route-layout.js?v=1.0.0"></script>
 </body>
 </html>

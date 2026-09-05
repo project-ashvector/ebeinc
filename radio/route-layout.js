@@ -5,7 +5,7 @@
     "/": { title: "ALLTHINGS140 Radio // Live Transmission", keep: ["listen", "homeRouteGrid", "schedule"] },
     "/submit-audio/": { title: "Submit Audio // ALLTHINGS140 Radio", keep: ["submit"], label: "ARTIST UPLINK" },
     "/takeovers/": { title: "Takeovers // ALLTHINGS140 Radio", keep: ["about", "archive"], label: "TAKE CONTROL OF 140" },
-    "/community/": { title: "Community // ALLTHINGS140 Radio", keep: ["sponsors", "discord"], label: "UNDERGROUND NETWORK" },
+    "/community/": { title: "Community // ALLTHINGS140 Radio", keep: ["sponsors", "discord", "takeoverApply"], label: "UNDERGROUND NETWORK" },
   };
   const page = pages[path] || pages["/"];
   document.title = page.title;

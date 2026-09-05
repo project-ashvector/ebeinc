@@ -15,6 +15,7 @@ import hmac
 import html
 import ipaddress
 import json
+import datetime as dt
 import mimetypes
 import os
 import random
@@ -714,6 +715,9 @@ def init_db() -> None:
             db.execute("ALTER TABLE takeovers ADD COLUMN logo_name TEXT NOT NULL DEFAULT ''")
         if "status" not in takeover_columns:
             db.execute("ALTER TABLE takeovers ADD COLUMN status TEXT NOT NULL DEFAULT 'published'")
+        for name, definition in (("submission_type", "TEXT NOT NULL DEFAULT 'live'"), ("visuals_enabled", "INTEGER NOT NULL DEFAULT 1"), ("contact_email", "TEXT NOT NULL DEFAULT ''"), ("recording_url", "TEXT NOT NULL DEFAULT ''"), ("rights_confirmed", "INTEGER NOT NULL DEFAULT 0")):
+            if name not in takeover_columns:
+                db.execute(f"ALTER TABLE takeovers ADD COLUMN {name} {definition}")
         invite_columns = {row[1] for row in db.execute("PRAGMA table_info(takeover_invites)").fetchall()}
         if "email" not in invite_columns:
             db.execute("ALTER TABLE takeover_invites ADD COLUMN email TEXT NOT NULL DEFAULT ''")
@@ -844,6 +848,37 @@ def public_write(handler: BaseHTTPRequestHandler, path: str, data: dict[str, Any
             db.commit()
         event_log("public_takeover_interest", client=client_hash[:12])
         return {"ok": True, "email": email, "link": f"https://allthings140radio.online/takeover/#{token}", "message": "Check your email for your private takeover form."}, 201, 0
+    if path == "/api/public/takeover-application":
+        allowed, retry = PUBLIC_WRITE_LIMITER.allow(f"takeover-application:{client_hash}", 3, 86400)
+        if not allowed:
+            return {"error": "Request limit reached. Please try again tomorrow."}, 429, retry
+        artist = str(data.get("artist", "")).strip()[:100]
+        email = str(data.get("email", "")).strip().lower()[:240]
+        title = str(data.get("title", "")).strip()[:140]
+        submission_type = str(data.get("submission_type", "live")).strip().lower()
+        if submission_type not in {"live", "recorded_mix"} or not artist or not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
+            return {"error": "Artist name, email, and a valid format are required."}, 400, 0
+        try:
+            timezone = valid_timezone(data.get("timezone"))
+            starts_at, ends_at = takeover_times(data, timezone)
+            logo_name = store_takeover_logo(data.get("logo_data"))
+        except (ValueError, TypeError) as exc:
+            return {"error": str(exc)}, 400, 0
+        now = int(time.time())
+        if starts_at and (starts_at <= now or ends_at <= starts_at):
+            return {"error": "Choose a future start and end time."}, 400, 0
+        recording_url = str(data.get("recording_url", "")).strip()[:1000]
+        try: duration = int(data.get("duration_minutes") or 0)
+        except (TypeError, ValueError): duration = 0
+        rights = bool(data.get("rights_confirmed"))
+        if submission_type == "recorded_mix" and (not re.fullmatch(r"https?://[^\s]+", recording_url) or duration < 1 or duration > 720 or not rights):
+            return {"error": "Recorded mixes need a valid URL, length, and broadcast rights confirmation."}, 400, 0
+        socials = [entry for entry in (data.get("socials") if isinstance(data.get("socials"), list) else []) if isinstance(entry, dict) and re.fullmatch(r"https?://[^\s]+", str(entry.get("url", "")).strip())]
+        with DB_LOCK, db_connect() as db:
+            cursor = db.execute("INSERT INTO takeovers(artist,title,starts_at,ends_at,details,socials_json,timezone,logo_name,status,created_by,created_at,updated_at,submission_type,visuals_enabled,contact_email,recording_url,rights_confirmed) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", (artist, title, starts_at, ends_at, str(data.get("details", "")).strip()[:500], json.dumps(socials[:10]), timezone, logo_name, "pending", None, now, now, submission_type, 1 if data.get("visuals_enabled", True) else 0, email, recording_url, 1 if rights else 0))
+            db.commit()
+        event_log("public_takeover_application", takeover_id=int(cursor.lastrowid), artist=artist, submission_type=submission_type, client=client_hash[:12])
+        return {"ok": True, "message": "Takeover request received. The station team will review it and follow up by email."}, 201, 0
     return {"error": "Not found"}, 404, 0
 
 
@@ -854,6 +889,17 @@ def valid_timezone(value: Any) -> str:
     except (ZoneInfoNotFoundError, ValueError):
         raise ValueError("Choose a valid timezone")
     return timezone
+
+
+def takeover_times(data: dict[str, Any], timezone: str) -> tuple[int, int]:
+    """Convert simple public-form date/time fields to timezone-aware epochs."""
+    if data.get("starts_at") and data.get("ends_at"):
+        return int(data["starts_at"]), int(data["ends_at"])
+    date, start, end = str(data.get("date", "")).strip(), str(data.get("start_time", "")).strip(), str(data.get("end_time", "")).strip()
+    if not date or not start or not end:
+        return 0, 0
+    zone = ZoneInfo(timezone)
+    return (int(dt.datetime.fromisoformat(f"{date}T{start}").replace(tzinfo=zone).timestamp()), int(dt.datetime.fromisoformat(f"{date}T{end}").replace(tzinfo=zone).timestamp()))
 
 
 def store_takeover_logo(data_url: Any) -> str:
@@ -885,7 +931,7 @@ def takeover_rows(public_only: bool = True) -> list[dict[str, Any]]:
     values = (now,) if public_only else ()
     with DB_LOCK, db_connect() as db:
         rows = db.execute(
-            f"SELECT id,artist,title,starts_at,ends_at,details,socials_json,timezone,logo_name,status FROM takeovers {where} ORDER BY starts_at ASC LIMIT 100",
+            f"SELECT id,artist,title,starts_at,ends_at,details,socials_json,timezone,logo_name,status,submission_type,visuals_enabled,contact_email,recording_url FROM takeovers {where} ORDER BY starts_at ASC LIMIT 100",
             values,
         ).fetchall()
     result = []
@@ -947,7 +993,7 @@ def serve_takeover_logo(handler: BaseHTTPRequestHandler, name: str) -> None:
 def submit_takeover_invite(token: str, data: dict[str, Any]) -> tuple[dict[str, Any], int]:
     invite = takeover_invite(token)
     now = int(time.time())
-    if not invite or invite["status"] != "open" or int(invite["expires_at"]) < now:
+    if not invite or invite["status"] != "open" or (int(invite["expires_at"]) and int(invite["expires_at"]) < now):
         return {"error": "This artist form link is invalid, expired, or already used."}, 404
     artist = str(data.get("artist", "")).strip()[:100]
     title = str(data.get("title", "")).strip()[:140]
@@ -2911,7 +2957,7 @@ class PublicGatewayHandler(BaseHTTPRequestHandler):
         if path.startswith("/api/public/takeover-invite/"):
             token = path.rsplit("/", 1)[-1]
             invite = takeover_invite(token)
-            valid = bool(invite and invite["status"] == "open" and int(invite["expires_at"]) >= int(time.time()))
+            valid = bool(invite and invite["status"] == "open" and (int(invite["expires_at"]) == 0 or int(invite["expires_at"]) >= int(time.time())))
             return self._json({"valid": valid, "label": invite["label"] if valid else ""}, 200 if valid else 404)
         if path.startswith("/api/public/archive/"):
             parts = path.strip("/").split("/")
@@ -2978,8 +3024,9 @@ class PublicGatewayHandler(BaseHTTPRequestHandler):
                 return self._json({"error": "Invalid JSON body"}, 400)
             except SupportError as exc:
                 return self._json({"error": str(exc)}, exc.status)
-        if path in {"/api/public/submissions", "/api/public/requests", "/api/public/newsletter", "/api/public/takeover-interest"}:
-            length = min(int(self.headers.get("Content-Length", "0")), 32 * 1024)
+        if path in {"/api/public/submissions", "/api/public/requests", "/api/public/newsletter", "/api/public/takeover-interest", "/api/public/takeover-application"}:
+            limit = 3 * 1024 * 1024 if path.endswith("takeover-application") else 32 * 1024
+            length = min(int(self.headers.get("Content-Length", "0")), limit)
             try:
                 data = json.loads(self.rfile.read(length).decode("utf-8")) if length else {}
             except (UnicodeDecodeError, json.JSONDecodeError):
@@ -3183,7 +3230,7 @@ class Handler(BaseHTTPRequestHandler):
             if path.startswith("/api/public/takeover-invite/"):
                 token = path.rsplit("/", 1)[-1]
                 invite = takeover_invite(token)
-                valid = bool(invite and invite["status"] == "open" and int(invite["expires_at"]) >= int(time.time()))
+                valid = bool(invite and invite["status"] == "open" and (int(invite["expires_at"]) == 0 or int(invite["expires_at"]) >= int(time.time())))
                 return self.json_response({"valid": valid, "label": invite["label"] if valid else ""}, 200 if valid else 404)
             if path.startswith("/api/public/archive/"):
                 parts = path.strip("/").split("/")
@@ -3597,13 +3644,15 @@ class Handler(BaseHTTPRequestHandler):
                     url = str(entry.get("url", "")).strip()[:500]
                     if platform and re.fullmatch(r"https?://[^\s]+", url):
                         socials.append({"platform": platform, "url": url})
+                submission_type = str(data.get("submission_type", "live")).strip().lower()
+                if submission_type not in {"live", "recorded_mix"}: submission_type = "live"
                 if not artist or starts_at <= 0 or ends_at <= starts_at:
                     return self.json_response({"error": "Artist, start time, and a valid end time are required"}, 400)
                 now = int(time.time())
                 with DB_LOCK, db_connect() as db:
                     cursor = db.execute(
-                        "INSERT INTO takeovers(artist,title,starts_at,ends_at,details,socials_json,timezone,logo_name,status,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
-                        (artist, title, starts_at, ends_at, details, json.dumps(socials), timezone, logo_name, "published", user["id"], now, now),
+                        "INSERT INTO takeovers(artist,title,starts_at,ends_at,details,socials_json,timezone,logo_name,status,created_by,created_at,updated_at,submission_type,visuals_enabled) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                        (artist, title, starts_at, ends_at, details, json.dumps(socials), timezone, logo_name, "published", user["id"], now, now, submission_type, 1 if data.get("visuals_enabled", True) else 0),
                     )
                     db.commit()
                 event_log("takeover_scheduled", takeover_id=int(cursor.lastrowid), artist=artist, starts_at=starts_at)
@@ -3616,13 +3665,13 @@ class Handler(BaseHTTPRequestHandler):
                     return self.json_response({"error": "DJ host access required"}, 403)
                 data = self.read_json()
                 label = str(data.get("label", "Guest DJ")).strip()[:100] or "Guest DJ"
-                days = max(1, min(60, int(data.get("expires_days") or 14)))
+                days = max(0, min(60, int(data.get("expires_days") or 14)))
                 token = secrets.token_urlsafe(32)
                 now = int(time.time())
                 with DB_LOCK, db_connect() as db:
-                    db.execute("INSERT INTO takeover_invites(token_hash,label,status,created_by,created_at,expires_at) VALUES(?,?,'open',?,?,?)", (hashlib.sha256(token.encode()).hexdigest(), label, user["id"], now, now + days * 86400))
+                    db.execute("INSERT INTO takeover_invites(token_hash,label,status,created_by,created_at,expires_at) VALUES(?,?,'open',?,?,?)", (hashlib.sha256(token.encode()).hexdigest(), label, user["id"], now, now + days * 86400 if days else 0))
                     db.commit()
-                return self.json_response({"ok": True, "link": f"https://allthings140radio.online/takeover/#{token}", "expires_at": now + days * 86400})
+                return self.json_response({"ok": True, "link": f"https://allthings140radio.online/takeover/#{token}", "expires_at": now + days * 86400 if days else None})
             if path == "/api/takeovers/delete":
                 user = self.auth_user()
                 if not user:
