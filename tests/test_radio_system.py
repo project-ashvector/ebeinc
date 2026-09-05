@@ -120,6 +120,36 @@ class RadioSystemTest(unittest.TestCase):
             self.assertEqual(response.status, 206)
             self.assertEqual(response.read(), b"ID3")
 
+    def test_shared_stream_rejects_client_alerts_when_global_injection_is_off(self):
+        self.app.AD_DIR.mkdir(parents=True, exist_ok=True)
+        alert = self.app.AD_DIR / "account-alert.mp3"
+        station_id = self.app.AD_DIR / "station-id.mp3"
+        alert.write_bytes(b"alert")
+        station_id.write_bytes(b"id")
+        meta = {
+            "interval_seconds": 900,
+            "server_stream_alert_injection_enabled": False,
+            "client_account_alerts_enabled": True,
+            "ads": {
+                alert.name: {
+                    "enabled": True,
+                    "client_delivery_enabled": True,
+                    "category": "promotional_alert",
+                },
+                station_id.name: {
+                    "enabled": True,
+                    "client_delivery_enabled": False,
+                    "common_stream_programming": True,
+                    "category": "station_id",
+                },
+            },
+        }
+        self.app.save_ad_meta(meta)
+        self.assertFalse(self.app.shared_stream_asset_allowed(alert, meta))
+        self.assertTrue(self.app.shared_stream_asset_allowed(station_id, meta))
+        manager = self.app.AutoDJManager()
+        self.assertEqual(manager.available_ads(), [station_id])
+
     def test_rotation_audit_is_not_publicly_exposed(self):
         status, _, _ = self.request("/api/rotation-audit")
         self.assertEqual(status, 404)

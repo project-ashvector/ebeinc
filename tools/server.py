@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import base64
 import array
+import audioop
 import hashlib
 import hmac
 import html
@@ -22,6 +23,7 @@ import secrets
 import shutil
 import signal
 import socket
+import struct
 import sqlite3
 import subprocess
 import sys
@@ -43,6 +45,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from radio_extensions import AlertBus, ArchiveManager, FailureNotifier
 from ai_host import AIConfig, AIHost, Takeover, AnnouncementScheduler, takeover_context
 from support_system import SupportError, SupportService
+from subscription_system import SubscriptionService
 from catalog_integrity import scan_catalog
 
 APP_NAME = "AllThings140Radio"
@@ -73,6 +76,8 @@ ICECAST_PORT = int(os.environ.get("ALLTHINGS140_ICECAST_PORT", "14000"))
 DISCOVERY_PORT = int(os.environ.get("ALLTHINGS140_DISCOVERY_PORT", "14081"))
 PUBLIC_GATEWAY_PORT = int(os.environ.get("ALLTHINGS140_PUBLIC_GATEWAY_PORT", "14082"))
 TRAKTOR_INGEST_PORT = int(os.environ.get("ALLTHINGS140_TRAKTOR_PORT", "14083"))
+MIC_OVERLAY_HOST = "127.0.0.1"
+MIC_OVERLAY_PORT = int(os.environ.get("ALLTHINGS140_MIC_OVERLAY_PORT", "14085"))
 DEFAULT_PASSWORD = "allthings140"
 AUDIO_EXTENSIONS = {".mp3", ".wav", ".flac", ".ogg", ".m4a", ".aac", ".opus"}
 MAX_UPLOAD = 2 * 1024 * 1024 * 1024
@@ -166,8 +171,8 @@ def cache_status() -> dict[str, Any]:
 def load_ad_meta() -> dict[str, Any]:
     default = {
         "interval_seconds": 900,
-        "server_stream_alert_injection_enabled": True,
-        "client_account_alerts_enabled": False,
+        "server_stream_alert_injection_enabled": False,
+        "client_account_alerts_enabled": True,
         "ads": {},
     }
     try:
@@ -182,61 +187,26 @@ def load_ad_meta() -> dict[str, Any]:
     return default
 
 
-def public_alert_id(filename: str) -> str:
-    """Return a stable opaque id without exposing a server filename."""
-    return hashlib.sha256(("allthings140-client-alert\0" + filename).encode("utf-8")).hexdigest()[:32]
+def shared_stream_asset_allowed(path: Path, meta: dict[str, Any] | None = None) -> bool:
+    """Fail closed for account-sensitive audio entering the common stream.
 
-
-def public_alert_catalog() -> dict[str, Any]:
-    """Return public-safe client delivery policy and media metadata."""
-    meta = load_ad_meta()
-    ads_meta = meta.get("ads", {}) if isinstance(meta.get("ads"), dict) else {}
-    alerts: list[dict[str, Any]] = []
-    if AD_DIR.is_dir():
-        for path in sorted(AD_DIR.iterdir()):
-            if not path.is_file() or path.suffix.lower() != ".mp3":
-                continue
-            info = ads_meta.get(path.name, {}) if isinstance(ads_meta.get(path.name, {}), dict) else {}
-            if not info.get("enabled", True) or not info.get("client_delivery_enabled", False):
-                continue
-            alert_id = public_alert_id(path.name)
-            duration = info.get("duration_seconds", info.get("duration", 0))
-            try:
-                duration = max(0.0, round(float(duration or 0), 3))
-            except (TypeError, ValueError):
-                duration = 0.0
-            alerts.append({
-                "id": alert_id,
-                "url": f"/api/public/alert-media/{alert_id}.mp3",
-                "duration_seconds": duration,
-                "category": str(info.get("category", "station_alert"))[:40],
-            })
-    version_source = "\n".join(f"{item['id']}:{item['duration_seconds']}" for item in alerts)
-    return {
-        "schema_version": 1,
-        "interval_seconds": max(60, int(meta.get("interval_seconds", 900))),
-        "server_stream_alert_injection_enabled": bool(meta.get("server_stream_alert_injection_enabled", True)),
-        "client_account_alerts_enabled": bool(meta.get("client_account_alerts_enabled", False)),
-        "alerts": alerts,
-        "version": hashlib.sha256(version_source.encode("utf-8")).hexdigest()[:16],
-        "server_time": int(time.time()),
-    }
-
-
-def resolve_public_alert(alert_id: str) -> Path | None:
-    if not re.fullmatch(r"[a-f0-9]{32}", alert_id):
-        return None
-    meta = load_ad_meta()
-    ads_meta = meta.get("ads", {}) if isinstance(meta.get("ads"), dict) else {}
-    if not AD_DIR.is_dir():
-        return None
-    for path in AD_DIR.iterdir():
-        info = ads_meta.get(path.name, {}) if isinstance(ads_meta.get(path.name, {}), dict) else {}
-        if (path.is_file() and path.suffix.lower() == ".mp3"
-                and info.get("enabled", True) and info.get("client_delivery_enabled", False)
-                and secrets.compare_digest(public_alert_id(path.name), alert_id)):
-            return path
-    return None
+    The global switch is retained only as an emergency legacy override.  With
+    it disabled, an asset must be explicitly classified as common station
+    programming; uploaded/unclassified ads and client-delivery alerts stay out
+    of Icecast.
+    """
+    meta = meta or load_ad_meta()
+    if bool(meta.get("server_stream_alert_injection_enabled", False)):
+        return True
+    ads = meta.get("ads", {}) if isinstance(meta.get("ads"), dict) else {}
+    info = ads.get(path.name, {}) if isinstance(ads.get(path.name), dict) else {}
+    category = str(info.get("category", "")).strip().casefold()
+    common_categories = {"station_id", "station_branding", "jingle", "dj_drop", "takeover"}
+    return (
+        bool(info.get("common_stream_programming", False))
+        and not bool(info.get("client_delivery_enabled", False))
+        and category in common_categories
+    )
 
 
 def save_ad_meta(meta: dict[str, Any]) -> None:
@@ -1096,6 +1066,134 @@ class AutoDJState:
     sequence: int = 0
 
 
+class MicOverlayMixer:
+    """Bounded non-blocking loopback overlay. Every error returns music unchanged."""
+    MAGIC = b"ATMP"
+    ACK = b"ATACK"
+    HEADER = struct.Struct("!4s8sIB")
+    MAX_AGE = 0.30
+
+    def __init__(self, rate: int, channels: int) -> None:
+        self.rate, self.channels = rate, channels
+        self.socket: socket.socket | None = None
+        self.music_gain = 1.0
+        self.last_packet_at = self.last_mix_at = 0.0
+        self.last_sequence = -1
+        self.session = b""
+        self.pcm_buffer = bytearray()
+        self.last_address: tuple[str, int] | None = None
+        self.source = ""
+        self.live = False
+        self.packets_mixed = self.invalid_packets = 0
+        self.bind_error = ""
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 65536)
+            sock.bind((MIC_OVERLAY_HOST, MIC_OVERLAY_PORT)); sock.setblocking(False)
+            self.socket = sock
+            event_log("mic_overlay_ready", host=MIC_OVERLAY_HOST, port=MIC_OVERLAY_PORT)
+        except OSError as exc:
+            self.bind_error = str(exc)
+            event_log("mic_overlay_disabled", error=self.bind_error)
+
+    def _read_current(self, wanted: int) -> tuple[bytes | None, tuple[str, int] | None, bytes, int]:
+        if self.socket is None:
+            return None, None, b"", -1
+        received = []
+        for _ in range(32):
+            try: packet, address = self.socket.recvfrom(8192)
+            except BlockingIOError: break
+            except OSError as exc: self.bind_error = str(exc); break
+            now = time.monotonic()
+            if len(packet) <= self.HEADER.size:
+                self.invalid_packets += 1; continue
+            magic, session, sequence, source_id = self.HEADER.unpack_from(packet)
+            payload = packet[self.HEADER.size:]
+            if magic != self.MAGIC or len(payload) % (self.channels * 2):
+                self.invalid_packets += 1; continue
+            received.append((now, payload, address, session, sequence, source_id))
+        if received:
+            session = received[-1][3]
+            current = [item for item in received if item[3] == session]
+            if session != self.session:
+                self.pcm_buffer.clear()
+            self.pcm_buffer.extend(b"".join(item[1] for item in current))
+            latest = current[-1]
+            self.last_packet_at, self.last_sequence, self.session = latest[0], latest[4], latest[3]
+            self.last_address = latest[2]
+            self.source = "galaxy_watch" if latest[5] == 2 else "phone"
+        elif not self.pcm_buffer or time.monotonic()-self.last_packet_at > self.MAX_AGE:
+            return None, None, b"", -1
+        # Bound latency to at most three mixer blocks. Preserve surplus audio
+        # across calls instead of discarding early packets and inserting gaps.
+        if len(self.pcm_buffer) > wanted * 3:
+            del self.pcm_buffer[:len(self.pcm_buffer) - wanted * 3]
+        take = min(wanted, len(self.pcm_buffer))
+        pcm = bytes(self.pcm_buffer[:take])
+        del self.pcm_buffer[:take]
+        if len(pcm) < wanted: pcm += b"\x00" * (wanted-len(pcm))
+        return pcm, self.last_address, self.session, self.last_sequence
+
+    def mix(self, music: bytes) -> bytes:
+        if not music:
+            return music
+        try:
+            mic, address, session, sequence = self._read_current(len(music))
+            active = mic is not None and time.monotonic() - self.last_packet_at <= self.MAX_AGE
+            target = 10.0 ** (-12.0 / 20.0) if active else 1.0
+
+            # Instant fast-path when mic is idle and music is at full volume (99.9% of the time)
+            if not active and self.music_gain >= 0.999 and target >= 0.999:
+                self.music_gain = 1.0
+                was_live, self.live = self.live, False
+                if was_live:
+                    event_log("mic_overlay_off", source=self.source)
+                return music
+
+            seconds = max(len(music) / (self.rate * self.channels * 2), .001)
+            ramp = .150 if target < self.music_gain else .750
+            full_range = 1.0 - 10.0 ** (-12.0 / 20.0)
+            step = full_range * seconds / ramp
+            end_gain = max(target, self.music_gain - step) if target < self.music_gain else min(target, self.music_gain + step)
+            avg_gain = (self.music_gain + end_gain) / 2.0
+
+            # C-accelerated mixing
+            scaled_music = audioop.mul(music, 2, avg_gain)
+            if mic:
+                scaled_mic = audioop.mul(mic, 2, 0.72)
+                mixed_bytes = audioop.add(scaled_music, scaled_mic, 2)
+            else:
+                mixed_bytes = scaled_music
+
+            self.music_gain = end_gain
+            was_live, self.live = self.live, active
+            if active:
+                self.last_mix_at = time.monotonic()
+                self.packets_mixed += 1
+                if address and self.socket:
+                    try:
+                        self.socket.sendto(self.ACK + session + struct.pack("!I", sequence), address)
+                    except OSError:
+                        pass
+            if active != was_live:
+                event_log("mic_overlay_live" if active else "mic_overlay_off", source=self.source)
+            return mixed_bytes
+        except Exception as exc:
+            self.live = False
+            self.music_gain = 1.0
+            self.invalid_packets += 1
+            event_log("mic_overlay_mix_error", error=str(exc))
+            return music
+
+    def snapshot(self) -> dict[str, Any]:
+        now = time.monotonic()
+        return {"enabled": self.socket is not None, "live": self.live and now-self.last_mix_at < self.MAX_AGE,
+                "source": self.source if self.live else "", "last_mix_ms": round((now-self.last_mix_at)*1000) if self.last_mix_at else None,
+                "packets_mixed": self.packets_mixed, "invalid_packets": self.invalid_packets,
+                "music_gain": round(self.music_gain,4), "duck_db": -12.0, "attack_ms": 150, "release_ms": 750,
+                "mic_gain": 0.72, "bind": f"{MIC_OVERLAY_HOST}:{MIC_OVERLAY_PORT}", "error": self.bind_error}
+
+
 class AutoDJManager(threading.Thread):
     """Continuous server-side catalog rotation with DJ transport controls.
 
@@ -1155,6 +1253,7 @@ class AutoDJManager(threading.Thread):
         self.current_ad_path: Path | None = None
         self.current_ad_manual = False
         self.current_ad_started_at = 0
+        self.mic_overlay = MicOverlayMixer(self.PCM_RATE, self.PCM_CHANNELS)
         self.load_rotation_state()
 
     def load_rotation_state(self) -> None:
@@ -1269,8 +1368,12 @@ class AutoDJManager(threading.Thread):
     def available_ads(self) -> list[Path]:
         if not AD_DIR.is_dir():
             return []
-        meta = load_ad_meta().get("ads", {})
-        return sorted(path for path in AD_DIR.iterdir() if path.is_file() and path.suffix.lower() in AUDIO_EXTENSIONS and meta.get(path.name, {}).get("enabled", True))
+        ad_meta = load_ad_meta()
+        assets = ad_meta.get("ads", {})
+        return sorted(path for path in AD_DIR.iterdir() if path.is_file()
+                      and path.suffix.lower() in AUDIO_EXTENSIONS
+                      and assets.get(path.name, {}).get("enabled", True)
+                      and shared_stream_asset_allowed(path, ad_meta))
 
     def choose_ad(self) -> Path | None:
         available = self.available_ads()
@@ -1304,12 +1407,12 @@ class AutoDJManager(threading.Thread):
             self.forced_ad = forced
             return
         else:
-            if not bool(load_ad_meta().get("server_stream_alert_injection_enabled", True)):
-                self.next_ad_at = time.monotonic() + float(load_ad_meta().get("interval_seconds", 900))
-                return
             path = self.choose_ad()
+        if path is not None and not shared_stream_asset_allowed(path):
+            event_log("shared_stream_asset_blocked", name=path.name, automatic=not manual)
+            path = None
         if path is None:
-            self.next_ad_at = time.monotonic() + float(load_ad_meta().get("interval_seconds", 900))
+            self.next_ad_at = time.monotonic() + float(load_ad_meta().get("interval_seconds", self.AD_INTERVAL_SECONDS))
             return
         self.ad_decoder = subprocess.Popen(
             self.ad_decoder_command(path), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, bufsize=0,
@@ -1391,15 +1494,10 @@ class AutoDJManager(threading.Thread):
             ad += b"\x00" * (len(music) - len(ad))
         elif len(ad) > len(music):
             ad = ad[: len(music)]
-        music_samples = array.array("h")
-        ad_samples = array.array("h")
-        music_samples.frombytes(music)
-        ad_samples.frombytes(ad)
         music_gain, ad_gain = self.ad_mix_gains()
-        for index, sample in enumerate(music_samples):
-            mixed = int(sample * music_gain + ad_samples[index] * ad_gain)
-            music_samples[index] = max(-32768, min(32767, mixed))
-        return music_samples.tobytes()
+        scaled_music = audioop.mul(music, 2, music_gain)
+        scaled_ad = audioop.mul(ad, 2, ad_gain)
+        return audioop.add(scaled_music, scaled_ad, 2)
 
     @property
     def chunk_bytes(self) -> int:
@@ -1643,6 +1741,7 @@ class AutoDJManager(threading.Thread):
             data["progress"] = min(1.0, data["position_seconds"] / duration) if duration else 0.0
         else:
             data["progress"] = 0.0
+        data["mic_overlay"] = self.mic_overlay.snapshot()
         return data
 
     def queue_snapshot(self) -> dict[str, Any]:
@@ -1696,7 +1795,7 @@ class AutoDJManager(threading.Thread):
             chunk = self.decoder.stdout.read(self.chunk_bytes)
             if not chunk:
                 break
-            self.write_pcm(self.mix_ad(chunk))
+            self.write_pcm(self.mic_overlay.mix(self.mix_ad(chunk)))
         return_code = self.decoder.poll() if self.decoder else None
         if not interrupted:
             if return_code not in (None, 0):
@@ -2455,6 +2554,7 @@ ARCHIVES = ArchiveManager(
 )
 ALERTS = AlertBus(event_log)
 SUPPORT = SupportService(str(DB_PATH), DB_LOCK, event_log)
+SUBSCRIPTIONS = SubscriptionService(str(DB_PATH), DB_LOCK, SUPPORT.stripe_request, event_log)
 NOTIFIER = FailureNotifier(event_log, os.environ.get("ALLTHINGS140_DISCORD_WEBHOOK_URL", ""), int(CONFIG.get("failure_alert_cooldown_seconds", 900)))
 
 
@@ -2709,61 +2809,6 @@ def serve_archive_file(handler: BaseHTTPRequestHandler, archive_id: str, kind: s
             remaining -= len(chunk)
 
 
-def serve_public_alert_file(handler: BaseHTTPRequestHandler, filename: str) -> None:
-    alert_id = filename[:-4] if filename.endswith(".mp3") else ""
-    path = resolve_public_alert(alert_id)
-    if path is None:
-        body = b'{"error":"Alert media not found"}'
-        handler.send_response(404)
-        handler.send_header("Content-Type", "application/json")
-        handler.send_header("Content-Length", str(len(body)))
-        handler.send_header("Access-Control-Allow-Origin", "*")
-        handler.end_headers()
-        if handler.command != "HEAD":
-            handler.wfile.write(body)
-        return
-    total = path.stat().st_size
-    start, end, status = 0, total - 1, 200
-    range_header = handler.headers.get("Range", "")
-    if range_header.startswith("bytes="):
-        try:
-            left, right = range_header[6:].split("-", 1)
-            start = int(left) if left else 0
-            end = min(total - 1, int(right)) if right else total - 1
-            if start < 0 or end < start or start >= total:
-                raise ValueError
-            status = 206
-        except ValueError:
-            handler.send_response(416)
-            handler.send_header("Content-Range", f"bytes */{total}")
-            handler.end_headers()
-            return
-    length = end - start + 1
-    handler.send_response(status)
-    handler.send_header("Content-Type", "audio/mpeg")
-    handler.send_header("Content-Length", str(length))
-    handler.send_header("Accept-Ranges", "bytes")
-    handler.send_header("Cache-Control", "public, max-age=3600, immutable")
-    handler.send_header("Access-Control-Allow-Origin", "*")
-    if status == 206:
-        handler.send_header("Content-Range", f"bytes {start}-{end}/{total}")
-    handler.end_headers()
-    if handler.command == "HEAD":
-        return
-    with path.open("rb") as stream:
-        stream.seek(start)
-        remaining = length
-        while remaining:
-            chunk = stream.read(min(64 * 1024, remaining))
-            if not chunk:
-                break
-            try:
-                handler.wfile.write(chunk)
-            except (BrokenPipeError, ConnectionResetError):
-                break
-            remaining -= len(chunk)
-
-
 class PublicGatewayHandler(BaseHTTPRequestHandler):
     """Public-only gateway used by the HTTPS tunnel.
 
@@ -2776,10 +2821,9 @@ class PublicGatewayHandler(BaseHTTPRequestHandler):
 
     def setup(self) -> None:
         super().setup()
-        # Never let an abandoned Cloudflare/client socket occupy one of the
-        # gateway's bounded request threads indefinitely. Live audio bypasses
-        # this handler and connects directly to Icecast, so this applies only
-        # to short metadata/API responses.
+        # Metadata clients must never occupy a bounded gateway request thread
+        # indefinitely after abandoning a Cloudflare connection. The live MP3
+        # route bypasses this gateway and connects directly to Icecast.
         self.connection.settimeout(10.0)
 
     def log_message(self, fmt: str, *args: Any) -> None:
@@ -2788,7 +2832,7 @@ class PublicGatewayHandler(BaseHTTPRequestHandler):
     def _cors(self) -> None:
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, HEAD, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, Range, Icy-MetaData, X-Guest-Token, X-Audio-Sequence")
+        self.send_header("Access-Control-Allow-Headers", "Authorization, Content-Type, Range, Icy-MetaData, X-Guest-Token, X-Audio-Sequence")
 
     def _json(self, payload: Any, status: int = 200, headers: dict[str, str] | None = None) -> None:
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
@@ -2820,9 +2864,7 @@ class PublicGatewayHandler(BaseHTTPRequestHandler):
             return serve_archive_file(self, parts[3], parts[4])
         if len(parts) == 4 and parts[:3] == ["api", "public", "takeover-logo"]:
             return serve_takeover_logo(self, parts[3])
-        if len(parts) == 4 and parts[:3] == ["api", "public", "alert-media"]:
-            return serve_public_alert_file(self, parts[3])
-        if parsed.path in ("/api/public/status", "/public/status.json", "/api/public/archive", "/api/public/schedule", "/api/public/alert-catalog", "/health"):
+        if parsed.path in ("/api/public/status", "/public/status.json", "/api/public/archive", "/api/public/schedule", "/health"):
             return self._json({"ok": True})
         if parsed.path == "/live.mp3":
             self.send_response(200)
@@ -2848,10 +2890,6 @@ class PublicGatewayHandler(BaseHTTPRequestHandler):
         if path == "/api/public/alerts":
             query = urllib.parse.parse_qs(parsed.query)
             return self._json({"alerts": ALERTS.since(int(query.get("since", ["0"])[0]))})
-        if path == "/api/public/alert-catalog":
-            return self._json(public_alert_catalog())
-        if path.startswith("/api/public/alert-media/"):
-            return serve_public_alert_file(self, path.rsplit("/", 1)[-1])
         if path == "/api/public/schedule":
             return self._json({"takeovers": takeover_rows(True)})
         if path == "/api/public/support":
@@ -2861,6 +2899,11 @@ class PublicGatewayHandler(BaseHTTPRequestHandler):
             query = urllib.parse.parse_qs(parsed.query)
             try:
                 return self._json(SUPPORT.checkout_status(query.get("session_id", [""])[0]))
+            except SupportError as exc:
+                return self._json({"error": str(exc)}, exc.status)
+        if path == "/api/account/plus/status":
+            try:
+                return self._json(SUBSCRIPTIONS.status(self.headers.get("Authorization", "")))
             except SupportError as exc:
                 return self._json({"error": str(exc)}, exc.status)
         if path.startswith("/api/public/takeover-logo/"):
@@ -2908,7 +2951,18 @@ class PublicGatewayHandler(BaseHTTPRequestHandler):
                 return self._json({"error": "Invalid webhook size"}, 400)
             raw = self.rfile.read(length)
             try:
-                return self._json(SUPPORT.process_webhook(raw, self.headers.get("Stripe-Signature", "")))
+                signature = self.headers.get("Stripe-Signature", "")
+                SUPPORT.verify_signature(raw, signature)
+                SUBSCRIPTIONS.stripe_event(json.loads(raw.decode("utf-8")))
+                return self._json(SUPPORT.process_webhook(raw, signature))
+            except SupportError as exc:
+                return self._json({"error": str(exc)}, exc.status)
+            except (UnicodeDecodeError, json.JSONDecodeError):
+                return self._json({"error": "Invalid Stripe event."}, 400)
+        if path in {"/api/account/plus/checkout", "/api/account/plus/portal"}:
+            try:
+                action = SUBSCRIPTIONS.checkout if path.endswith("/checkout") else SUBSCRIPTIONS.portal
+                return self._json(action(self.headers.get("Authorization", "")), 201)
             except SupportError as exc:
                 return self._json({"error": str(exc)}, exc.status)
         if path == "/api/public/support/checkout":
@@ -3116,16 +3170,14 @@ class Handler(BaseHTTPRequestHandler):
                 ))
             if path == "/api/public/alerts":
                 return self.json_response({"alerts": ALERTS.since(int(query.get("since", ["0"])[0]))})
-            if path == "/api/public/alert-catalog":
-                return self.json_response(public_alert_catalog())
-            if path.startswith("/api/public/alert-media/"):
-                return serve_public_alert_file(self, path.rsplit("/", 1)[-1])
             if path == "/api/public/schedule":
                 return self.json_response({"takeovers": takeover_rows(True)})
             if path == "/api/public/support":
                 return self.json_response(SUPPORT.public_state(int(query.get("since", ["0"])[0])))
             if path == "/api/public/support/status":
                 return self.json_response(SUPPORT.checkout_status(query.get("session_id", [""])[0]))
+            if path == "/api/account/plus/status":
+                return self.json_response(SUBSCRIPTIONS.status(self.headers.get("Authorization", "")))
             if path.startswith("/api/public/takeover-logo/"):
                 return serve_takeover_logo(self, path.rsplit("/", 1)[-1])
             if path.startswith("/api/public/takeover-invite/"):
@@ -3423,7 +3475,14 @@ class Handler(BaseHTTPRequestHandler):
                 length = int(self.headers.get("Content-Length", "0"))
                 if length < 1 or length > 256 * 1024:
                     return self.json_response({"error": "Invalid webhook size"}, 400)
-                return self.json_response(SUPPORT.process_webhook(self.rfile.read(length), self.headers.get("Stripe-Signature", "")))
+                raw = self.rfile.read(length)
+                signature = self.headers.get("Stripe-Signature", "")
+                SUPPORT.verify_signature(raw, signature)
+                SUBSCRIPTIONS.stripe_event(json.loads(raw.decode("utf-8")))
+                return self.json_response(SUPPORT.process_webhook(raw, signature))
+            if path in {"/api/account/plus/checkout", "/api/account/plus/portal"}:
+                action = SUBSCRIPTIONS.checkout if path.endswith("/checkout") else SUBSCRIPTIONS.portal
+                return self.json_response(action(self.headers.get("Authorization", "")), 201)
             if path == "/api/public/support/checkout":
                 allowed, retry = PUBLIC_WRITE_LIMITER.allow(f"support:{public_client_hash(self)}", 8, 600)
                 if not allowed:
@@ -4364,6 +4423,7 @@ def main() -> None:
     ensure_dirs()
     init_db()
     SUPPORT.init_schema()
+    SUBSCRIPTIONS.init_schema()
     signal.signal(signal.SIGTERM, shutdown_handler)
     signal.signal(signal.SIGINT, shutdown_handler)
 

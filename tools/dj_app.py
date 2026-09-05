@@ -37,6 +37,17 @@ TAKEOVER_TIMES = [f"{hour % 12 or 12}:{minute:02d} {'AM' if hour < 12 else 'PM'}
 TAKEOVER_TIMEZONES = ["America/Los_Angeles", "America/Denver", "America/Chicago", "America/New_York", "America/Phoenix", "America/Anchorage", "Pacific/Honolulu", "Europe/London", "Europe/Paris", "Australia/Sydney", "Asia/Tokyo", "UTC"]
 
 
+def station_display_status(icecast: dict[str, Any], cache: dict[str, Any]) -> tuple[str, str]:
+    """Return listener-facing station state independently of cache health."""
+    if not icecast.get("online"):
+        return "STATION UNAVAILABLE", "#ff9ca8"
+    cache_state = str(cache.get("status", "unknown")).strip().lower()
+    if cache_state == "healthy":
+        return "STATION LIVE", "#76f0c2"
+    cache_label = "OFFLINE" if cache_state == "offline" else "DEGRADED"
+    return f"STATION LIVE   •   HOT CACHE {cache_label}", "#ffcb6b"
+
+
 class APIError(RuntimeError):
     pass
 
@@ -447,9 +458,10 @@ class DJApp(tk.Tk):
         health = tk.Frame(f, bg="#15101d", padx=12, pady=10, highlightbackground="#362542", highlightthickness=1)
         health.pack(fill="x", pady=(0, 12))
         self.health_labels = {}
-        for key in ("SERVER", "ICECAST", "AUTODJ", "ENCODER", "DECODER", "LIVE RELAY", "SILENCE", "DISK", "ADS", "RECORDING", "STORAGE"):
+        health_keys = ("SERVER", "ICECAST", "AUTODJ", "ENCODER", "DECODER", "HOT CACHE", "LIVE RELAY", "SILENCE", "DISK", "ADS", "RECORDING", "STORAGE")
+        for index, key in enumerate(health_keys):
             label = tk.Label(health, text=f"{key}: CHECKING", bg="#15101d", fg="#9f91aa", font=("Sans", 9, "bold"), padx=8, pady=4)
-            label.pack(side="left")
+            label.grid(row=index // 6, column=index % 6, sticky="w")
             self.health_labels[key] = label
 
         queue_head = tk.Frame(f, bg="#100b18")
@@ -2100,28 +2112,18 @@ TROUBLESHOOTING
         if error is None and status is not None:
             self._apply_status(status)
         else:
-            self.onair_label.config(text=f"STATION UNAVAILABLE   •   {error}", fg="#ff9ca8")
+            self.onair_label.config(text=f"STATION STATUS UNKNOWN   •   {error}", fg="#ffcb6b")
         self.status_after_id = self.after(4000, self.refresh_status)
 
     def _apply_status(self, s):
+        ice = s.get("icecast", {})
+        cache = s.get("cache", {})
         try:
-            ice = s.get("icecast", {})
             live = bool(ice.get("live_source", False))
             autodj = s.get("autodj", {})
             rotation = s.get("rotation", [])
             self.current_listener = s.get("website_url") or s.get("listener_page", self.api.base_url)
-            if live:
-                state = "LIVE DJ TAKEOVER ON AIR"
-                color = "#ff8cab"
-            elif ice.get("online") and autodj.get("current_track_id"):
-                state = "24/7 EBMARAH CATALOG ON AIR"
-                color = "#76f0c2"
-            elif ice.get("online"):
-                state = "SERVER ON AIR — WAITING FOR CATALOG"
-                color = "#ffcb6b"
-            else:
-                state = "RADIO SERVER OFFLINE"
-                color = "#ff9ca8"
+            state, color = station_display_status(ice, cache)
             self.onair_label.config(text=f"● {state}   •   {s.get('station_name', 'AllThings140Radio')}", fg=color)
             self.now_title.config(text=autodj.get("current_title") or ("Live DJ transmission" if live else "No catalog song loaded"))
             self.now_artist.config(text=autodj.get("current_artist") or (self.user.get("username", "DJ") if live else "AllThings140Radio"))
@@ -2147,7 +2149,6 @@ TROUBLESHOOTING
                 storage = s.get("storage", {})
                 ads = s.get("ads", {})
                 watchdog = s.get("watchdog", {})
-                cache = s.get("cache", {})
                 if hasattr(self, "ops_summary"):
                     free_gb = float(disk.get("free_bytes", 0) or 0) / (1024 ** 3)
                     self.ops_summary.config(text=(
@@ -2172,9 +2173,14 @@ TROUBLESHOOTING
                     "HOT CACHE": (f"{str(cache.get('status', 'UNKNOWN')).upper()} / {cache.get('minutes_ready', 0)} MIN", cache.get("status") == "healthy"),
                 }
                 for key, (value, healthy) in states.items():
-                    self.health_labels[key].config(text=f"{key}: {value}", fg="#76f0c2" if healthy else "#ffcb6b")
+                    label = self.health_labels.get(key)
+                    if label is not None:
+                        label.config(text=f"{key}: {value}", fg="#76f0c2" if healthy else "#ffcb6b")
         except Exception as exc:
-            self.onair_label.config(text=f"STATION UNAVAILABLE   •   {exc}", fg="#ff9ca8")
+            state, color = station_display_status(ice, cache)
+            if ice.get("online"):
+                state = f"{state}   •   DASHBOARD DEGRADED"
+            self.onair_label.config(text=f"● {state}   •   {exc}", fg=color)
 
     def open_listener(self):webbrowser.open(getattr(self,"current_listener",PUBLIC_SITE))
 
