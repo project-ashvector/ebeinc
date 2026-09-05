@@ -1,18 +1,17 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "ALLTHINGS140Radio Visuals",
-  "version": "0.1.43",
+  "version": "0.2.1",
   "identifier": "online.allthings140radio.visuals",
   "build": {
-    "beforeDevCommand": "npm run dev",
-    "devUrl": "http://127.0.0.1:14340",
-    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "npm run dev:frontend",
+    "beforeBuildCommand": "npm run build:frontend",
     "frontendDist": "../dist"
   },
   "app": {
     "windows": [
       {
-        "title": "ALLTHINGS140Radio Visuals \u2014 STAGING WORKSTATION",
+        "title": "ALLTHINGS140 Visuals \u2014 Green Room Workstation",
         "width": 1600,
         "height": 980,
         "minWidth": 1000,
@@ -44,7 +43,7 @@
     ],
     "category": "Video",
     "shortDescription": "Professional Visuals show-control workstation",
-    "longDescription": "Configure, validate, preview and publish ALLTHINGS140Radio Visuals to the locked green staging room.",
+    "longDescription": "Configure, preview and publish ALLTHINGS140 visuals from this workstation to the Green Room.",
     "linux": {
       "deb": {
         "depends": []

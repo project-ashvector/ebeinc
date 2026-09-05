@@ -1,11 +1,14 @@
 {
   "name": "allthings140radio-visuals",
   "private": true,
-  "version": "0.1.43",
+  "version": "0.2.1",
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1 --port 14340",
-    "build": "vite build",
+    "dev": "tauri dev --config '{\"build\":{\"devUrl\":\"http://127.0.0.1:14340\"}}'",
+    "dev:frontend": "vite --host 127.0.0.1 --port 14340",
+    "build:frontend": "vite build",
+    "build": "npm run build:frontend && tauri build",
+    "test": "node --test tests/*.test.mjs",
     "tauri": "tauri"
   },
   "dependencies": {

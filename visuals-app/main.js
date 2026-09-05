@@ -1,11 +1,14 @@
 import './style.css';
 import { invoke, convertFileSrc } from '@tauri-apps/api/core';
 import { open } from '@tauri-apps/plugin-dialog';
+import { buildOrderedCycle, mediaIdentity } from './cycle-contract.js';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 function numberOr(value, fallback) { const n = Number(value); return Number.isFinite(n) ? n : fallback; }
-const views = ['Dashboard', 'Live Output', 'Visual Workspace', '24/7 Visuals', 'Takeover Visuals', 'Takeovers', 'Chat / Room', 'Diagnostics', 'Activity', 'Backups', 'Settings'];
+function formatBytes(value) { if (!value) return 'size unknown'; const units = ['B', 'KB', 'MB', 'GB']; let n = value; let i = 0; while (n >= 1024 && i < units.length - 1) { n /= 1024; i += 1; } return `${n.toFixed(i ? 1 : 0)} ${units[i]}`; }
+const views = ['Dashboard', 'Visual Workspace', '24/7 Visuals', 'Diagnostics', 'Activity', 'Settings'];
+const viewLabels = { Dashboard: 'LIVE', 'Visual Workspace': 'LAYOUT', '24/7 Visuals': 'VISUAL LIBRARY', Diagnostics: 'STATUS', Activity: 'LOG', Settings: 'SETTINGS' };
 const viewport = {
   'desktop-16-9': [1280, 720],
   'desktop-wide': [1440, 600],
@@ -17,9 +20,10 @@ const viewport = {
   custom: [1280, 720]
 };
 const CANONICAL_COMPOSITION = { width: 1920, height: 1080 };
-const CANONICAL_GREEN_URL = 'https://allthings140-visuals-green.pages.dev/?approval=1';
-const CANONICAL_REALTIME_WS = 'wss://visuals-realtime-staging.allthings140radio.online/ws';
-const CANONICAL_MEDIA_ORIGIN = 'https://visuals-media-staging.allthings140radio.online';
+const CANONICAL_GREEN_URL = 'https://allthings140radio.online/room/';
+const CANONICAL_VISUALS_URL = 'https://allthings140radio.online/visuals/';
+const CANONICAL_REALTIME_WS = 'wss://visuals-realtime-staging.allthings140radio.online/ws?environment=live';
+const CANONICAL_MEDIA_ORIGIN = 'https://visuals-realtime-staging.allthings140radio.online/media';
 const DEFAULT_VISUAL_FOLDER = '/home/ebmarah/Videos/at140radio/desktop visuals/visuals';
 const DEFAULT_STAGE_FOLDER = '/home/ebmarah/Videos/at140radio/desktop visuals/stage';
 const DEFAULT_SCREEN_OPENING = { x: 23.0, y: 33.5, width: 53.6, height: 48.5, rx: 1.5, enabled: true };
@@ -42,13 +46,15 @@ let history = [];
 let future = [];
 let editorZoom = 1;
 let snapEnabled = true;
-let appVersion = '0.1.43';
+let currentView = 'Dashboard';
+let appVersion = '0.2.1';
 let buildInfo = { gitCommit: 'unknown', buildUnix: '0' };
 let mediaLibrary = [];
 const layerLibraries = new Map();
 let stateNeedsSave = false;
 let visualsSearchFilter = '';
 let isPublishing = false;
+let workstationLive = { active: false, phase: 'READY', layoutHash: '', heartbeatTimer: null, heartbeatFailures: 0, startedAt: 0, error: '', greenAck: null, visualsAck: null };
 let liveRouting = { chat: 'legacy', visuals: 'legacy', lastChanged: null };
 let liveHealth = {
   vm2: 'ONLINE',
@@ -59,6 +65,10 @@ let liveHealth = {
   chatRendererLayoutId: '',
   chatRendererVisualMode: 'unknown',
   chatRendererRenderingCurrent: false,
+  currentVisualId: '',
+  rotationRound: 0,
+  rotationPosition: 0,
+  rotationLibraryCount: 0,
   greenRenderer: 'ONLINE'
 };
 
@@ -78,7 +88,7 @@ async function refreshLiveRoutingAndHealth() {
       liveHealth.realtime = health.realtime?.status === 'ok' ? 'ONLINE' : 'OFFLINE';
       const rAck = health.renderer?.ack || {};
       const envs = health.renderer?.environments || rAck.environments || {};
-      const chatAck = envs['live-chat'] || (rAck.environment === 'live-chat' ? rAck : null);
+      const chatAck = envs.live || (rAck.environment === 'live' ? rAck : null);
       if (chatAck) {
         const isFresh = (Date.now() - (chatAck.lastSeen || chatAck.renderAppliedAt || 0)) < 35000;
         liveHealth.chatRenderer = isFresh ? 'ONLINE' : 'OFFLINE';
@@ -87,10 +97,19 @@ async function refreshLiveRoutingAndHealth() {
         liveHealth.chatRendererLayoutId = chatAck.layoutId || '';
         liveHealth.chatRendererVisualMode = health.renderer?.ack?.visualMode || chatAck.visualMode || 'unknown';
         liveHealth.chatRendererRenderingCurrent = Boolean(health.renderer?.ack?.renderingCurrentLayout || chatAck.renderingCurrentLayout);
+        liveHealth.currentVisualId = chatAck.visualAssetId || chatAck.currentVisualId || '';
+        liveHealth.rotationRound = Number(chatAck.rotationRound || 0);
+        liveHealth.rotationPosition = Number(chatAck.rotationPosition || 0);
+        liveHealth.rotationLibraryCount = Number(chatAck.libraryCount || 0);
       } else {
         liveHealth.chatRenderer = health.renderer?.status === 'online' ? 'ONLINE' : 'OFFLINE';
         liveHealth.chatRendererLastSeen = health.renderer?.last_seen || null;
       }
+
+      const roles = rAck.renderersByRole || {};
+      const freshAck = ack => ack && String(ack.renderStatus).toLowerCase() === 'rendered' && (Date.now() - Number(ack.lastSeen || ack.receivedAt || 0)) < 35000 && (!workstationLive.layoutHash || ack.layoutHash === workstationLive.layoutHash);
+      workstationLive.greenAck = freshAck(roles['green-room-renderer']) ? roles['green-room-renderer'] : null;
+      workstationLive.visualsAck = freshAck(roles['visuals-page-renderer']) ? roles['visuals-page-renderer'] : null;
     }
   } catch (_) {}
 }
@@ -308,7 +327,12 @@ function compactPlaylistEntry(item) {
   };
 }
 
-function livePublishSnapshot(preview = false) {
+function orderedCyclePlaylist() {
+  const visual = selectedMedia(layerDef('visual-content'));
+  return buildOrderedCycle(state.playlist, mediaIdentity(visual), compactPlaylistEntry);
+}
+
+function livePublishSnapshot(mode = 'cycle') {
   // Deliberately construct a small publish contract instead of cloning the entire
   // workstation state. This keeps the WebKitGTK UI responsive even with hundreds
   // of local media items and prevents accidental local-only/debug data from
@@ -367,12 +391,13 @@ function livePublishSnapshot(preview = false) {
     workspaceLayers,
     screenOpening: structuredClone(screenOpening(p)),
     safePlaybackMode: Boolean(state.safePlaybackMode),
-    previewMode: Boolean(preview),
-    productionLocked: true,
-    playlist: preview ? [] : (state.playlist || []).map(compactPlaylistEntry)
+    previewMode: mode === 'single',
+    productionLocked: false,
+    cycle: { mode: 'shuffle-bag', interval: 'media-ended', skipFailed: true, avoidImmediateRepeat: true },
+    playlist: mode === 'single' ? [] : orderedCyclePlaylist()
   };
 
-  if (preview) {
+  if (mode === 'single') {
     const visualLayer = workspaceLayers.find(x => x.id === 'visual-content');
     const media = visualLayer?.selectedMedia;
     if (media) {
@@ -594,23 +619,23 @@ function workspace() {
       <label class="check"><input id="safe" type="checkbox" ${p.safeArea ? 'checked' : ''}> Safe area / guides</label>
       
       <hr>
-      <!-- DEDICATED GREEN / STAGING WORKSTATION TOOLBAR -->
+      <!-- DEDICATED GREEN ROOM WORKSTATION TOOLBAR -->
       <div class="staging-box">
         <div class="staging-box-header">
-          <b>🌿 GREEN STAGING</b>
+          <b>GREEN ROOM OUTPUT</b>
           <span class="staging-status-pill ${syncState.class}" id="greenSyncPill">${syncState.label}</span>
         </div>
         <div class="staging-url-badge" title="${CANONICAL_GREEN_URL}">
           ${CANONICAL_GREEN_URL}
         </div>
-        <button id="browser" class="btn-green">🌐 OPEN GREEN AUDIENCE ROOM</button>
-        <button id="testGreen" class="btn-cyan">⚡ TEST THIS VISUAL ON GREEN</button>
+        <button id="browser" class="btn-green">OPEN GREEN ROOM</button>
+        <button id="testGreen" class="btn-cyan">TEST CURRENT VISUAL</button>
         <div class="row" style="gap:4px;margin-top:4px;">
           <button id="validateStageOnly" class="btn-sm" style="flex:1;font-size:10px;padding:6px 4px;background:#1e293b;border:1px solid #334155;color:#93c5fd;" title="Validate Stage media independently with substep timings">⚡ STAGE ONLY</button>
           <button id="validateVisualOnly" class="btn-sm" style="flex:1;font-size:10px;padding:6px 4px;background:#1e293b;border:1px solid #334155;color:#93c5fd;" title="Validate Visual media independently with substep timings">⚡ VISUAL ONLY</button>
         </div>
-        <button id="publishGreen">🚀 PUBLISH CURRENT LAYOUT</button>
-        <button id="copyGreenUrl">📋 COPY GREEN URL</button>
+        <button id="publishGreen">UPDATE LIVE LAYOUT</button>
+        <button id="copyGreenUrl">COPY GREEN ROOM URL</button>
         <div class="staging-meta-grid">
           <div title="Active Visual">🎬 ${escapeHtml(activeVisualMedia?.name || 'Default Visual')}</div>
           <div title="Active Stage">🏛️ ${escapeHtml(activeStageMedia?.name || 'Default Stage')}</div>
@@ -666,18 +691,66 @@ function dashboard() {
   const isChatLegacy = liveRouting.chat === 'legacy';
   const isAutoFallback = !isChatLegacy && liveHealth.chatRendererVisualMode === 'legacy';
   const roomSummary = isChatLegacy ? 'LEGACY SAFETY' : (isAutoFallback ? 'AUTO FALLBACK' : 'COMPOSITOR');
-  return `<div class="scrollable-page"><div class="cards">
-    <article><small>ENVIRONMENT</small><b>STAGING</b><span>Production controls locked</span></article>
-    <article><small>GREEN ROOM VISUALS</small><b class="${isChatLegacy || isAutoFallback ? 'text-locked' : 'text-green'}">${roomSummary}</b><span>${liveHealth.chatRenderer === 'ONLINE' ? 'Renderer socket: ONLINE' : 'Renderer socket: OFFLINE'}</span></article>
-    <article><small>REALTIME</small><b>${metrics.ws}</b><span>${metrics.presence} connected users</span></article>
-    <article><small>LAYOUT</small><b>v${state.layoutVersion || 1}</b><span>${escapeHtml(state.activePreset)}</span></article>
-  </div><div class="panel overview">
+  const readyVisuals = state.playlist.filter(x => x.enabled !== false && !x.missingLocalSource).length;
+  const stageLayer = state.workspaceLayers.find(x => x.id === 'stage-content' || x.role === 'stage');
+  const stageMedia = stageLayer ? (selectedMedia(stageLayer) || stageLayer.selectedMedia) : null;
+  const hasValidStage = Boolean(stageMedia && (stageMedia.sourcePath || stageMedia.runtimePath));
+  const stageName = hasValidStage ? stageMedia.name : (stageLayer?.scanStatus === 'SCANNING' ? 'Scanning Stage...' : 'STAGE MISSING');
+  const visualMedia = selectedMedia(state.workspaceLayers.find(x => x.id === 'visual-content'));
+  const visualName = visualMedia?.name || (readyVisuals > 0 ? 'Ready for rotation' : 'No visuals available');
+
+  let liveBannerTitle = workstationLive.phase === 'READY' ? 'WORKSTATION READY' : workstationLive.phase;
+  let liveBannerCopy = 'Preview and edit safely. Both routes remain on fallback until you press the button.';
+  if (workstationLive.active) {
+    if (workstationLive.greenAck && workstationLive.visualsAck) {
+      liveBannerTitle = '● LIVE — BOTH DESTINATIONS';
+      liveBannerCopy = 'Green Room and the full-width Visuals tab acknowledged the same workstation scene.';
+    } else if (workstationLive.greenAck) {
+      liveBannerTitle = '● LIVE — GREEN ROOM';
+      liveBannerCopy = `Green Room viewer acknowledged live scene (rev ${(workstationLive.greenAck.layoutHash || '').slice(0, 8)}). Waiting for /visuals/ viewer.`;
+    } else if (workstationLive.visualsAck) {
+      liveBannerTitle = '● LIVE — VISUALS TAB';
+      liveBannerCopy = `Full-width Visuals tab acknowledged live scene (rev ${(workstationLive.visualsAck.layoutHash || '').slice(0, 8)}). Waiting for /room/ viewer.`;
+    } else {
+      liveBannerTitle = '● SOURCE LIVE (BROADCAST ACTIVE)';
+      liveBannerCopy = 'Workstation source lease is active and publishing. No public browser viewers currently open.';
+    }
+  }
+
+  const renderAckLabel = !workstationLive.active
+    ? 'STANDBY'
+    : (workstationLive.greenAck && workstationLive.visualsAck
+      ? 'MATCHED BOTH'
+      : (workstationLive.greenAck || workstationLive.visualsAck ? 'PARTIAL' : 'NO ACTIVE VIEWER'));
+
+  return `<div class="scrollable-page live-home">
+  <section class="live-command-panel ${workstationLive.active ? 'is-live' : ''}">
+    <div>
+      <small>GREEN ROOM + VISUALS BROADCAST SOURCE</small>
+      <h2>${escapeHtml(liveBannerTitle)}</h2>
+      <p>${escapeHtml(liveBannerCopy)}</p>
+    </div>
+    <button id="dashboardLiveVisuals" class="${workstationLive.active ? 'btn-live-stop' : 'btn-live-primary'}">${workstationLive.active ? 'STOP LIVE VISUALS' : (hasValidStage ? '● LIVE VISUALS' : 'STAGE REQUIRED')}</button>
+  </section>
+  <div class="live-truth-grid">
+    <article><small>CONNECTION</small><b>${metrics.ws === 'LIVE' ? 'HEALTHY' : metrics.ws}</b></article>
+    <article><small>STAGE</small><b class="${hasValidStage ? '' : 'text-danger'}">${escapeHtml(stageName)}</b><span>${hasValidStage ? 'READY' : 'STAGE MISSING'}</span></article>
+    <article><small>VISUALS READY</small><b>${readyVisuals} / ${state.playlist.length}</b><span>Full-library shuffle bag</span></article>
+    <article><small>CURRENT</small><b>${escapeHtml(visualName)}</b><span>Next asset prefetched</span></article>
+    <article><small>SCENE REVISION</small><b>${escapeHtml((state.lastPublishedHash || 'NOT PUBLISHED').slice(0, 12))}</b><span>${workstationLive.active ? 'Live revision' : 'Awaiting live session'}</span></article>
+    <article><small>MAIN /visuals/</small><b class="${workstationLive.visualsAck ? 'text-green' : ''}">${workstationLive.visualsAck ? 'LIVE (ACK)' : (workstationLive.active ? 'NO ACTIVE VIEWER' : 'FALLBACK')}</b><span>${workstationLive.visualsAck ? 'Viewer rendering live scene' : 'Existing background is automatic fallback'}</span></article>
+  </div><div class="cards">
+    <article><small>WORKSTATION</small><b id="workstationLiveStatus" class="${workstationLive.active ? 'text-green' : ''}">${workstationLive.active ? 'SOURCE LIVE' : workstationLive.phase}</b><span>One scene authority · two route shells</span></article>
+    <article><small>GREEN ROOM</small><b class="${workstationLive.greenAck ? 'text-green' : ''}">${workstationLive.greenAck ? 'LIVE (ACK)' : (workstationLive.active ? 'NO ACTIVE VIEWER' : roomSummary)}</b><span>${workstationLive.greenAck ? 'Exact scene ACK' : 'Fallback / no active viewer ACK'}</span></article>
+    <article><small>VISUALS</small><b>${readyVisuals} / ${libraryFor('visual-content').length || state.playlist.length} READY</b><span>Full-library shuffle bag</span></article>
+    <article><small>RENDER ACK</small><b>${renderAckLabel}</b><span>${escapeHtml(state.lastRendererAckHash?.slice(0, 12) || (workstationLive.active ? 'Waiting for viewers' : 'No live revision'))}</span></article>
+  </div><div class="panel overview quick-actions">
     <h2>ALLTHINGS140 VISUALS WORKSTATION</h2>
-    <p>The radio homepage and production Visuals tab remain isolated. This workstation manages local media, Green staging, and the dedicated public Green Room visual safety mode.</p>
+    <p>This workstation is the single live scene authority for Green Room and the full-width Visuals tab. Each destination reports its own renderer acknowledgement; radio audio remains isolated.</p>
     <div class="row" style="max-width:600px;margin-top:12px;gap:10px;">
-      <button data-view="Live Output" class="btn-cyan">◉ LIVE OUTPUT SHOW CONTROL</button>
-      <button data-view="Visual Workspace" class="btn-green">OPEN VISUAL FITTING ROOM</button>
-      <button data-view="24/7 Visuals">MANAGE 24/7 VISUALS</button>
+      <button data-view="Visual Workspace" class="btn-green">EDIT LAYOUT</button>
+      <button data-view="24/7 Visuals">OPEN VISUAL LIBRARY</button>
+      <button data-view="Diagnostics" class="btn-cyan">VIEW STATUS</button>
     </div>
   </div></div>`;
 }
@@ -712,9 +785,9 @@ function liveOutput() {
             <span>${escapeHtml(liveHealth.chatRendererVisualMode || 'unknown')} mode${liveHealth.chatRendererLastSeen ? ' · Last ACK: ' + liveHealth.chatRendererLastSeen : ''}</span>
           </div>
           <div class="telemetry-item">
-            <small>VM2 SERVER</small>
+            <small>WORKSTATION SERVICE</small>
             <b class="${liveHealth.vm2 === 'ONLINE' ? 'text-green' : 'text-danger'}">${liveHealth.vm2}</b>
-            <span>Realtime authority host</span>
+            <span>Local Green Room authority</span>
           </div>
           <div class="telemetry-item">
             <small>REALTIME GATEWAY</small>
@@ -733,7 +806,7 @@ function liveOutput() {
           </div>
           <div class="telemetry-item">
             <small>RENDERER ENVIRONMENT</small>
-            <b>live-chat</b>
+            <b>live</b>
             <span>Independent from green-staging</span>
           </div>
           <div class="telemetry-item">
@@ -813,15 +886,15 @@ function playlist(takeover = false) {
   });
 
   const readyCount = items.filter(x => x.status === 'READY').length;
-  const enabledCount = items.filter(x => x.enabled !== false).length;
+  const errorCount = items.filter(x => ['ERROR', 'UNSUPPORTED'].includes(String(x.status || '').toUpperCase())).length;
 
   return `<div class="manager-container scrollable-page">
     <div class="manager-toolbar">
-      <h2>${takeover ? 'TAKEOVER VISUALS' : '24/7 VISUALS PLAYLIST'}</h2>
-      <button id="addMedia" class="btn-green">＋ ADD VISUAL FILE</button>
+      <h2>${takeover ? 'TAKEOVER VISUALS' : 'FULL VISUAL LIBRARY'}</h2>
+      ${takeover ? '<button id="addMedia" class="btn-green">＋ ADD VISUAL FILE</button>' : '<button id="rescanVisuals" class="btn-green">RESCAN FOLDER</button><button id="openVisualsFolder">OPEN VISUALS FOLDER</button>'}
       <button id="validateAll">VALIDATE ALL</button>
       <input type="text" id="searchVisuals" class="search-input" placeholder="🔍 Search visuals by name, codec, status..." value="${escapeHtml(visualsSearchFilter)}">
-      <span class="manager-stats">${items.length} TOTAL · ${readyCount} READY · ${enabledCount} ENABLED</span>
+      <span class="manager-stats">${items.length} TOTAL · ${readyCount} READY · ${errorCount} ERROR · ALL VALID FILES AUTO-INCLUDED</span>
     </div>
     <div id="mediaList" class="media-list-scroll">
       ${filtered.length ? filtered.map(({ item: x, index: originalIndex }) => {
@@ -831,16 +904,12 @@ function playlist(takeover = false) {
           <div class="media-card-thumb">${x.status === 'READY' ? '▶' : '!'}</div>
           <div class="media-card-info">
             <b>${escapeHtml(x.name || x.artist || 'Untitled')}</b>
-            <span>${escapeHtml(x.codec || 'unprobed')} · ${x.width || '?'}×${x.height || '?'} · ${x.duration || '?'}s</span>
+            <span>${escapeHtml(x.codec || 'unprobed')} · ${x.width || '?'}×${x.height || '?'} · ${x.fps || x.frameRate || '?'} FPS · ${x.duration || '?'}s · ${formatBytes(Number(x.size || x.fileSize || 0))}</span>
             <small>${escapeHtml(x.path || x.sourcePath || x.runtimePath || x.visual_url || '')}</small>
           </div>
           <div class="media-card-status ${x.status === 'READY' ? 'ready' : (x.status === 'CONVERTED' ? 'converted' : 'problem')}">${escapeHtml(x.status || 'DRAFT')}</div>
           <div class="media-card-actions">
-            <button data-toggle-enable="${originalIndex}">${isEnabled ? 'Disable' : 'Enable'}</button>
-            <button data-move-up="${originalIndex}" ${originalIndex === 0 ? 'disabled' : ''}>▲</button>
-            <button data-move-down="${originalIndex}" ${originalIndex === items.length - 1 ? 'disabled' : ''}>▼</button>
             <button data-preview="${originalIndex}">Preview</button>
-            <button data-remove="${originalIndex}" class="danger">Remove</button>
           </div>
         </div>`;
       }).join('') : '<div class="panel" style="text-align:center;padding:40px;color:var(--text-muted);">No matching visuals found. Drag or add browser-compatible video files.</div>'}
@@ -875,7 +944,7 @@ function takeovers() {
 
 function diagnostics() {
   const buildDate = Number(buildInfo.buildUnix) > 0 ? new Date(Number(buildInfo.buildUnix) * 1000).toLocaleString() : 'unknown';
-  return `<div class="scrollable-page"><div class="cards"><article><small>APP VERSION</small><b>${appVersion || 'unknown'}</b></article><article><small>BUILD</small><b>${escapeHtml(buildInfo.gitCommit || 'unknown')}</b><span>${escapeHtml(buildDate)}</span></article><article><small>WEBSOCKET</small><b>${metrics.ws}</b></article><article><small>PRODUCTION</small><b>LOCKED</b></article></div><div class="panel diag"><h2>SHOW CONTROL DIAGNOSTICS</h2><div class="row" style="margin-bottom:12px;"><button id="runDiag">Run Full Diagnostics</button><button id="testRealtime">Test Realtime Service</button><button id="testMedia">Test Media Streaming (206)</button><button id="testStaging">Open Green Staging</button><button id="export">Export Diagnostic Report</button></div><pre id="report">Ready.</pre></div></div>`;
+  return `<div class="scrollable-page"><div class="cards"><article><small>APP VERSION</small><b>${appVersion || 'unknown'}</b></article><article><small>BUILD</small><b>${escapeHtml(buildInfo.gitCommit || 'unknown')}</b><span>${escapeHtml(buildDate)}</span></article><article><small>WEBSOCKET</small><b>${metrics.ws}</b></article><article><small>SCOPE</small><b>GREEN ROOM ONLY</b></article></div><div class="panel diag"><h2>SYSTEM STATUS</h2><div class="row" style="margin-bottom:12px;"><button id="runDiag">Run Full Diagnostics</button><button id="testRealtime">Test Realtime Service</button><button id="testMedia">Test Media Streaming (206)</button><button id="testStaging">Open Green Room</button><button id="export">Export Diagnostic Report</button></div><pre id="report">Ready.</pre></div></div>`;
 }
 
 function simple(name) {
@@ -893,10 +962,10 @@ function simple(name) {
       <p><b>ALLTHINGS140 Visuals Workstation</b> — Version: <b>v${appVersion}</b></p>
       <p>Build Commit: <code>${escapeHtml(buildInfo.gitCommit || 'unknown')}</code></p>
       <p>Compositor Engine: <b>Canonical Multi-Layer with WebKitGTK 4-Panel Cutout Slicer</b></p>
-      <p>Authoritative Green Staging Room: <code style="color:#74ffbe;">${CANONICAL_GREEN_URL}</code></p>
+      <p>Authoritative Green Room: <code style="color:#74ffbe;">${CANONICAL_GREEN_URL}</code></p>
       <p>Realtime Service: <code>${CANONICAL_REALTIME_WS}</code></p>
-      <p>Staging Media Origin: <code>${CANONICAL_MEDIA_ORIGIN}</code></p>
-      <p>Live Website Promotion: <b style="color:#ff87aa;">LOCKED (Pending User Approval)</b></p>
+      <p>Workstation Media Origin: <code>${CANONICAL_MEDIA_ORIGIN}</code></p>
+      <p>Main /visuals/ route: <b style="color:#74ffbe;">ISOLATED / UNCHANGED</b></p>
     </div></div>`;
   }
   return `<div class="scrollable-page"><div class="panel"><h2>${escapeHtml(name)}</h2><p>STAGING is the default. Production control is intentionally locked.</p></div></div>`;
@@ -907,11 +976,12 @@ function disposeViewMedia() {
 }
 
 function render(name = 'Visual Workspace') {
+  currentView = name;
   const scroll = captureScrollState();
   disposeViewMedia();
   $$('nav button').forEach(b => b.classList.toggle('active', b.dataset.view === name));
-  $('#crumb').textContent = `STAGING / ${name.toUpperCase()} (v${appVersion})`;
-  $('#title').textContent = name === 'Visual Workspace' ? 'Visual Fitting Room' : name;
+  $('#crumb').textContent = `GREEN ROOM / ${(viewLabels[name] || name).toUpperCase()} (v${appVersion})`;
+  $('#title').textContent = viewLabels[name] || name;
   $('#view').innerHTML = name === 'Visual Workspace' ? workspace() :
     name === 'Dashboard' ? dashboard() :
     name === 'Live Output' ? liveOutput() :
@@ -924,7 +994,6 @@ function render(name = 'Visual Workspace') {
   if (name === 'Live Output' || name === 'Dashboard') {
     refreshLiveRoutingAndHealth().then(() => {
       // If still on the view, update the dynamic badges
-      const currentView = document.querySelector('nav button.active')?.dataset?.view;
       if (currentView === name) {
         const viewEl = $('#view');
         if (viewEl) {
@@ -1180,7 +1249,7 @@ function refreshWorkspaceMediaUi(changedLayerId = null) {
 async function refreshLayerMedia(id, { rerender = true, preserveSelection = true } = {}) {
   const def = layerDef(id);
   if (!def || def.kind !== 'media' || !def.sourceFolder) return [];
-  const previous = preserveSelection ? selectedMedia(def)?.sourcePath : null;
+  const previous = preserveSelection ? (def.selectedMedia?.sourcePath || def.selectedMedia?.name || selectedMedia(def)?.sourcePath || def.sourcePath || def.name) : null;
   def.scanStatus = 'SCANNING';
   if (rerender && $('#canvas')) updateMediaStatus();
   try {
@@ -1188,10 +1257,13 @@ async function refreshLayerMedia(id, { rerender = true, preserveSelection = true
     const items = result.items || [];
     layerLibraries.set(def.id, items);
     if (previous) {
-      const previousIndex = items.findIndex(item => item.sourcePath === previous);
+      const previousIndex = items.findIndex(item => item.sourcePath === previous || item.name === previous || item.routeId === previous || item.id === previous);
       def.mediaIndex = previousIndex >= 0 ? previousIndex : Math.max(0, Math.min(Math.max(0, items.length - 1), Number(def.mediaIndex) || 0));
     } else {
       def.mediaIndex = Math.max(0, Math.min(Math.max(0, items.length - 1), Number(def.mediaIndex) || 0));
+    }
+    if (items.length > 0) {
+      def.selectedMedia = items[def.mediaIndex];
     }
     def.scanStatus = 'READY';
     activity('Layer media refreshed', `${def.name}: ${items.length} videos from ${def.sourceFolder}`);
@@ -1250,9 +1322,9 @@ function reconcilePlaylistWithVisualLibrary() {
       status: media?.status || prior?.status || 'DRAFT',
       converted: Boolean(media?.converted ?? prior?.converted ?? false),
       fit: prior?.fit || 'cover',
-      // Existing operator choices are preserved. Newly discovered files are
-      // disabled unless this is a first-run empty library, avoiding surprise live rotation.
-      enabled: prior ? prior.enabled !== false : wasEmpty
+      // Green Room workstation live mode always rotates every valid supported
+      // visual in the configured folder. No manual subset is required.
+      enabled: String(media?.status || '').toUpperCase() !== 'ERROR' && String(media?.status || '').toUpperCase() !== 'UNSUPPORTED'
     };
   });
 
@@ -1691,6 +1763,11 @@ function bindWorkspaceEditor() {
 
 function bind(name) {
   $$('[data-view]').forEach(b => b.onclick = () => render(b.dataset.view));
+  if (name === 'Dashboard') {
+    const liveButton = $('#dashboardLiveVisuals');
+    if (liveButton) liveButton.onclick = () => workstationLive.active ? stopWorkstationLive() : startWorkstationLive();
+    return;
+  }
   if (name === 'Visual Workspace') return;
 
   if (name === 'Live Output') {
@@ -1700,10 +1777,12 @@ function bind(name) {
         if (!confirm('Switch the PUBLIC GREEN ROOM to LEGACY VIDEO SAFETY MODE?\n\nThis affects only /room/. The homepage and /visuals/ remain unchanged.')) {
           return;
         }
+        const confirmation = prompt('PRODUCTION ROUTING CONTROL\n\nType PROMOTE GREEN ROOM to confirm this public /room/ routing change.');
+        if (confirmation !== 'PROMOTE GREEN ROOM') { showToast('Production routing change cancelled'); return; }
         btnFallback.disabled = true;
         btnFallback.textContent = 'Falling back…';
         try {
-          await invoke('set_visual_routing', { chat: 'legacy', reason: 'green_room_legacy_fallback' });
+          await invoke('set_visual_routing', { chat: 'legacy', reason: 'green_room_legacy_fallback', confirmation });
           activity('GREEN ROOM → LEGACY VIDEO', 'Workstation manual Green Room visual fallback executed');
           activity('LEGACY FALLBACK VERIFIED', 'Green Room visual mode set to legacy');
           showToast('✓ Green Room switched to legacy video safety mode');
@@ -1724,10 +1803,12 @@ function bind(name) {
         if (!confirm('Enable the GREEN ROOM COMPOSITOR?\n\nThis changes only the visual engine inside /room/. The homepage and /visuals/ remain untouched.')) {
           return;
         }
+        const confirmation = prompt('PRODUCTION ROUTING CONTROL\n\nType PROMOTE GREEN ROOM to confirm this public /room/ routing change.');
+        if (confirmation !== 'PROMOTE GREEN ROOM') { showToast('Production routing change cancelled'); return; }
         btnUseNew.disabled = true;
         btnUseNew.textContent = 'Activating…';
         try {
-          await invoke('set_visual_routing', { chat: 'new', reason: 'green_room_compositor_enable' });
+          await invoke('set_visual_routing', { chat: 'new', reason: 'green_room_compositor_enable', confirmation });
           activity('GREEN ROOM COMPOSITOR ENABLED', 'Public /room/ visual engine set to compositor');
           activity('GREEN ROOM → COMPOSITOR', 'Green Room visual mode set to new');
           showToast('✓ Green Room compositor enabled');
@@ -1769,7 +1850,23 @@ function bind(name) {
     return;
   }
   if (name.includes('Visuals')) {
-    $('#addMedia').onclick = () => addMedia(name === 'Takeover Visuals');
+    const addMediaButton = $('#addMedia');
+    if (addMediaButton) addMediaButton.onclick = () => addMedia(name === 'Takeover Visuals');
+    const rescanButton = $('#rescanVisuals');
+    if (rescanButton) rescanButton.onclick = async () => {
+      rescanButton.disabled = true; rescanButton.textContent = 'SCANNING…';
+      try {
+        await refreshAllMediaLayers();
+        await invoke('save_state', { state });
+        activity('Visual folder rescanned', `${state.playlist.length} files indexed`);
+        render('24/7 Visuals');
+      } catch (err) {
+        activity('Visual folder rescan failed', String(err));
+        showToast(`Rescan failed: ${err}`);
+      }
+    };
+    const openFolderButton = $('#openVisualsFolder');
+    if (openFolderButton) openFolderButton.onclick = () => invoke('open_media_folder', { path: DEFAULT_VISUAL_FOLDER }).catch(err => showToast(String(err)));
     $('#validateAll').onclick = async () => {
       activity('Validation started', name);
       for (const item of (name === 'Takeover Visuals' ? state.takeovers : state.playlist)) {
@@ -1990,15 +2087,18 @@ function connect() {
   }
   metrics.ws = 'CONNECTING';
   updateHealth();
-  ws = new WebSocket(CANONICAL_REALTIME_WS);
-  ws.onopen = () => {
+  const socket = new WebSocket(CANONICAL_REALTIME_WS);
+  ws = socket;
+  socket.onopen = () => {
+    if (ws !== socket) return;
     wsRetryCount = 0;
     metrics.ws = 'LIVE';
-    ws.send(JSON.stringify({ type: 'join', name: 'Visuals Workstation', avatar: 'orb-purple', audience: false, event_id: crypto.randomUUID() }));
+    socket.send(JSON.stringify({ type: 'join', environment: 'live', name: 'Visuals Workstation', avatar: 'orb-purple', audience: false, event_id: crypto.randomUUID() }));
     activity('Realtime connected', CANONICAL_REALTIME_WS);
     updateHealth();
   };
-  ws.onmessage = e => {
+  socket.onmessage = e => {
+    if (ws !== socket) return;
     try {
       const d = JSON.parse(e.data);
       if (d.energy != null) metrics.energy = d.energy;
@@ -2008,6 +2108,13 @@ function connect() {
         const changed = state.lastRendererAckHash !== d.ack.layoutHash;
         state.lastRendererAckHash = d.ack.layoutHash;
         state.lastRendererAckAt = d.ack.receivedAt || Date.now();
+        const role = d.ack.rendererRole || 'unknown-renderer';
+        if (role === 'green-room-renderer') workstationLive.greenAck = d.ack;
+        if (role === 'visuals-page-renderer') workstationLive.visualsAck = d.ack;
+        if (workstationLive.active) {
+          renderLiveButtonState();
+          if (currentView === 'Dashboard') render('Dashboard');
+        }
         if (changed && state.lastPublishedHash === d.ack.layoutHash) {
           invoke('save_state', { state }).catch(() => {});
         }
@@ -2015,10 +2122,11 @@ function connect() {
       updateHealth();
     } catch (_) {}
   };
-  ws.onerror = () => {
-    try { ws?.close(); } catch (_) {}
+  socket.onerror = () => {
+    try { socket.close(); } catch (_) {}
   };
-  ws.onclose = () => {
+  socket.onclose = () => {
+    if (ws !== socket) return;
     ws = null;
     metrics.ws = 'OFFLINE';
     updateHealth();
@@ -2030,6 +2138,14 @@ function connect() {
   };
 }
 window.addEventListener('online', () => connect());
+window.addEventListener('beforeunload', () => {
+  if (wsRetryTimer) clearTimeout(wsRetryTimer);
+  wsRetryTimer = null;
+  const socket = ws;
+  ws = null;
+  try { socket?.close(1000, 'workstation_shutdown'); } catch (_) {}
+  disposeViewMedia();
+});
 
 function updateHealth() {
   if ($('#ws')) {
@@ -2524,8 +2640,8 @@ async function testVisualOnGreenWithProgress() {
     await new Promise(r => setTimeout(r, 16));
     if (isCancelled) return;
 
-    const snap = livePublishSnapshot(true);
-    snap.previewMode = true;
+    const snap = livePublishSnapshot('cycle');
+    if (!snap.playlist.length) throw new Error('No enabled Visuals are available for Green cycle testing');
     setStep('step2', 'done', `✓ 2. Canonical layout snapshot generated (v${state.layoutVersion || 1})`);
 
     // Step 3 & 4: Fast Media Sync & Realtime Layout Broadcast
@@ -2583,7 +2699,7 @@ async function testVisualOnGreenWithProgress() {
 
     if (!ack) {
       // Gateway storage is not renderer proof. Preserve that distinction.
-      const lState = await fetch(`https://visuals-realtime-staging.allthings140radio.online/layout-state?t=${Date.now()}`, { cache: 'no-store' })
+      const lState = await fetch(`https://visuals-realtime-staging.allthings140radio.online/layout-state?environment=green-staging&t=${Date.now()}`, { cache: 'no-store' })
         .then(r => r.json()).catch(() => null);
       const gatewayStored = Boolean(lState && lState.layoutHash === pubRes.layoutHash);
       throw new Error(gatewayStored
@@ -2637,6 +2753,155 @@ async function testVisualOnGreenWithProgress() {
   }
 }
 
+function renderLiveButtonState() {
+  const button = $('#liveVisuals');
+  const dashboardButton = $('#dashboardLiveVisuals');
+  const stageLayer = state?.workspaceLayers?.find(x => x.id === 'stage-content' || x.role === 'stage');
+  const stageMedia = stageLayer ? (selectedMedia(stageLayer) || stageLayer.selectedMedia) : null;
+  const hasValidStage = Boolean(stageMedia && (stageMedia.sourcePath || stageMedia.runtimePath));
+
+  for (const target of [button, dashboardButton].filter(Boolean)) {
+    if (workstationLive.active) {
+      target.textContent = '■ STOP LIVE VISUALS';
+      target.className = 'btn-live-stop';
+      target.disabled = false;
+    } else if (!hasValidStage) {
+      target.textContent = 'STAGE REQUIRED';
+      target.className = 'btn-live-primary btn-stage-missing';
+      target.disabled = false;
+    } else {
+      target.textContent = workstationLive.phase === 'READY' ? '● LIVE VISUALS' : workstationLive.phase;
+      target.className = 'btn-live-primary';
+      target.disabled = !['READY', 'ERROR', 'CONNECTION LOST'].includes(workstationLive.phase);
+    }
+  }
+  const status = $('#workstationLiveStatus');
+  if (status) {
+    if (workstationLive.active) {
+      if (workstationLive.greenAck && workstationLive.visualsAck) {
+        status.textContent = 'LIVE — BOTH';
+      } else if (workstationLive.greenAck) {
+        status.textContent = 'LIVE — GREEN ROOM';
+      } else if (workstationLive.visualsAck) {
+        status.textContent = 'LIVE — VISUALS TAB';
+      } else {
+        status.textContent = 'SOURCE LIVE · NO ACTIVE VIEWER';
+      }
+    } else {
+      status.textContent = workstationLive.phase;
+    }
+  }
+}
+
+async function checkProductionRenderers(layoutHash) {
+  try {
+    const health = await invoke('get_visual_health').catch(() => null);
+    const state = health?.renderer?.ack || {};
+    const roles = state.renderersByRole || {};
+    const fresh = ack => ack && String(ack.renderStatus).toLowerCase() === 'rendered' && (Date.now() - Number(ack.lastSeen || ack.receivedAt || 0)) < 35000 && (!layoutHash || ack.layoutHash === layoutHash);
+    workstationLive.greenAck = fresh(roles['green-room-renderer']) ? roles['green-room-renderer'] : null;
+    workstationLive.visualsAck = fresh(roles['visuals-page-renderer']) ? roles['visuals-page-renderer'] : null;
+    return { green: workstationLive.greenAck, visuals: workstationLive.visualsAck };
+  } catch (_) {
+    return { green: null, visuals: null };
+  }
+}
+
+function startLiveHeartbeat() {
+  clearInterval(workstationLive.heartbeatTimer);
+  workstationLive.heartbeatFailures = 0;
+  workstationLive.heartbeatTimer = setInterval(async () => {
+    try {
+      await invoke('set_workstation_live', { action: 'heartbeat', layoutHash: workstationLive.layoutHash });
+      workstationLive.heartbeatFailures = 0;
+    } catch (err) {
+      workstationLive.heartbeatFailures += 1;
+      activity('Workstation heartbeat retry', `${workstationLive.heartbeatFailures}/2 · ${err}`);
+      if (workstationLive.heartbeatFailures < 2) return;
+      clearInterval(workstationLive.heartbeatTimer);
+      workstationLive.heartbeatTimer = null;
+      workstationLive.active = false;
+      workstationLive.phase = 'CONNECTION LOST';
+      workstationLive.error = String(err);
+      activity('Workstation live heartbeat lost', String(err));
+      renderLiveButtonState();
+    }
+  }, 1500);
+}
+
+async function startWorkstationLive() {
+  const button = $('#liveVisuals');
+  try {
+    workstationLive.phase = 'PREPARING MEDIA'; renderLiveButtonState();
+    await refreshAllMediaLayers();
+
+    const stageLayer = state.workspaceLayers.find(x => x.id === 'stage-content' || x.role === 'stage');
+    const stageMedia = stageLayer ? (selectedMedia(stageLayer) || stageLayer.selectedMedia) : null;
+    if (!stageMedia || (!stageMedia.sourcePath && !stageMedia.runtimePath)) {
+      throw new Error('STAGE REQUIRED: No stage media is selected. Please configure a valid Stage video in Visual Workspace.');
+    }
+
+    const valid = state.playlist.filter(item => item.enabled !== false && !item.missingLocalSource);
+    if (!valid.length) throw new Error('No valid visuals were found in the configured Visuals folder');
+    if (valid.length !== libraryFor('visual-content').length) throw new Error(`Full-library check failed: ${valid.length}/${libraryFor('visual-content').length} visuals ready`);
+    await saveDraft(false);
+
+    workstationLive.phase = 'CONNECTING'; renderLiveButtonState();
+    await invoke('ensure_workstation_live_path');
+
+    workstationLive.phase = `GOING LIVE · ${valid.length}/${valid.length}`; renderLiveButtonState();
+    const result = await window.__publishLiveWorkspace('cycle');
+    workstationLive.layoutHash = result.layoutHash || '';
+    state.lastPublishedHash = workstationLive.layoutHash;
+    await invoke('set_workstation_live', { action: 'start', layoutHash: workstationLive.layoutHash });
+    startLiveHeartbeat();
+    await invoke('set_visual_routing', { chat: 'new', visuals: null, reason: 'workstation_live_button', confirmation: 'PROMOTE GREEN ROOM' });
+
+    workstationLive.active = true;
+    workstationLive.phase = 'LIVE';
+    workstationLive.startedAt = Date.now();
+    activity('SOURCE LIVE', `Revision: ${workstationLive.layoutHash.slice(0, 12)} · ${valid.length}/${valid.length} visuals ready`);
+    renderLiveButtonState();
+    if (currentView === 'Dashboard') render('Dashboard');
+
+    // Open destinations in browser
+    openStagingBrowser(CANONICAL_GREEN_URL).catch(() => {});
+    openStagingBrowser(CANONICAL_VISUALS_URL).catch(() => {});
+
+    // Check initial viewer ACKs reactively
+    checkProductionRenderers(workstationLive.layoutHash).then(() => {
+      renderLiveButtonState();
+      if (currentView === 'Dashboard') render('Dashboard');
+    }).catch(() => {});
+  } catch (err) {
+    clearInterval(workstationLive.heartbeatTimer);
+    workstationLive.heartbeatTimer = null;
+    try { await invoke('set_workstation_live', { action: 'stop', layoutHash: workstationLive.layoutHash || null }); } catch (_) {}
+    workstationLive.active = false;
+    workstationLive.phase = 'ERROR';
+    workstationLive.error = String(err);
+    activity('LIVE VISUALS failed closed', String(err));
+    alert(`LIVE VISUALS FAILED CLOSED\n\n${err}`);
+  } finally {
+    if (button) button.disabled = false;
+    renderLiveButtonState();
+  }
+}
+
+async function stopWorkstationLive() {
+  clearInterval(workstationLive.heartbeatTimer); workstationLive.heartbeatTimer = null;
+  workstationLive.phase = 'STOPPING'; renderLiveButtonState();
+  try { await invoke('set_workstation_live', { action: 'stop', layoutHash: workstationLive.layoutHash || null }); } catch (_) {}
+  try { await invoke('set_visual_routing', { chat: 'legacy', visuals: null, reason: 'workstation_live_stopped', confirmation: 'PROMOTE GREEN ROOM' }); } catch (_) {}
+  workstationLive.active = false;
+  workstationLive.phase = 'READY';
+  workstationLive.layoutHash = '';
+  workstationLive.greenAck = null;
+  workstationLive.visualsAck = null;
+  activity('Live visuals stopped', 'Green Room returned to safe fallback');
+  renderLiveButtonState();
+}
+
 function buildAppShell() {
   document.querySelector('#app').innerHTML = `
     <div class="app">
@@ -2649,21 +2914,21 @@ function buildAppShell() {
           </div>
         </div>
         <div class="env">
-          <i></i> STAGING CONNECTED
+          <i></i> GREEN ROOM WORKSTATION
         </div>
         <nav>
-          ${views.map((v, i) => `<button data-view="${v}" class="${i === 1 ? 'active' : ''}">${v}</button>`).join('')}
+          ${views.map((v, i) => `<button data-view="${v}" class="${i === 0 ? 'active' : ''}">${viewLabels[v] || v}</button>`).join('')}
         </nav>
         <div class="locked">
-          PRODUCTION
-          <b>LOCKED — NOT READY FOR CUTOVER</b>
+          MAIN VISUALS TAB
+          <b>ISOLATED — NEVER MODIFIED</b>
         </div>
       </aside>
       <main>
         <header>
           <div>
-            <small id="crumb">STAGING / VISUAL WORKSPACE (v${appVersion})</small>
-            <h1 id="title">Visual Fitting Room</h1>
+            <small id="crumb">GREEN ROOM / LIVE (v${appVersion})</small>
+            <h1 id="title">Live Visuals</h1>
           </div>
           <div class="health">
             <span id="ws" class="offline">REALTIME — OFFLINE</span>
@@ -2673,12 +2938,13 @@ function buildAppShell() {
         </header>
         <section id="view"></section>
         <footer>
-          <b>STAGING DEFAULT</b>
+          <b>GREEN ROOM ONLY</b>
           <span id="saved">DRAFT</span>
-          <button id="local">Preview Locally</button>
+          <button id="local">Edit Layout</button>
           <button id="compare" class="btn-green">Open Green Room</button>
-          <button id="publish" class="btn-cyan">Publish Layout to Green</button>
-          <button disabled title="Live promotion is locked until explicit user approval">Promote Green to Live — LOCKED</button>
+          <button id="publish" class="btn-cyan">UPDATE LIVE</button>
+          <button id="liveVisuals" class="btn-live-primary">● LIVE VISUALS</button>
+          <span class="main-route-safe">/visuals/ SAFE</span>
         </footer>
       </main>
     </div>`;
@@ -2687,7 +2953,7 @@ function buildAppShell() {
   $('#local').onclick = () => render('Visual Workspace');
   $('#compare').onclick = () => openStagingBrowser(CANONICAL_GREEN_URL);
 
-  const publishLiveWorkspace = async (preview = false) => {
+  const publishLiveWorkspace = async (mode = 'cycle') => {
     await saveDraft(false);
     isPublishing = true;
     updateHealth();
@@ -2696,13 +2962,13 @@ function buildAppShell() {
       // Layout/media publishing is a realtime workstation operation. Cloudflare
       // Pages deploys are reserved for Green application CODE updates, not for
       // everyday show-control changes.
-      const r = await invoke('publish_layout_fast', { payload: { state: livePublishSnapshot(preview), jobId } });
+      const r = await invoke('publish_layout_fast', { payload: { state: livePublishSnapshot(mode), jobId } });
       const p = r.phases || {};
       activity('Layout snapshot', p.snapshot || 'PASS');
       activity('Media sync', p.mediaUpload || 'PASS');
       activity('Realtime publish', `${p.realtimePublish || 'PASS'} · HTTP ${r.realtimeHttpStatus || '?'} · ${Number(r.payloadBytes || 0).toLocaleString()} bytes`);
       activity('PUBLISHED LAYOUT', `${r.layoutRevision || 'unknown'} ${r.layoutHash || ''}`);
-      if (!preview) {
+      if (mode !== 'single') {
         state.publishedVersion = state.layoutVersion;
         state.lastPublishedHash = r.layoutHash || '';
         state.lastPublishedAt = new Date().toISOString();
@@ -2717,11 +2983,11 @@ function buildAppShell() {
   window.__publishLiveWorkspace = publishLiveWorkspace;
 
   const triggerPublishStaging = async () => {
-    if (!confirm('Publish this validated layout to GREEN STAGING only? Production live stream remains locked.')) return;
+    if (!confirm('Publish this validated layout update to the Green Room realtime renderer? The radio and /visuals/ remain unchanged.')) return;
     $('#publish').disabled = true;
     $('#publish').textContent = 'Publishing…';
     try {
-      const r = await publishLiveWorkspace(false);
+      const r = await publishLiveWorkspace('cycle');
       const p = r.phases || {};
       alert(`LAYOUT SNAPSHOT: PASS
 MEDIA SYNC: ${p.mediaUpload || 'PASS'}
@@ -2736,21 +3002,23 @@ Green staging was updated through Realtime. The status pill will change to RENDE
       alert(String(e));
     } finally {
       $('#publish').disabled = false;
-      $('#publish').textContent = 'Publish Layout to Green';
+      $('#publish').textContent = 'UPDATE LIVE';
     }
   };
   window.__triggerPublishStaging = triggerPublishStaging;
   $('#publish').onclick = triggerPublishStaging;
+  $('#liveVisuals').onclick = () => workstationLive.active ? stopWorkstationLive() : startWorkstationLive();
+  renderLiveButtonState();
 }
 
 // Startup Sequence
-let info = { version: '0.1.43' };
+let info = { version: '0.2.1' };
 try {
   info = await invoke('app_info');
 } catch (e) {
-  info = { version: '0.1.43' };
+  info = { version: '0.2.1' };
 }
-appVersion = info.version || '0.1.43';
+appVersion = info.version || '0.2.1';
 buildInfo = info;
 
 try {
@@ -2785,24 +3053,38 @@ try {
   activity('Media server startup failed', String(err));
 }
 
+// Initial media scan — populates Stage and 95 Visuals immediately on startup
+await refreshAllMediaLayers().catch(err => activity('Initial media refresh failed', String(err)));
+
 if (!state.playlist?.length) {
-  invoke('import_default_media').then(media => {
+  try {
+    const media = await invoke('import_default_media');
     mediaLibrary = media.items || media.visualAssets || media.playlist || [];
     state.playlist = media.items || media.playlist || mediaLibrary;
-    return invoke('save_state', { state });
-  }).catch(err => activity('Legacy playlist background import failed', String(err)));
+    await invoke('save_state', { state });
+  } catch (err) {
+    activity('Legacy playlist background import failed', String(err));
+  }
 }
 
-render('Visual Workspace');
+render('Dashboard');
 connect();
 if (stateNeedsSave) invoke('save_state', { state }).catch(err => activity('State migration save failed', String(err)));
 
-const yieldFrame = () => new Promise(resolve => requestAnimationFrame(() => resolve()));
-await yieldFrame();
-await yieldFrame();
-refreshAllMediaLayers()
-  .then(async () => {
-    await invoke('save_state', { state }).catch(err => activity('Reconciled playlist save failed', String(err)));
-    refreshWorkspaceMediaUi();
-  })
-  .catch(err => activity('Background media refresh failed', String(err)));
+// Keep the full folder-backed library current without disturbing a live clip.
+// Changes join the next shuffle-bag round; the renderer's current media remains untouched.
+setInterval(async () => {
+  if (isPublishing) return;
+  const before = new Set((mediaLibrary || []).map(item => item.id || item.path));
+  try {
+    await refreshAllMediaLayers();
+    const after = new Set((mediaLibrary || []).map(item => item.id || item.path));
+    const changed = before.size !== after.size || [...before].some(id => !after.has(id));
+    if (!changed) return;
+    await invoke('save_state', { state });
+    activity('Visuals folder updated', `${after.size} valid files ready for the next full rotation round`);
+    if (currentView === '24/7 Visuals' || currentView === 'Dashboard') render(currentView);
+  } catch (err) {
+    activity('Automatic folder scan failed', String(err));
+  }
+}, 60000);

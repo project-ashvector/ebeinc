@@ -1,1 +1,1 @@
-{"identifier":"default","description":"Main workstation window","windows":["main"],"permissions":["core:default","dialog:default"]}
+{"identifier":"default","description":"Main workstation window","windows":["main"],"permissions":["core:default","dialog:default","dialog:allow-confirm"]}

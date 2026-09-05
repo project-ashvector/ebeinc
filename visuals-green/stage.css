@@ -26,16 +26,21 @@ html,body{
   align-items:center;
   justify-content:center;
 }
+.legacy-fallback{position:absolute;inset:0;z-index:5;background:#000;overflow:hidden}
+.legacy-fallback[hidden]{display:none}
+.legacy-fallback video{width:100%;height:100%;display:block;object-fit:cover;background:#000}
+.legacy-fallback-label[hidden]{display:none}
+.legacy-fallback-label{position:absolute;left:16px;bottom:16px;padding:6px 10px;border:1px solid #8c6a9f66;border-radius:999px;background:#08020dcc;color:#d4c4dd;font-size:.62rem;font-weight:800;letter-spacing:.08em;pointer-events:none}
 .stage-composition{
   position:relative;
   width:100%;
   height:100%;
   max-width:100%;
   max-height:100%;
-  aspect-ratio:16 / 9;
   background:#000;
   overflow:hidden;
 }
+
 
 /* Layer 01: Visual Content (Backmost - z: 10) */
 .screens{
@@ -56,13 +61,16 @@ html,body{
   height:100%;
   object-fit:cover;
   opacity:0;
-  transition:opacity 0.8s ease-in-out;
-  background:#000;
+  transition:opacity 0.4s ease;
+  background:transparent;
   pointer-events:none;
+  z-index:1;
 }
 .screens video.active{
   opacity:1;
+  z-index:2;
 }
+
 
 /* Layer 02: Stage Content (Stage Frame above Visual - z: 20) */
 .stage-overlay{

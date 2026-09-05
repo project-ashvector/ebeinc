@@ -5,6 +5,9 @@
  */
 (() => {
   const C = window.AT140_GREEN_CONFIG || {};
+  // The public Visuals route shares the compositor core but not the Green Room
+  // audience chrome. Keep these presentation surfaces route-scoped.
+  document.documentElement.classList.toggle('visuals-only', Boolean(C.visualsOnly));
   const $ = selector => document.querySelector(selector);
   const $$ = selector => [...document.querySelectorAll(selector)];
   const numberOr = (value, fallback) => { const n = Number(value); return Number.isFinite(n) ? n : fallback; };
@@ -65,12 +68,13 @@
   let roomVisualModeReason = C.legacyFallbackEnabled ? 'startup_safe_default' : 'not_applicable';
   let autoFallbackUntil = 0;
   let realtimeOutageTimer = null;
-  let fallbackHls = null;
-
   let rendererReadyTimer = null;
   let routingPollInFlight = false;
   let workstationLive = false;
   let workstationLivePollInFlight = false;
+  let workstationLeaseStartedAt = 0;
+  let workstationServerOffset = 0;
+  let scheduledVisualId = '';
   let realtimeTelemetry = {
     connected: false,
     statusText: 'CONNECTING',
@@ -94,9 +98,75 @@
     }
   }
 
+  let fallbackHls = null;
+
   function chooseLegacyFallbackUrl() {
     const mobile = window.matchMedia && window.matchMedia('(max-width: 680px)').matches;
     return mobile ? (C.legacyFallbackMobile || C.legacyFallbackDesktop) : (C.legacyFallbackDesktop || C.legacyFallbackMobile);
+  }
+
+  async function ensureFallbackReady() {
+    const fallbackVideo = $('#legacyFallbackVideo');
+    if (!fallbackVideo) return false;
+    fallbackVideo.muted = true;
+    fallbackVideo.defaultMuted = true;
+    fallbackVideo.playsInline = true;
+
+    const isMobile = window.matchMedia && window.matchMedia('(max-width: 680px)').matches;
+    const hlsUrl = !isMobile && C.legacyFallbackHls;
+    const mp4Url = chooseLegacyFallbackUrl();
+
+    if (hlsUrl && window.Hls && Hls.isSupported()) {
+      if (!fallbackHls) {
+        fallbackHls = new Hls({
+          enableWorker: true,
+          maxBufferLength: 30,
+          maxMaxBufferLength: 60
+        });
+        fallbackHls.loadSource(hlsUrl);
+        fallbackHls.attachMedia(fallbackVideo);
+        fallbackHls.on(Hls.Events.MANIFEST_PARSED, () => {
+          fallbackVideo.play().catch(() => {});
+        });
+        fallbackHls.on(Hls.Events.ERROR, (_event, data) => {
+          if (!data.fatal || !fallbackHls) return;
+          if (data.type === Hls.ErrorTypes.NETWORK_ERROR) fallbackHls.startLoad();
+          else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) fallbackHls.recoverMediaError();
+          else {
+            fallbackHls.destroy();
+            fallbackHls = null;
+            if (mp4Url && fallbackVideo.src !== mp4Url) {
+              fallbackVideo.src = mp4Url;
+              fallbackVideo.load();
+              fallbackVideo.play().catch(() => {});
+            }
+          }
+        });
+      } else {
+        try { await fallbackVideo.play(); } catch (_) {}
+      }
+    } else if (hlsUrl && fallbackVideo.canPlayType('application/vnd.apple.mpegurl')) {
+      if (fallbackVideo.src !== hlsUrl) {
+        fallbackVideo.src = hlsUrl;
+        fallbackVideo.load();
+      }
+      try { await fallbackVideo.play(); } catch (_) {}
+    } else {
+      if (!C.preserveFallbackSource && mp4Url && fallbackVideo.currentSrc !== mp4Url && fallbackVideo.src !== mp4Url) {
+        fallbackVideo.src = mp4Url;
+        fallbackVideo.load();
+      }
+      try { await fallbackVideo.play(); } catch (_) {}
+    }
+
+    if (fallbackVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) return true;
+    return await new Promise(resolve => {
+      const finish = value => { clearTimeout(timer); fallbackVideo.removeEventListener('loadeddata', ready); fallbackVideo.removeEventListener('canplay', ready); resolve(value); };
+      const ready = () => finish(true);
+      const timer = setTimeout(() => finish(fallbackVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA), 5000);
+      fallbackVideo.addEventListener('loadeddata', ready, { once: true });
+      fallbackVideo.addEventListener('canplay', ready, { once: true });
+    });
   }
 
   function clearRendererSafetyTimers() {
@@ -161,6 +231,7 @@
 
     roomVisualMode = next;
     roomVisualModeReason = reason;
+    document.documentElement.classList.toggle('workstation-live', next === 'new');
     const composition = $('#stageComposition');
     const fallback = $('#legacyFallback');
     const fallbackVideo = $('#legacyFallbackVideo');
@@ -169,71 +240,31 @@
 
     if (next === 'legacy') {
       clearRendererSafetyTimers();
-      pauseCompositorMedia();
-      if (composition) composition.hidden = true;
       if (fallback) fallback.hidden = false;
       if (label) label.textContent = reason === 'manual_routing'
         ? 'LEGACY VISUAL SAFETY MODE'
         : 'VISUAL SAFETY FALLBACK';
-      const isMobile = window.matchMedia && window.matchMedia('(max-width: 680px)').matches;
-      const hlsUrl = !isMobile && C.legacyFallbackHls;
-      const mp4Url = chooseLegacyFallbackUrl();
-      if (fallbackVideo) {
-        fallbackVideo.muted = true;
-        fallbackVideo.defaultMuted = true;
-        fallbackVideo.playsInline = true;
-        if (hlsUrl && window.Hls && Hls.isSupported()) {
-          if (!fallbackHls) {
-            fallbackHls = new Hls({ enableWorker: true, maxBufferLength: 30, maxMaxBufferLength: 60 });
-            fallbackHls.loadSource(hlsUrl);
-            fallbackHls.attachMedia(fallbackVideo);
-            fallbackHls.on(Hls.Events.MANIFEST_PARSED, () => { fallbackVideo.play().catch(() => {}); });
-            fallbackHls.on(Hls.Events.ERROR, (_event, data) => {
-              if (!data.fatal || !fallbackHls) return;
-              if (data.type === Hls.ErrorTypes.NETWORK_ERROR) fallbackHls.startLoad();
-              else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) fallbackHls.recoverMediaError();
-              else {
-                fallbackHls.destroy();
-                fallbackHls = null;
-                if (mp4Url && fallbackVideo.src !== mp4Url) {
-                  fallbackVideo.src = mp4Url;
-                  fallbackVideo.load();
-                  fallbackVideo.play().catch(() => {});
-                }
-              }
-            });
-          } else {
-            try { await fallbackVideo.play(); } catch (_) {}
-          }
-        } else if (hlsUrl && fallbackVideo.canPlayType('application/vnd.apple.mpegurl')) {
-          if (fallbackVideo.src !== hlsUrl) {
-            fallbackVideo.src = hlsUrl;
-            fallbackVideo.load();
-          }
-          try { await fallbackVideo.play(); } catch (_) {}
-        } else if (mp4Url) {
-          if (fallbackVideo.src !== mp4Url) {
-            fallbackVideo.src = mp4Url;
-            fallbackVideo.load();
-          }
-          try { await fallbackVideo.play(); } catch (_) {}
-        }
-      }
-
+      await ensureFallbackReady();
+      pauseCompositorMedia();
+      if (composition) composition.hidden = true;
       log('room_visual_mode', { mode: next, reason });
       return;
     }
 
-    if (fallbackVideo) {
-      try { fallbackVideo.pause(); } catch (_) {}
-    }
-    if (fallback) fallback.hidden = true;
     if (composition) composition.hidden = false;
     resumeCompositorMedia();
     log('room_visual_mode', { mode: next, reason });
     armRendererReadinessFallback();
     if (!ws || ws.readyState !== WebSocket.OPEN) armRealtimeOutageFallback();
     ensureRenderedAndAck();
+    const deadline = Date.now() + 15000;
+    while (!rendererMediaReady().ready && Date.now() < deadline && roomVisualMode === 'new') {
+      await new Promise(resolve => setTimeout(resolve, 120));
+    }
+    if (roomVisualMode === 'new' && rendererMediaReady().ready) {
+      if (fallback) fallback.hidden = true;
+      if (fallbackVideo) { try { fallbackVideo.pause(); } catch (_) {} }
+    }
   }
 
   async function pollVisualRouting() {
@@ -266,8 +297,23 @@
       const active = Boolean(data?.active);
       if (active !== workstationLive) log('workstation_live_changed', { active, ageMs: data?.ageMs, layoutHash: data?.layoutHash });
       workstationLive = active;
+      workstationLeaseStartedAt = Number(data?.startedAt || 0);
+      workstationServerOffset = Number(data?.serverTime || Date.now()) - Date.now();
       if (!active) await setRoomVisualMode('legacy', 'workstation_offline');
-      else if (data?.layoutHash && (!layout || data.layoutHash === layout.layoutHash)) await setRoomVisualMode('new', 'workstation_live');
+      else if (data?.layoutHash) {
+        // The workstation publishes a new scene immediately before acquiring
+        // its live lease. A renderer that missed that websocket update must
+        // refresh scene state instead of remaining trapped in legacy fallback.
+        if (!layout || data.layoutHash !== layout.layoutHash) {
+          await loadPlaylist();
+        }
+        if (layout && data.layoutHash === layout.layoutHash) {
+          await setRoomVisualMode('new', 'workstation_live');
+          await synchronizeVisualToLease();
+        } else {
+          log('workstation_layout_pending', { leaseHash: data.layoutHash, rendererHash: layout?.layoutHash || '' });
+        }
+      }
     } catch (err) {
       workstationLive = false;
       await setRoomVisualMode('legacy', 'workstation_unreachable');
@@ -384,7 +430,7 @@
       stageOverlay.style.zIndex = String(stage.z ?? 20);
       stageOverlay.style.mixBlendMode = 'normal';
       applyLayerFrame(stageOverlay, stage);
-      
+
       // Update SVG screen aperture mask
       const screenOpening = data.screenOpening || {
         x: 23.0,
@@ -614,6 +660,71 @@ Track: ${currentStationStatus?.current_title || 'LIVE RADIO'} (Seq: ${currentSta
 
   }
 
+  function seededNumber(seedText) {
+    let value = 2166136261;
+    for (let i = 0; i < seedText.length; i++) {
+      value ^= seedText.charCodeAt(i);
+      value = Math.imul(value, 16777619);
+    }
+    return value >>> 0;
+  }
+
+  function deterministicBag(round) {
+    const bag = playlist.filter(item => !failedVisualIds.has(item.id || item.assetId));
+    let seed = seededNumber(`${layout?.layoutHash || 'layout'}:${round}`) || 1;
+    const random = () => {
+      seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5;
+      return (seed >>> 0) / 4294967296;
+    };
+    for (let i = bag.length - 1; i > 0; i--) {
+      const j = Math.floor(random() * (i + 1));
+      [bag[i], bag[j]] = [bag[j], bag[i]];
+    }
+    return bag;
+  }
+
+  function scheduledVisualAt(serverNow) {
+    if (!playlist.length || !workstationLeaseStartedAt) return null;
+    let elapsed = Math.max(0, serverNow - workstationLeaseStartedAt);
+    let round = 1;
+    // Media duration is part of the published scene. Cap pathological metadata
+    // while retaining the masters' intended complete-loop duration.
+    for (let guard = 0; guard < 10000; guard++) {
+      const bag = deterministicBag(round);
+      const qaParams = new URLSearchParams(location.search);
+      const qaRequested = Number(qaParams.get('qaIntervalMs'));
+      const qaInterval = location.hostname.endsWith('.pages.dev') && qaParams.has('qaIntervalMs') && Number.isFinite(qaRequested)
+        ? Math.max(250, Math.min(5000, qaRequested))
+        : 0;
+      const durations = bag.map(item => qaInterval || Math.max(1000, Math.min(120000, numberOr(item.duration, 8) * 1000)));
+      const roundDuration = durations.reduce((sum, value) => sum + value, 0) || 8000;
+      if (elapsed >= roundDuration) { elapsed -= roundDuration; round += 1; continue; }
+      for (let index = 0; index < bag.length; index++) {
+        if (elapsed < durations[index]) return { item: bag[index], round, position: index + 1, offsetSeconds: elapsed / 1000 };
+        elapsed -= durations[index];
+      }
+    }
+    return null;
+  }
+
+  async function synchronizeVisualToLease() {
+    if (!workstationLive || roomVisualMode !== 'new' || !layout) return;
+    const scheduled = scheduledVisualAt(Date.now() + workstationServerOffset);
+    if (!scheduled?.item) return;
+    cycleRound = scheduled.round;
+    cycleCursor = scheduled.position;
+    const id = scheduled.item.id || scheduled.item.assetId || '';
+    if (id === scheduledVisualId && videos[activeIndex]?.dataset.id === id && !transitionTriggeredForCurrent) return;
+    scheduledVisualId = id;
+    let itemToPlay = scheduled.item;
+    if (id === videos[activeIndex]?.dataset.id) {
+      itemToPlay = getNextPlaylistItem() || scheduled.item;
+      scheduledVisualId = itemToPlay.id || itemToPlay.assetId || '';
+    }
+    await playNextVisual({ ...itemToPlay, syncOffsetSeconds: scheduled.offsetSeconds });
+  }
+
+
   function currentPlaylistPosition() {
     const id = videos[activeIndex]?.dataset.id;
     return playlist.findIndex(item => (item.id || item.assetId) === id);
@@ -750,6 +861,16 @@ Track: ${currentStationStatus?.current_title || 'LIVE RADIO'} (Seq: ${currentSta
     }
 
     try {
+      if (Number.isFinite(item.syncOffsetSeconds) && item.syncOffsetSeconds > 0) {
+        if (targetVideo.readyState < HTMLMediaElement.HAVE_METADATA) {
+          await new Promise(resolve => {
+            const timer = setTimeout(resolve, 2500);
+            targetVideo.addEventListener('loadedmetadata', () => { clearTimeout(timer); resolve(); }, { once: true });
+          });
+        }
+        const duration = Number.isFinite(targetVideo.duration) ? targetVideo.duration : 0;
+        targetVideo.currentTime = duration > 0 ? Math.min(item.syncOffsetSeconds, Math.max(0, duration - 0.1)) : item.syncOffsetSeconds;
+      }
       await targetVideo.play();
       await waitForDecodedFrame(targetVideo);
     } catch (e) {
@@ -797,6 +918,7 @@ Track: ${currentStationStatus?.current_title || 'LIVE RADIO'} (Seq: ${currentSta
     const ackData = {
       rendererSessionId: sessionId || '',
       environment: C.environment || 'green-staging',
+      rendererRole: C.rendererRole || 'unknown-renderer',
       layoutId: layout.layoutId || layout.revision || 'layout',
       layoutHash: layout.layoutHash,
       stageAssetId: stage?.media?.id || stage?.media?.fingerprint || 'stage',
@@ -916,7 +1038,8 @@ Track: ${currentStationStatus?.current_title || 'LIVE RADIO'} (Seq: ${currentSta
     if (v !== videos[activeIndex] || transitionTriggeredForCurrent) return;
     if (Number.isFinite(v.duration) && v.duration > 1 && v.currentTime >= Math.max(0.5, v.duration - 0.5)) {
       transitionTriggeredForCurrent = true;
-      playNextVisual();
+      if (workstationLeaseStartedAt) synchronizeVisualToLease();
+      else playNextVisual();
     }
   }
 
@@ -925,7 +1048,8 @@ Track: ${currentStationStatus?.current_title || 'LIVE RADIO'} (Seq: ${currentSta
     if (event?.currentTarget !== videos[activeIndex]) return;
     if (!transitionTriggeredForCurrent) {
       transitionTriggeredForCurrent = true;
-      playNextVisual();
+      if (workstationLeaseStartedAt) synchronizeVisualToLease();
+      else playNextVisual();
     }
   }
 
@@ -1196,8 +1320,14 @@ Track: ${currentStationStatus?.current_title || 'LIVE RADIO'} (Seq: ${currentSta
       $('#mode').textContent = isLive ? 'NOW LIVE' : '24/7 PLAYLIST';
       $('#track').textContent = isLive ? '' : (d.current_title || 'LIVE RADIO');
       $('#artist').textContent = isLive ? host : (d.current_artist || 'ALLTHINGS140');
-      $('#modeLogo').src = take?.logo_url || 'https://allthings140radio.online/assets/takeover-fallback-logo.webp';
-      $('#modeLogo').alt = (isLive ? host : 'ALLTHINGS140Radio') + ' logo';
+      if ($('#modeLogo')) {
+        $('#modeLogo').src = take?.logo_url || 'https://allthings140radio.online/assets/takeover-fallback-logo.webp';
+        $('#modeLogo').alt = (isLive ? host : 'ALLTHINGS140Radio') + ' logo';
+      }
+      if ($('#visualsTopLogo')) {
+        $('#visualsTopLogo').src = take?.logo_url || 'https://allthings140radio.online/assets/takeover-fallback-logo.webp';
+        $('#visualsTopLogo').alt = (isLive ? host : 'ALLTHINGS140Radio') + ' logo';
+      }
 
       // Check for licensed track music video mapping
       checkTrackMusicVideoSync(d);
@@ -1327,7 +1457,7 @@ Track: ${currentStationStatus?.current_title || 'LIVE RADIO'} (Seq: ${currentSta
 
   const audio = $('#audio');
   const listen = $('#listen');
-  if (listen && audio) {
+  if (!C.visualsOnly && listen && audio) {
     listen.onclick = async () => {
       if (!audio.paused) {
         audio.pause();
@@ -1377,6 +1507,7 @@ Track: ${currentStationStatus?.current_title || 'LIVE RADIO'} (Seq: ${currentSta
         ws.send(JSON.stringify({
           type: 'renderer_heartbeat',
           environment: C.environment || 'green-staging',
+          rendererRole: C.rendererRole || 'unknown-renderer',
           layoutHash: layout.layoutHash,
           videoReadyState: activeVideo?.readyState || 0,
           visualMode: roomVisualMode

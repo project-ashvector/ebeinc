@@ -238,6 +238,18 @@ footer span#saved {
   font-size: 10px;
   font-weight: 600;
 }
+.main-route-safe{color:var(--green);font-size:10px;font-weight:800;letter-spacing:.08em;padding:7px 9px;border:1px solid var(--green-border);border-radius:6px;background:var(--green-dark)}
+.live-home{padding:24px!important}
+.live-command-panel{display:flex;align-items:center;justify-content:space-between;gap:28px;padding:28px 30px;border:1px solid #5b3472;border-radius:16px;background:radial-gradient(circle at 80% 20%,rgba(155,57,255,.22),transparent 44%),linear-gradient(145deg,#181020,#0d0a12);box-shadow:0 20px 60px #0008;margin-bottom:18px}
+.live-command-panel.is-live{border-color:#ff477e;background:radial-gradient(circle at 80% 20%,rgba(255,47,110,.2),transparent 46%),linear-gradient(145deg,#1d0d18,#0d0a12)}
+.live-command-panel small{color:var(--purple-light);font-weight:900;letter-spacing:.14em}
+.live-command-panel h2{font-size:32px;margin:7px 0 5px}.live-command-panel p{margin:0;color:var(--text-dim);max-width:620px}
+.live-command-panel button{min-width:260px;min-height:58px;font-size:14px}
+.live-truth-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.live-truth-grid article{padding:16px;border:1px solid var(--line);border-radius:10px;background:var(--panel-bg);min-width:0}
+.live-truth-grid small{display:block;color:var(--text-muted);font-size:9px;font-weight:800;letter-spacing:.12em;margin-bottom:7px}
+.live-truth-grid b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff}.live-truth-grid span{display:block;color:var(--text-dim);font-size:10px;margin-top:5px}
+.quick-actions .row{max-width:none!important}
 
 /* Buttons, Inputs, Selects */
 button, select, input, textarea {
@@ -1500,3 +1512,7 @@ button:disabled {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+.btn-live-primary,.btn-live-stop{min-width:220px;font-weight:900;letter-spacing:.09em;border-radius:10px;padding:12px 20px;box-shadow:0 0 24px rgba(162,52,255,.35)}
+.btn-live-primary{background:linear-gradient(135deg,#9d2bff,#ff3dbf);color:#fff;border:1px solid #ff7bd5}
+.btn-live-stop{background:linear-gradient(135deg,#8a142c,#e22d4f);color:#fff;border:1px solid #ff7891}
+.btn-live-primary:disabled{opacity:.7;cursor:wait}

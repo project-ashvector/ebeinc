@@ -6,7 +6,8 @@ from collections import defaultdict, deque
 from pathlib import Path
 from aiohttp import WSMsgType, web
 
-VERSION="0.2.0-staging"; WS_MAX_PAYLOAD=16384; HTTP_MAX_PAYLOAD=262144; MAX_LAYOUT_BYTES=131072
+VERSION="0.3.0-workstation"; WS_MAX_PAYLOAD=16384; HTTP_MAX_PAYLOAD=262144; MAX_LAYOUT_BYTES=131072
+LIVE_LEASE_MS=6000
 NAME=re.compile(r"[^\w ._-]",re.UNICODE); TAGS=re.compile(r"<[^>]*>")
 REACTIONS={"fire":8,"skull":7,"heart":6,"bolt":9,"bass":10}
 ENVIRONMENTS=frozenset({"green-staging","live"})
@@ -83,7 +84,65 @@ class Room:
   for sid in results:
    if sid:self.clients.pop(sid,None)
 
-async def health(request): return web.json_response({"ok":True,"service":"allthings140-visuals-realtime","version":VERSION,"connections":len(request.app['room'].clients),"environment":os.getenv('ENVIRONMENT','staging')},headers={"Cache-Control":"no-store"})
+def live_snapshot(app):
+ state=app['workstation_live']; now=int(time.time()*1000)
+ active=bool(state.get('active') and now-state.get('lastHeartbeat',0)<=LIVE_LEASE_MS)
+ return {"active":active,"source":"workstation" if active else "fallback","layoutHash":state.get('layoutHash','') if active else '',"startedAt":state.get('startedAt',0) if active else 0,"lastHeartbeat":state.get('lastHeartbeat',0),"ageMs":max(0,now-state.get('lastHeartbeat',0)) if state.get('lastHeartbeat') else None,"leaseMs":LIVE_LEASE_MS,"serverTime":now}
+
+async def health(request):
+ return web.json_response({"ok":True,"service":"allthings140-visuals-realtime","version":VERSION,"connections":len(request.app['room'].clients),"environment":os.getenv('ENVIRONMENT','staging'),"workstationLive":live_snapshot(request.app)},headers={"Cache-Control":"no-store"})
+
+async def live_state(request):
+ environment=request_environment(request)
+ if environment!='live':return web.json_response({"error":"live_environment_required"},status=400)
+ return web.json_response({"ok":True,"environment":"live",**live_snapshot(request.app)},headers={"Cache-Control":"no-store"})
+
+async def workstation_live(request):
+ try: body=await request.json()
+ except Exception:return web.json_response({"error":"invalid_json"},status=400)
+ environment=request_environment(request,body)
+ if environment!='live':return web.json_response({"error":"live_environment_required"},status=400)
+ status,err=check_admin(request,environment)
+ if status!=200:return web.json_response({"error":err},status=status)
+ action=clean(body.get('action'),24); now=int(time.time()*1000); state=request.app['workstation_live']
+ if action in {'start','heartbeat'}:
+  layout_hash=clean(body.get('layoutHash'),64)
+  active_layout,_=read_layout(request.app['room'],'live'); active_hash=clean((active_layout or {}).get('layoutHash'),64)
+  if not layout_hash or layout_hash!=active_hash:return web.json_response({"error":"layout_hash_not_active"},status=409)
+  if action=='start' or not state.get('active') or state.get('layoutHash')!=layout_hash:
+   state.update({"active":True,"layoutHash":layout_hash,"startedAt":now,"lastHeartbeat":now})
+   await request.app['room'].broadcast({"type":"workstation_live","environment":"live",**live_snapshot(request.app)},'live')
+  else:state['lastHeartbeat']=now
+ elif action=='stop':
+  state.update({"active":False,"layoutHash":"","startedAt":0,"lastHeartbeat":now})
+  await request.app['room'].broadcast({"type":"workstation_live","environment":"live",**live_snapshot(request.app)},'live')
+ else:return web.json_response({"error":"invalid_action"},status=400)
+ return web.json_response({"ok":True,"environment":"live",**live_snapshot(request.app)},headers={"Cache-Control":"no-store"})
+
+async def media_asset(request):
+ name=clean(request.match_info.get('name'),160)
+ if not re.fullmatch(r"[A-Za-z0-9_.-]+\.(?:mp4|webm)",name):raise web.HTTPNotFound()
+ root=request.app['media_root']; target=(root/name).resolve()
+ if not (target.is_file() and target.is_relative_to(root)):
+  cand = None
+  for sub in ("stage", "visuals", "playlist"):
+   t = (root / sub / name).resolve()
+   if t.is_file() and t.is_relative_to(root):
+    cand = t; break
+  if cand: target = cand
+  else: raise web.HTTPNotFound()
+ response=web.FileResponse(target)
+ response.headers.update({
+  "Cache-Control":"public, max-age=31536000, immutable",
+  "Accept-Ranges":"bytes",
+  "X-Content-Type-Options":"nosniff",
+  "Access-Control-Allow-Origin":"*",
+  "Access-Control-Allow-Methods":"GET, HEAD, OPTIONS",
+  "Access-Control-Allow-Headers":"Range, Content-Type",
+  "Access-Control-Expose-Headers":"Accept-Ranges, Content-Length, Content-Range, Content-Type"
+ })
+ return response
+
 
 def valid_environment(value):
  value=clean(value,32)
@@ -184,6 +243,10 @@ async def renderer_ack(request):
  now_ts=int(time.time()*1000)
  state["is_renderer"]=True
  state["renderer_environment"]=env_name
+ state["visual_mode"]="new"
+ renderer_role=clean(body.get("rendererRole"),32) or "unknown-renderer"
+ if renderer_role not in {"green-room-renderer","visuals-page-renderer","unknown-renderer"}:renderer_role="unknown-renderer"
+ state["renderer_role"]=renderer_role
  ack_data={
   "rendererSessionId":sid,
   "environment":env_name,
@@ -194,11 +257,16 @@ async def renderer_ack(request):
   "renderAppliedAt":int(body.get("renderAppliedAt",now_ts)),
   "videoReadyState":int(body.get("videoReadyState",0)),
   "stageReadyState":int(body.get("stageReadyState",0)),
+  "rotationRound":int(body.get("rotationRound",0)),
+  "rotationPosition":int(body.get("rotationPosition",0)),
+  "libraryCount":int(body.get("libraryCount",0)),
   "visualMode":"new",
+  "rendererRole":renderer_role,
   "renderStatus":clean(body.get("renderStatus","rendered"),32),
   "receivedAt":now_ts,
   "lastSeen":now_ts
  }
+ state["renderer_ack"]=ack_data
  room.db.execute("INSERT OR REPLACE INTO stats(key, value) VALUES(?, ?)",(f"renderer_ack:{env_name}",json.dumps(ack_data)))
  room.db.commit()
  await room.broadcast({"type":"renderer_ack_received","environment":env_name,"ack":ack_data},env_name)
@@ -227,6 +295,21 @@ async def renderer_state(request):
  live_visual_mode=("mixed" if new_clients and legacy_clients else "new" if new_clients else "legacy" if legacy_clients else "unknown")
  active_layout,_=read_layout(room,req_env); active_layout=active_layout or {}
  active_hash=clean(active_layout.get("layoutHash"),64)
+ # Renderer truth is per live socket. A legacy/fallback client must never
+ # overwrite a fresh workstation renderer ACK for the same environment.
+ matching_acks=[c.get("renderer_ack") for _,c in live_pairs
+                if c.get("visual_mode")=="new" and c.get("renderer_ack")
+                and c.get("renderer_ack",{}).get("layoutHash")==active_hash]
+ if matching_acks:
+  target_ack=max(matching_acks,key=lambda a:a.get("lastSeen",a.get("receivedAt",0)))
+ role_acks={}
+ for _,client in live_pairs:
+  candidate=client.get("renderer_ack") or {}
+  role=client.get("renderer_role") or candidate.get("rendererRole") or "unknown-renderer"
+  if client.get("visual_mode")!="new" or candidate.get("layoutHash")!=active_hash:continue
+  existing=role_acks.get(role) or {}
+  if candidate.get("lastSeen",candidate.get("receivedAt",0))>existing.get("lastSeen",existing.get("receivedAt",0)):
+   role_acks[role]=candidate
  ack_age=(now_ts - (target_ack or {}).get("lastSeen",(target_ack or {}).get("receivedAt",0))) if target_ack else 10**12
  ack_sid=(target_ack or {}).get("rendererSessionId","")
  ack_live_state=next((c for sid,c in live_pairs if sid==ack_sid),None)
@@ -282,7 +365,8 @@ async def renderer_state(request):
   "renderAppliedAt":(target_ack or {}).get("renderAppliedAt",0),
   "lastSeen":(target_ack or {}).get("lastSeen",(target_ack or {}).get("receivedAt",0)),
   "ack":target_ack,
-  "environments":env_summaries
+  "environments":env_summaries,
+  "renderersByRole":role_acks
  }
  return web.json_response(resp_data,headers={"Cache-Control":"no-store"})
 
@@ -306,7 +390,7 @@ async def ws_handler(request):
  ip=request.headers.get("CF-Connecting-IP") or request.remote or "unknown"
  if len(room.clients)>=int(os.getenv("MAX_CONNECTIONS","500")) or not room.allow((ip,"connect"),12,60):return web.json_response({"error":"rate_limited"},status=429)
  ws=web.WebSocketResponse(heartbeat=25,receive_timeout=70,max_msg_size=WS_MAX_PAYLOAD,autoping=True); await ws.prepare(request)
- sid=secrets.token_urlsafe(12); room.clients[sid]={"ws":ws,"name":f"Listener-{sid[:4].upper()}","avatar":"orb-purple","ip":ip,"last_reaction":0.,"seen":deque(maxlen=32),"is_audience":False,"is_renderer":False,"environment":environment,"renderer_environment":None,"visual_mode":"unknown"}
+ sid=secrets.token_urlsafe(12); room.clients[sid]={"ws":ws,"name":f"Listener-{sid[:4].upper()}","avatar":"orb-purple","ip":ip,"last_reaction":0.,"seen":deque(maxlen=32),"is_audience":False,"is_renderer":False,"environment":environment,"renderer_environment":None,"renderer_role":None,"visual_mode":"unknown"}
  rows=room.db.execute("SELECT id,name,text,avatar,created_at FROM messages ORDER BY created_at DESC LIMIT ?",(int(os.getenv("CHAT_HISTORY_LIMIT","50")),)).fetchall()
  active_layout,_=read_layout(room,environment)
  snap=room.snapshot();snap.pop("type",None);await ws.send_json({"type":"welcome","session_id":sid,"environment":environment,"history":[dict(x) for x in reversed(rows)],"active_layout":active_layout,**snap}); await room.broadcast(room.snapshot())
@@ -350,6 +434,10 @@ async def ws_handler(request):
      await ws.send_json({"type":"error","code":"layout_hash_not_active"}); continue
     state["is_renderer"]=True
     state["renderer_environment"]=env_name
+    state["visual_mode"]="new"
+    renderer_role=clean(body.get("rendererRole"),32) or "unknown-renderer"
+    if renderer_role not in {"green-room-renderer","visuals-page-renderer","unknown-renderer"}:renderer_role="unknown-renderer"
+    state["renderer_role"]=renderer_role
     ack_data={
      "rendererSessionId":sid,
      "environment":env_name,
@@ -360,11 +448,16 @@ async def ws_handler(request):
      "renderAppliedAt":int(body.get("renderAppliedAt",now_ts)),
      "videoReadyState":int(body.get("videoReadyState",0)),
      "stageReadyState":int(body.get("stageReadyState",0)),
+     "rotationRound":int(body.get("rotationRound",0)),
+     "rotationPosition":int(body.get("rotationPosition",0)),
+     "libraryCount":int(body.get("libraryCount",0)),
      "visualMode":"new",
+     "rendererRole":renderer_role,
      "renderStatus":clean(body.get("renderStatus","rendered"),32),
      "receivedAt":now_ts,
      "lastSeen":now_ts
     }
+    state["renderer_ack"]=ack_data
     room.db.execute("INSERT OR REPLACE INTO stats(key, value) VALUES(?, ?)",(f"renderer_ack:{env_name}",json.dumps(ack_data)))
     room.db.commit()
     await room.broadcast({"type":"renderer_ack_received","environment":env_name,"ack":ack_data},env_name)
@@ -383,7 +476,15 @@ async def ws_handler(request):
     state["renderer_environment"]=env_name
     visual_mode=clean(body.get("visualMode"),16) or "new"
     state["visual_mode"]=visual_mode
+    heartbeat_role=clean(body.get("rendererRole"),32)
+    if heartbeat_role in {"green-room-renderer","visuals-page-renderer","unknown-renderer"}:state["renderer_role"]=heartbeat_role
     h_hash=clean(body.get("layoutHash"),64)
+    client_ack=state.get("renderer_ack") or {}
+    if client_ack and visual_mode == "new" and (not h_hash or client_ack.get("layoutHash")==h_hash):
+     client_ack["lastSeen"]=now_ts
+     client_ack["videoReadyState"]=int(body.get("videoReadyState",client_ack.get("videoReadyState",0)))
+     client_ack["visualMode"]="new"
+     state["renderer_ack"]=client_ack
     for stat_key in (f"renderer_ack:{env_name}",):
      row=room.db.execute("SELECT value FROM stats WHERE key=?", (stat_key,)).fetchone()
      ack=json.loads(row[0]) if row and row[0] else {}
@@ -391,6 +492,7 @@ async def ws_handler(request):
       ack["lastSeen"]=now_ts
       ack["videoReadyState"]=int(body.get("videoReadyState",ack.get("videoReadyState",0)))
       ack["visualMode"]=visual_mode
+      state["renderer_ack"]=ack
       room.db.execute("INSERT OR REPLACE INTO stats(key, value) VALUES(?, ?)",(stat_key,json.dumps(ack)))
     room.db.commit()
     await ws.send_json({"type":"renderer_heartbeat_ack","environment":env_name,"server_time":now_ts})
@@ -431,5 +533,7 @@ def create_app(db_path=None):
  if not live_token:raise RuntimeError("LIVE_ADMIN_TOKEN is required")
  if secrets.compare_digest(green_token,live_token):raise RuntimeError("Green and Live admin credentials must be different")
  path=db_path or os.getenv("DATABASE_PATH","./realtime.db");Path(path).parent.mkdir(parents=True,exist_ok=True)
- app=web.Application(client_max_size=HTTP_MAX_PAYLOAD,middlewares=[cors]);app['room']=Room(path);app['origins']=origins;app.add_routes([web.get('/health',health),web.get('/visuals-state',visual_state),web.get('/layout-state',layout_state),web.post('/admin/schedule',schedule),web.post('/admin/layout',publish_layout),web.post('/renderer-ack',renderer_ack),web.get('/renderer-state',renderer_state),web.get('/ws',ws_handler)]);app.on_shutdown.append(shutdown_clients);app.on_cleanup.append(close_room_db);return app
+ media_root=Path(os.getenv("MEDIA_ROOT","/home/ebmarah/Videos/at140radio/desktop visuals/generated/web-v1")).expanduser().resolve()
+ if not media_root.is_dir():raise RuntimeError(f"MEDIA_ROOT does not exist: {media_root}")
+ app=web.Application(client_max_size=HTTP_MAX_PAYLOAD,middlewares=[cors]);app['room']=Room(path);app['origins']=origins;app['media_root']=media_root;app['workstation_live']={"active":False,"layoutHash":"","startedAt":0,"lastHeartbeat":0};app.add_routes([web.get('/health',health),web.get('/live-state',live_state),web.post('/admin/live',workstation_live),web.get('/media/visuals/{name}',media_asset),web.get('/media/stage/{name}',media_asset),web.get('/media/{name}',media_asset),web.get('/visuals/{name}',media_asset),web.get('/stage/{name}',media_asset),web.get('/visuals-state',visual_state),web.get('/layout-state',layout_state),web.post('/admin/schedule',schedule),web.post('/admin/layout',publish_layout),web.post('/renderer-ack',renderer_ack),web.get('/renderer-state',renderer_state),web.get('/ws',ws_handler)]);app.on_shutdown.append(shutdown_clients);app.on_cleanup.append(close_room_db);return app
 if __name__=="__main__":logging.basicConfig(level=logging.INFO);web.run_app(create_app(),host=os.getenv("REALTIME_HOST","127.0.0.1"),port=int(os.getenv("REALTIME_PORT","14140")))

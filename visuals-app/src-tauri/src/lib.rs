@@ -143,8 +143,23 @@ fn get_admin_token() -> String {
         .unwrap_or_default()
 }
 
+fn get_live_admin_token() -> String {
+    let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/home/ebmarah"));
+    let env_path = home.join(".config/allthings140-visuals-laptop/realtime.env");
+    fs::read_to_string(env_path).ok()
+        .and_then(|content| content.lines().find_map(|line| line.strip_prefix("LIVE_ADMIN_TOKEN=").map(str::trim).filter(|v| !v.is_empty()).map(str::to_string)))
+        .or_else(|| env::var("LIVE_ADMIN_TOKEN").ok())
+        .unwrap_or_default()
+}
+
+fn workstation_derivative_root() -> PathBuf {
+    dirs::home_dir().unwrap_or_else(|| PathBuf::from("/home/ebmarah"))
+        .join("Videos/at140radio/desktop visuals/generated/web-v1")
+}
+
 const APPROVED_STAGING_ORIGINS: &[&str] = &[
     "https://allthings140-visuals-green.pages.dev",
+    "https://visuals-main-preview.ebeinc-uqt.pages.dev",
     "https://visuals-media-staging.allthings140radio.online",
     "https://visuals-realtime-staging.allthings140radio.online",
     "https://allthings140radio.online",
@@ -162,6 +177,18 @@ fn open_staging_url(url: String) -> Result<(), String> {
         .spawn()
         .map(|_| ())
         .map_err(|e| format!("Could not open staging browser: {e}"))
+}
+
+#[tauri::command]
+fn open_media_folder(path: String) -> Result<(), String> {
+    let requested = PathBuf::from(path).canonicalize().map_err(|e| format!("Media folder is unavailable: {e}"))?;
+    let approved = dirs::home_dir().ok_or("Home directory unavailable")?
+        .join("Videos/at140radio/desktop visuals").canonicalize().map_err(|e| e.to_string())?;
+    if !requested.is_dir() || !requested.starts_with(&approved) {
+        return Err("Only configured ALLTHINGS140 media folders may be opened".into());
+    }
+    Command::new("xdg-open").arg(requested).stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null())
+        .spawn().map(|_| ()).map_err(|e| format!("Could not open media folder: {e}"))
 }
 
 fn validate_staging_url(url: &str) -> Result<(), String> {
@@ -274,7 +301,7 @@ fn get_visual_health() -> Result<Value, String> {
     // the realtime service. Always query renderer-state directly so a missing
     // Worker KV mirror cannot falsely report the live Green Room as offline.
     let edge_health = Command::new("curl")
-        .args(["-fsS", "-m", "5", "https://allthings140radio.online/api/visual-health"])
+        .args(["-fsS", "-m", "1", "https://allthings140radio.online/api/visual-health"])
         .output()
         .ok()
         .filter(|o| o.status.success())
@@ -282,12 +309,14 @@ fn get_visual_health() -> Result<Value, String> {
         .unwrap_or(json!({}));
 
     let rt_health = Command::new("curl")
-        .args(["-fsS", "-m", "4", "https://visuals-realtime-staging.allthings140radio.online/health"])
+        .args(["-fsS", "-m", "3", "https://visuals-realtime-staging.allthings140radio.online/health"])
         .output();
     let rt_ok = rt_health.as_ref().map(|o| o.status.success()).unwrap_or(false);
+    let rt_health_value = rt_health.as_ref().ok().filter(|o| o.status.success())
+        .and_then(|o| serde_json::from_slice::<Value>(&o.stdout).ok()).unwrap_or(json!({}));
 
     let rt_ack = Command::new("curl")
-        .args(["-fsS", "-m", "4", "https://visuals-realtime-staging.allthings140radio.online/renderer-state?environment=live"])
+        .args(["-fsS", "-m", "3", "https://visuals-realtime-staging.allthings140radio.online/renderer-state?environment=live"])
         .output();
     let ack_val: Value = rt_ack
         .ok()
@@ -308,7 +337,7 @@ fn get_visual_health() -> Result<Value, String> {
     Ok(json!({
         "ok": rt_ok,
         "vm2": { "status": if rt_ok { "ok" } else { "offline" } },
-        "realtime": { "status": if rt_ok { "ok" } else { "offline" } },
+        "realtime": { "status": if rt_ok { "ok" } else { "offline" }, "health": rt_health_value },
         "renderer": {
             "status": if renderer_online { "online" } else { "offline" },
             "ack": ack_val.clone(),
@@ -317,6 +346,46 @@ fn get_visual_health() -> Result<Value, String> {
         "routing": routing,
         "edge": edge_health
     }))
+}
+
+#[tauri::command]
+fn ensure_workstation_live_path() -> Result<Value, String> {
+    for _ in 0..30 {
+        let output = Command::new("curl").args(["-fsS", "-m", "2", "https://visuals-realtime-staging.allthings140radio.online/health"]).output();
+        if let Ok(out) = output {
+            if out.status.success() {
+                if let Ok(value) = serde_json::from_slice::<Value>(&out.stdout) { return Ok(value); }
+            }
+        }
+        std::thread::sleep(std::time::Duration::from_millis(500));
+    }
+    Err("Secure workstation live path did not become healthy within 15 seconds".into())
+}
+
+#[tauri::command]
+fn set_workstation_live(action: String, layout_hash: Option<String>) -> Result<Value, String> {
+    if !matches!(action.as_str(), "start" | "heartbeat" | "stop") { return Err("Invalid workstation live action".into()); }
+    let token = get_live_admin_token();
+    if token.is_empty() { return Err("LIVE realtime credential is not configured".into()); }
+    let payload = json!({"action": action, "environment": "live", "layoutHash": layout_hash.unwrap_or_default()});
+    let publish_dir = data_dir()?.join("publish-tmp");
+    fs::create_dir_all(&publish_dir).map_err(|e| e.to_string())?;
+    let tag = Utc::now().timestamp_millis();
+    let payload_path = publish_dir.join(format!("live-{tag}.json"));
+    let header_path = publish_dir.join(format!("live-headers-{tag}.txt"));
+    let response_path = publish_dir.join(format!("live-response-{tag}.json"));
+    fs::write(&payload_path, payload.to_string()).map_err(|e| e.to_string())?;
+    fs::write(&header_path, format!("Content-Type: application/json\nAuthorization: Bearer {token}\nX-AT140-Environment: live\n")).map_err(|e| e.to_string())?;
+    #[cfg(unix)] let _ = fs::set_permissions(&header_path, fs::Permissions::from_mode(0o600));
+
+    let output = Command::new("curl").args(["-sS", "-m", "5", "-o", response_path.to_str().ok_or("Invalid response path")?, "-w", "%{http_code}", "-X", "POST", "-H", &format!("@{}", header_path.display()), "--data-binary", &format!("@{}", payload_path.display()), "https://visuals-realtime-staging.allthings140radio.online/admin/live?environment=live"]).output()
+        .map_err(|e| format!("Live control request failed: {e}"))?;
+    let status = String::from_utf8_lossy(&output.stdout).trim().parse::<u16>().unwrap_or(0);
+    let body = fs::read_to_string(&response_path).unwrap_or_default();
+    let _ = fs::remove_file(payload_path); let _ = fs::remove_file(header_path); let _ = fs::remove_file(response_path);
+    if !output.status.success() || !(200..300).contains(&status) { return Err(format!("Live control HTTP {status}: {body}")); }
+
+    serde_json::from_str(&body).map_err(|e| format!("Live control returned invalid JSON: {e}"))
 }
 
 #[tauri::command]
@@ -1549,14 +1618,11 @@ fn validate_selected_media_blocking(payload: Value) -> Result<Value, String> {
     }))
 }
 
-fn runtime_media_extension(path: &Path) -> &'static str {
-    match path.extension().and_then(|x| x.to_str()).unwrap_or("").to_ascii_lowercase().as_str() {
-        "webm" => "webm",
-        "mp4" | "m4v" => "mp4",
-        // Runtime conversion should normally prevent these from reaching staging, but keep
-        // a conservative fallback rather than lying about the file type.
-        _ => "mp4",
-    }
+fn runtime_media_extension(_path: &Path) -> &'static str {
+    // The public workstation media directory contains validated, web-safe H.264
+    // derivatives. Source extensions must never leak into the published URL:
+    // a selected WebM/MOV master is still delivered as its generated MP4.
+    "mp4"
 }
 
 fn playlist_local_path(item: &Value) -> Option<PathBuf> {
@@ -1603,7 +1669,7 @@ fn compact_playlist_for_green(state: &Value, media_origin: &str) -> Result<Value
         // stale persisted publicUrl from an earlier publish.
         let url = if let Some(path) = local_path.as_deref() {
             let ext = runtime_media_extension(path);
-            format!("{}/visuals/{}.{}", media_origin.trim_end_matches('/'), id, ext)
+            format!("{}/visuals/{}.{}?v=workstation-v2", media_origin.trim_end_matches('/'), id, ext)
         } else if let Some(u) = explicit_url {
             u.to_string()
         } else {
@@ -1633,21 +1699,9 @@ fn publish_layout_fast_blocking(payload: Value) -> Result<Value, String> {
         .to_path_buf();
     let green = root.join("visuals-green");
 
-    let config = get_workstation_config();
-    let media_origin = config["mediaOrigin"].as_str()
-        .map(|s| s.to_string())
-        .or_else(|| env::var("VISUALS_MEDIA_ORIGIN").ok())
-        .unwrap_or_else(|| "https://visuals-media-staging.allthings140radio.online".to_string())
-        .trim_end_matches('/').to_string();
-    let media_target = config["sshTarget"].as_str()
-        .map(|s| s.to_string())
-        .or_else(|| env::var("VISUALS_MEDIA_SSH_TARGET").ok())
-        .unwrap_or_else(|| "opc@100.74.121.38".to_string());
-    let remote_root = config["remoteRoot"].as_str()
-        .map(|s| s.to_string())
-        .or_else(|| env::var("VISUALS_MEDIA_REMOTE_ROOT").ok())
-        .unwrap_or_else(|| "/srv/allthings140-visuals/media".to_string());
-    let admin_token = get_admin_token();
+    let media_origin = "https://visuals-realtime-staging.allthings140radio.online/media".to_string();
+    let derivative_root = workstation_derivative_root();
+    let admin_token = get_live_admin_token();
 
     if admin_token.is_empty() {
         return Err("REALTIME AUTH NOT CONFIGURED: No admin token found in workstation config or env".into());
@@ -1710,7 +1764,7 @@ fn publish_layout_fast_blocking(payload: Value) -> Result<Value, String> {
             let sub = if layer["id"] == "stage-content" { "stage" } else { "visuals" };
             let ext = runtime_media_extension(&local_path);
             let asset_filename = format!("{fingerprint}.{ext}");
-            let manifest_url = format!("{media_origin}/{sub}/{asset_filename}");
+            let manifest_url = format!("{media_origin}/{sub}/{asset_filename}?v=workstation-v2");
 
             // Never leak workstation-local paths into the Green/realtime data contract.
             published["media"] = json!({
@@ -1729,9 +1783,8 @@ fn publish_layout_fast_blocking(payload: Value) -> Result<Value, String> {
                 visual_asset_id = Some(fingerprint.clone());
             }
 
-            if local_path.exists() {
-                media_to_sync.push((local_path, sub.to_string(), fingerprint.clone(), asset_filename.clone()));
-            }
+            let derivative = derivative_root.join(format!("{fingerprint}.mp4"));
+            if derivative.exists() { media_to_sync.push((derivative, sub.to_string(), fingerprint.clone(), format!("{fingerprint}.mp4"))); }
 
             if layer["id"] == "visual-content" {
                 preview_visual_obj = Some(json!({
@@ -1757,11 +1810,12 @@ fn publish_layout_fast_blocking(payload: Value) -> Result<Value, String> {
                     .filter(|u| u.starts_with("https://"));
                 if let Some(local_path) = playlist_local_path(item) {
                     let asset_id = safe_playlist_asset_id(item, Some(&local_path))?;
-                    let ext = runtime_media_extension(&local_path);
-                    let asset_filename = format!("{asset_id}.{ext}");
+                    let asset_filename = format!("{asset_id}.mp4");
                     let duplicate = media_to_sync.iter().any(|(_, sub, _, file)| sub == "visuals" && file == &asset_filename);
                     if !duplicate {
-                        media_to_sync.push((local_path, "visuals".to_string(), asset_id, asset_filename));
+                        let derivative = derivative_root.join(&asset_filename);
+                        if !derivative.exists() { return Err(format!("RENDER-READY DERIVATIVE MISSING: {}", derivative.display())); }
+                        media_to_sync.push((derivative, "visuals".to_string(), asset_id, asset_filename));
                     }
                 } else if external_https.is_none() {
                     return Err(format!("24/7 PRE-FLIGHT FAILED: enabled playlist item '{}' has neither a local source/runtime path nor an HTTPS URL", item.get("name").and_then(|v| v.as_str()).unwrap_or("visual")));
@@ -1771,9 +1825,9 @@ fn publish_layout_fast_blocking(payload: Value) -> Result<Value, String> {
     }
 
     // 3C-3F: Check if assets already exist on staging media origin before rsync
-    let mut uploaded = 0u32;
+    let uploaded = 0u32;
     let mut cached = 0u32;
-    for (src, sub, asset_id, asset_filename) in &media_to_sync {
+    for (src, sub, _asset_id, asset_filename) in &media_to_sync {
         if is_job_cancelled(job_id.as_deref()) {
             return Err("Publish cancelled by user".into());
         }
@@ -1790,35 +1844,14 @@ fn publish_layout_fast_blocking(payload: Value) -> Result<Value, String> {
                 cached += 1;
                 continue;
             }
-            _ => {
-                // 3E: Asset missing — rsync upload
-                let dest = format!("{}:{}/{}/{}", media_target, remote_root, sub, asset_filename);
-                let mut rsync = Command::new("rsync");
-                rsync.args(["-az", "--partial", "--timeout=10", src.to_str().unwrap(), &dest]);
-                // Preview publishes must remain snappy; a full 24/7 rollout may need to
-                // pre-stage a large uncached asset, so give rsync more wall-clock time.
-                let upload_timeout_secs = if is_preview { 15 } else { 90 };
-                let out = run_cmd_with_timeout(rsync, upload_timeout_secs, job_id.as_deref())?;
-                if !out.status.success() {
-                    return Err(format!("Media sync failed for {asset_id}: {}", String::from_utf8_lossy(&out.stderr)));
-                }
-                uploaded += 1;
-
-                // 3F: Verify upload via HEAD
-                let mut head2 = Command::new("curl");
-                head2.args(["-fsSI", "-m", "5", &check_url]);
-                let head2_out = run_cmd_with_timeout(head2, 6, job_id.as_deref())?;
-                if !head2_out.status.success() {
-                    return Err(format!("Remote media URL {check_url} failed HEAD check after upload: {}", String::from_utf8_lossy(&head2_out.stderr)));
-                }
-            }
+            _ => return Err(format!("WORKSTATION MEDIA PATH UNAVAILABLE: {check_url} (local derivative {})", src.display()))
         }
     }
 
     let playlist_contract = if is_preview { json!([]) } else { compact_playlist_for_green(state, &media_origin)? };
     let mut canonical = json!({
         "schemaVersion": 2,
-        "environment": "green-staging",
+        "environment": "live",
         "revision": revision,
         "layoutId": format!("layout-{revision}"),
         "publishedAt": Utc::now().to_rfc3339(),
@@ -1827,11 +1860,11 @@ fn publish_layout_fast_blocking(payload: Value) -> Result<Value, String> {
         "layers": layers,
         "mediaBaseUrl": media_origin,
         "playlist": playlist_contract,
-        "cycle": state.get("cycle").cloned().unwrap_or_else(|| json!({"mode":"ordered","interval":"media-ended","skipFailed":true,"avoidImmediateRepeat":true})),
+        "cycle": {"mode":"shuffle-bag","interval":"media-ended","skipFailed":true,"avoidImmediateRepeat":true},
         "fallback": { "id": "known-good-fallback", "url": "https://allthings140radio.online/assets/visuals-phone.mp4?v=1.1.0", "fit": "cover" },
         "previewMode": is_preview,
         "safePlaybackMode": state.get("safePlaybackMode").and_then(|v| v.as_bool()).unwrap_or(false),
-        "productionLocked": true
+        "productionLocked": false
     });
 
     if is_preview && preview_visual_obj.is_some() {
@@ -1868,12 +1901,12 @@ fn publish_layout_fast_blocking(payload: Value) -> Result<Value, String> {
     fs::write(&payload_path, payload_str.as_bytes()).map_err(|e| format!("Could not stage realtime payload: {e}"))?;
     fs::write(
         &header_path,
-        format!("Content-Type: application/json\nAuthorization: Bearer {admin_token}\nX-AT140-Environment: green-staging\n").as_bytes(),
+        format!("Content-Type: application/json\nAuthorization: Bearer {admin_token}\nX-AT140-Environment: live\n").as_bytes(),
     ).map_err(|e| format!("Could not stage realtime auth header: {e}"))?;
     #[cfg(unix)]
     let _ = fs::set_permissions(&header_path, fs::Permissions::from_mode(0o600));
 
-    let realtime_url = "https://visuals-realtime-staging.allthings140radio.online/admin/layout?environment=green-staging";
+    let realtime_url = "https://visuals-realtime-staging.allthings140radio.online/admin/layout?environment=live";
     let mut post_cmd = Command::new("curl");
     post_cmd.args([
         "-sS",
@@ -2035,6 +2068,7 @@ pub fn run() {
             import_default_media,
             start_media_server,
             open_staging_url,
+            open_media_folder,
             append_app_log,
             scan_layer_media,
             export_report,
@@ -2047,7 +2081,9 @@ pub fn run() {
             app_info,
             get_visual_routing,
             set_visual_routing,
-            get_visual_health
+            get_visual_health,
+            ensure_workstation_live_path,
+            set_workstation_live
         ])
         .build(tauri::generate_context!())
         .expect("Visuals workstation failed");
