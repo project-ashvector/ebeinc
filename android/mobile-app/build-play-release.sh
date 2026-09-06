@@ -18,6 +18,9 @@ export KEYSTORE_PASSWORD="$(getv 'Keystore password')"
 export KEY_PASSWORD="$(getv 'Key password')"
 
 cd "$ROOT"
-./gradlew --no-daemon :app:assembleDeviceQa :app:assembleRelease :app:bundleRelease --console=plain
+./gradlew --no-daemon :app:assembleDeviceQa :app:assembleDeviceQaAndroidTest \
+  :app:assembleRelease :app:bundleRelease --console=plain
+"$ROOT/verify-android-auto-release.sh"
 
 echo "Signed device-QA APK, release APK, and release AAB built with the existing upload key."
+echo "Android Auto discovery contract verified in release artifacts."
