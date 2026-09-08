@@ -29,8 +29,8 @@ require_manifest() {
 }
 
 require_manifest 'package="online.ebeinc.allthings140radio"'
-require_manifest 'android:versionCode="26"'
-require_manifest 'android:versionName="1.3.10"'
+require_manifest 'android:versionCode="27"'
+require_manifest 'android:versionName="1.3.11"'
 require_manifest 'android:name="com.google.android.gms.car.application"'
 if [[ "$manifest" != *'android:resource="@ref/'* && "$manifest" != *'android:resource="@xml/automotive_app_desc"'* ]]; then
   echo "Release APK Android Auto metadata does not reference an automotive descriptor." >&2
