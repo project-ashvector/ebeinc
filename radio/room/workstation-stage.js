@@ -118,19 +118,51 @@
     fallbackVideo.loop = true;
 
     const mp4Url = chooseLegacyFallbackUrl();
+    const isMobile = window.matchMedia && window.matchMedia('(max-width: 680px)').matches;
+    const hlsUrl = !isMobile && C.legacyFallbackHls;
     const playing = !fallbackVideo.paused && fallbackVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && fallbackVideo.videoWidth > 0;
     if (playing) return true;
 
-    // Fail open: start the progressive MP4 immediately. HLS is an upgrade path
-    // and must never block or replace a working MP4.
-    if (mp4Url && !fallbackVideo.currentSrc && !fallbackVideo.src) {
-      fallbackVideo.src = mp4Url;
-      fallbackVideo.load();
-    } else if (mp4Url && fallbackVideo.error) {
-      fallbackVideo.src = mp4Url;
-      fallbackVideo.load();
+    const playMp4 = () => {
+      if (mp4Url && fallbackVideo.getAttribute('src') !== mp4Url) {
+        fallbackVideo.src = mp4Url;
+        fallbackVideo.load();
+      }
+      return fallbackVideo.play().catch(() => {});
+    };
+
+    if (hlsUrl && window.Hls && Hls.isSupported()) {
+      if (!fallbackHls) {
+        fallbackHls = new Hls({
+          enableWorker: true,
+          maxBufferLength: 30,
+          maxMaxBufferLength: 60
+        });
+        fallbackHls.loadSource(hlsUrl);
+        fallbackHls.attachMedia(fallbackVideo);
+        fallbackHls.on(Hls.Events.MANIFEST_PARSED, () => { fallbackVideo.play().catch(() => {}); });
+        fallbackHls.on(Hls.Events.ERROR, (_event, data) => {
+          if (!data.fatal || !fallbackHls) return;
+          if (data.type === Hls.ErrorTypes.NETWORK_ERROR) fallbackHls.startLoad();
+          else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) fallbackHls.recoverMediaError();
+          else {
+            fallbackHls.destroy();
+            fallbackHls = null;
+            playMp4();
+          }
+        });
+      } else {
+        try { await fallbackVideo.play(); } catch (_) {}
+      }
+    } else if (hlsUrl && fallbackVideo.canPlayType('application/vnd.apple.mpegurl')) {
+      if (fallbackVideo.src !== hlsUrl) {
+        fallbackVideo.src = hlsUrl;
+        fallbackVideo.load();
+      }
+      try { await fallbackVideo.play(); } catch (_) {}
+    } else {
+      await playMp4();
     }
-    try { await fallbackVideo.play(); } catch (_) {}
 
     if (fallbackVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && fallbackVideo.videoWidth > 0) return true;
     try {

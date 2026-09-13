@@ -28,10 +28,12 @@ test('failed next visual does not clear current before first frame', () => {
   assert.doesNotMatch(stage, /prevVideo\.pause\(\);\s*\n\s*\}, 400\)/);
 });
 
-test('public fallback starts MP4 without waiting for HLS or realtime', () => {
+test('public desktop visuals use HQ HLS from master with MP4 emergency fallback', () => {
+  assert.match(adaptive, /visuals-desktop-v9\/index\.m3u8/);
+  assert.match(adaptive, /desktopHls\.loadSource\(video\.dataset\.desktopSrc\)/);
   assert.match(adaptive, /useDirectSource\(video\.dataset\.desktopFallback\)/);
   assert.doesNotMatch(adaptive, /if \(document\.hidden\) \{\s*video\.pause/);
-  assert.match(config, /legacyFallbackDesktop:"https:\/\/allthings140radio\.online\/assets\/visuals-desktop\.mp4/);
+  assert.match(config, /legacyFallbackHls:"https:\/\/allthings140radio\.online\/assets\/visuals-desktop-v9\/index\.m3u8"/);
 });
 
 test('workstation visual layer uses A\/B buffers', () => {
