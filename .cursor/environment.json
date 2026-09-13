@@ -1,0 +1,17 @@
+{
+  "name": "EBE INC Hub",
+  "install": "python3 --version",
+  "terminals": [
+    {
+      "name": "site-server",
+      "command": "python3 \"LAN SERVER.py\"",
+      "description": "No-cache static HTTP server for the EBE INC single-page site. Serves the repository root (index.html) on the first free port in 8080-8199 (8080 by default). Open http://localhost:8080/ to view the site."
+    }
+  ],
+  "ports": [
+    {
+      "name": "web",
+      "port": 8080
+    }
+  ]
+}
