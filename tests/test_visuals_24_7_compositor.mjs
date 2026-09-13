@@ -29,14 +29,14 @@ test('failed next visual does not clear current before first frame', () => {
 });
 
 test('public visuals tab uses only HQ HLS from master, never MP4 or phone fallbacks', () => {
-  assert.match(adaptive, /visuals-desktop-v9\/index\.m3u8/);
+  assert.match(adaptive, /visuals-desktop-v10\/index\.m3u8/);
   assert.match(adaptive, /desktopHls\.loadSource\(video\.dataset\.desktopSrc\)/);
   assert.doesNotMatch(adaptive, /visuals-desktop\.mp4/);
   assert.doesNotMatch(adaptive, /phone-visuals/);
   assert.doesNotMatch(adaptive, /desktopFallback/);
   assert.doesNotMatch(adaptive, /data-mobile-src/);
   assert.doesNotMatch(adaptive, /if \(document\.hidden\) \{\s*video\.pause/);
-  assert.match(config, /legacyFallbackHls:"https:\/\/allthings140radio\.online\/assets\/visuals-desktop-v9\/index\.m3u8"/);
+  assert.match(config, /legacyFallbackHls:"https:\/\/allthings140radio\.online\/assets\/visuals-desktop-v10\/index\.m3u8"/);
   assert.doesNotMatch(config, /legacyFallbackDesktop/);
   assert.doesNotMatch(config, /legacyFallbackMobile/);
   assert.match(stage, /visualsHlsOnly/);
