@@ -59,6 +59,8 @@
   let visualTransitionInFlight = false;
   let queuedCustomVisual = null;
   let transitionTriggeredForCurrent = false;
+  let visualSwapGeneration = 0;
+  const CROSSFADE_MS = Math.max(500, Math.min(800, Number(C.crossfadeMs) || 700));
   let stationPollInFlight = false;
 
   let takeoverPollInFlight = false;
@@ -107,66 +109,37 @@
 
   async function ensureFallbackReady() {
     const fallbackVideo = $('#legacyFallbackVideo');
+    const fallback = $('#legacyFallback');
     if (!fallbackVideo) return false;
+    if (fallback) fallback.hidden = false;
     fallbackVideo.muted = true;
     fallbackVideo.defaultMuted = true;
     fallbackVideo.playsInline = true;
+    fallbackVideo.loop = true;
 
-    const isMobile = window.matchMedia && window.matchMedia('(max-width: 680px)').matches;
-    const hlsUrl = !isMobile && C.legacyFallbackHls;
     const mp4Url = chooseLegacyFallbackUrl();
+    const playing = !fallbackVideo.paused && fallbackVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && fallbackVideo.videoWidth > 0;
+    if (playing) return true;
 
-    if (hlsUrl && window.Hls && Hls.isSupported()) {
-      if (!fallbackHls) {
-        fallbackHls = new Hls({
-          enableWorker: true,
-          maxBufferLength: 30,
-          maxMaxBufferLength: 60
-        });
-        fallbackHls.loadSource(hlsUrl);
-        fallbackHls.attachMedia(fallbackVideo);
-        fallbackHls.on(Hls.Events.MANIFEST_PARSED, () => {
-          fallbackVideo.play().catch(() => {});
-        });
-        fallbackHls.on(Hls.Events.ERROR, (_event, data) => {
-          if (!data.fatal || !fallbackHls) return;
-          if (data.type === Hls.ErrorTypes.NETWORK_ERROR) fallbackHls.startLoad();
-          else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) fallbackHls.recoverMediaError();
-          else {
-            fallbackHls.destroy();
-            fallbackHls = null;
-            if (mp4Url && fallbackVideo.src !== mp4Url) {
-              fallbackVideo.src = mp4Url;
-              fallbackVideo.load();
-              fallbackVideo.play().catch(() => {});
-            }
-          }
-        });
-      } else {
-        try { await fallbackVideo.play(); } catch (_) {}
-      }
-    } else if (hlsUrl && fallbackVideo.canPlayType('application/vnd.apple.mpegurl')) {
-      if (fallbackVideo.src !== hlsUrl) {
-        fallbackVideo.src = hlsUrl;
-        fallbackVideo.load();
-      }
-      try { await fallbackVideo.play(); } catch (_) {}
-    } else {
-      if (!C.preserveFallbackSource && mp4Url && fallbackVideo.currentSrc !== mp4Url && fallbackVideo.src !== mp4Url) {
-        fallbackVideo.src = mp4Url;
-        fallbackVideo.load();
-      }
-      try { await fallbackVideo.play(); } catch (_) {}
+    // Fail open: start the progressive MP4 immediately. HLS is an upgrade path
+    // and must never block or replace a working MP4.
+    if (mp4Url && !fallbackVideo.currentSrc && !fallbackVideo.src) {
+      fallbackVideo.src = mp4Url;
+      fallbackVideo.load();
+    } else if (mp4Url && fallbackVideo.error) {
+      fallbackVideo.src = mp4Url;
+      fallbackVideo.load();
     }
+    try { await fallbackVideo.play(); } catch (_) {}
 
-    if (fallbackVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) return true;
-    return await new Promise(resolve => {
-      const finish = value => { clearTimeout(timer); fallbackVideo.removeEventListener('loadeddata', ready); fallbackVideo.removeEventListener('canplay', ready); resolve(value); };
-      const ready = () => finish(true);
-      const timer = setTimeout(() => finish(fallbackVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA), 5000);
-      fallbackVideo.addEventListener('loadeddata', ready, { once: true });
-      fallbackVideo.addEventListener('canplay', ready, { once: true });
-    });
+    if (fallbackVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && fallbackVideo.videoWidth > 0) return true;
+    try {
+      await waitForDecodedFrame(fallbackVideo, 8000);
+      return true;
+    } catch (_) {
+      try { await fallbackVideo.play(); } catch (__) {}
+      return fallbackVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA;
+    }
   }
 
   function clearRendererSafetyTimers() {
@@ -245,13 +218,24 @@
         ? 'LEGACY VISUAL SAFETY MODE'
         : 'VISUAL SAFETY FALLBACK';
       await ensureFallbackReady();
+      if (composition) {
+        composition.classList.remove('live-armed');
+        composition.classList.remove('live-pending');
+        composition.hidden = true;
+      }
       pauseCompositorMedia();
-      if (composition) composition.hidden = true;
       log('room_visual_mode', { mode: next, reason });
       return;
     }
 
-    if (composition) composition.hidden = false;
+    // Keep fallback visible and covering until a live visual frame exists.
+    if (fallback) fallback.hidden = false;
+    await ensureFallbackReady();
+    if (composition) {
+      composition.hidden = false;
+      composition.classList.add('live-pending');
+      composition.classList.remove('live-armed');
+    }
     resumeCompositorMedia();
     log('room_visual_mode', { mode: next, reason });
     armRendererReadinessFallback();
@@ -262,8 +246,17 @@
       await new Promise(resolve => setTimeout(resolve, 120));
     }
     if (roomVisualMode === 'new' && rendererMediaReady().ready) {
-      if (fallback) fallback.hidden = true;
-      if (fallbackVideo) { try { fallbackVideo.pause(); } catch (_) {} }
+      if (composition) {
+        composition.classList.remove('live-pending');
+        composition.classList.add('live-armed');
+      }
+      await new Promise(resolve => setTimeout(resolve, CROSSFADE_MS));
+      if (roomVisualMode === 'new' && rendererMediaReady().ready) {
+        if (fallback) fallback.hidden = true;
+        if (fallbackVideo) { try { fallbackVideo.pause(); } catch (_) {} }
+      }
+    } else if (roomVisualMode === 'new') {
+      engageAutomaticLegacyFallback('live_first_frame_missing');
     }
   }
 
@@ -846,18 +839,18 @@ Track: ${currentStationStatus?.current_title || 'LIVE RADIO'} (Seq: ${currentSta
   }
 
   async function activateVisualBuffer(targetIdx, item) {
+    const generation = ++visualSwapGeneration;
     const targetVideo = videos[targetIdx];
     const prevIdx = 1 - targetIdx;
     const prevVideo = videos[prevIdx];
     const targetUrl = mediaUrl(item.url);
+    const prevWasActive = prevVideo?.classList.contains('active');
 
-    if (targetVideo.src !== targetUrl) {
+    if (targetVideo.getAttribute('src') !== targetUrl) {
       targetVideo.src = targetUrl;
       targetVideo.dataset.id = item.id || item.assetId || 'visual';
       targetVideo.style.objectFit = item.fit || 'cover';
       targetVideo.load();
-    } else {
-      targetVideo.currentTime = 0;
     }
 
     try {
@@ -868,16 +861,17 @@ Track: ${currentStationStatus?.current_title || 'LIVE RADIO'} (Seq: ${currentSta
             targetVideo.addEventListener('loadedmetadata', () => { clearTimeout(timer); resolve(); }, { once: true });
           });
         }
+        if (generation !== visualSwapGeneration) return;
         const duration = Number.isFinite(targetVideo.duration) ? targetVideo.duration : 0;
         targetVideo.currentTime = duration > 0 ? Math.min(item.syncOffsetSeconds, Math.max(0, duration - 0.1)) : item.syncOffsetSeconds;
       }
       await targetVideo.play();
       await waitForDecodedFrame(targetVideo);
+      if (targetVideo.videoWidth < 2) throw new Error('empty visual frame');
     } catch (e) {
+      if (generation !== visualSwapGeneration) return;
       const message = String(e?.message || e || '');
       if (e?.name === 'AbortError' || /play\(\) request was interrupted/i.test(message)) {
-        // A newer serialized transport action retired this buffer. This is an
-        // expected cancellation, not evidence that the immutable media failed.
         log('play_cancelled', { id: item.id || item.assetId });
         return;
       }
@@ -885,21 +879,28 @@ Track: ${currentStationStatus?.current_title || 'LIVE RADIO'} (Seq: ${currentSta
       handleVisualFailure(item, 'first_frame_failed');
       return;
     }
+    if (generation !== visualSwapGeneration) return;
 
-    // Keep the previous good frame visible until the replacement has decoded.
+    // Current remains visible until B has a decoded frame; then GPU opacity crossfade.
     targetVideo.classList.add('active');
-    if (prevVideo && prevVideo !== targetVideo) {
-      setTimeout(() => {
-        prevVideo.classList.remove('active');
-        prevVideo.pause();
-      }, 400);
-    }
     activeIndex = targetIdx;
     consecutiveFailures = 0;
     transitionTriggeredForCurrent = false;
     updateDebugOverlay();
     reportRendererAck();
     prefetchNextVisual();
+    if (prevVideo && prevVideo !== targetVideo && prevWasActive) {
+      const retire = () => {
+        if (generation !== visualSwapGeneration) return;
+        if (prevVideo.classList.contains('active') && videos[activeIndex] !== prevVideo) {
+          prevVideo.classList.remove('active');
+        }
+      };
+      prevVideo.addEventListener('transitionend', retire, { once: true });
+      setTimeout(() => {
+        retire();
+      }, CROSSFADE_MS + 80);
+    }
   }
 
 

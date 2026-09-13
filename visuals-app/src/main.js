@@ -482,6 +482,12 @@ function makeLayerElement(def) {
       <video class="stage-fallback-full" muted loop autoplay playsinline preload="auto" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:fill;"></video>
     </div>`;
   }
+  if (def.kind === 'media' && (def.role === 'visual' || def.id === 'visual-content')) {
+    return `<div class="layer media-layer visual-ab" data-canvas-layer-id="${id}">
+      <video class="visual-buf visual-buf-a active" muted loop autoplay playsinline preload="auto"></video>
+      <video class="visual-buf visual-buf-b" muted loop playsinline preload="auto"></video>
+    </div>`;
+  }
   if (def.kind === 'media') return `<video class="layer media-layer" data-canvas-layer-id="${id}" muted loop autoplay playsinline preload="auto"></video>`;
   if (def.kind === 'logo') return `<div class="layer layer-logo" data-canvas-layer-id="${id}"><img src="https://allthings140radio.online/assets/takeover-fallback-logo.webp" alt="ALLTHINGS140 logo"></div>`;
   if (def.kind === 'alert') return `<div class="layer layer-alert" data-canvas-layer-id="${id}" data-mode="autodj"><small>24/7 PLAYLIST</small><b>EXAMPLE TRACK</b><span>EXAMPLE ARTIST</span></div>`;
@@ -1014,13 +1020,13 @@ function render(name = 'Visual Workspace') {
 
 function setVideoSource(video, url) {
   if (!video || !url) return;
-  const current = video.getAttribute('src') || '';
-  if (current === url) {
-    if (video.paused) video.play()?.catch(err => video.dataset.playError = String(err));
+  const host = video.classList?.contains('visual-ab') ? video : video.closest?.('.visual-ab');
+  if (host && host.classList.contains('visual-ab')) {
+    setVisualAbSource(host, url);
     return;
   }
-  if (video.src === url) {
-    video.currentTime = 0;
+  const current = video.getAttribute('src') || '';
+  if (current === url || video.src === url) {
     if (video.paused) video.play()?.catch(err => video.dataset.playError = String(err));
     return;
   }
@@ -1028,6 +1034,56 @@ function setVideoSource(video, url) {
   video.src = url;
   video.load();
   video.play()?.catch(err => { video.dataset.playError = String(err); updateMediaStatus(); });
+}
+
+function waitVisualFrame(video, timeoutMs = 8000) {
+  return new Promise(resolve => {
+    let settled = false;
+    const done = ok => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve(ok);
+    };
+    const timer = setTimeout(() => done(video.readyState >= 2 && video.videoWidth > 0), timeoutMs);
+    const check = () => {
+      if (video.readyState >= 2 && video.videoWidth > 1) {
+        if (typeof video.requestVideoFrameCallback === 'function') video.requestVideoFrameCallback(() => done(true));
+        else done(true);
+      }
+    };
+    video.addEventListener('loadeddata', check, { once: true });
+    video.addEventListener('canplay', check, { once: true });
+    check();
+  });
+}
+
+function setVisualAbSource(host, url) {
+  const a = host.querySelector('.visual-buf-a');
+  const b = host.querySelector('.visual-buf-b');
+  if (!a || !b) return;
+  const active = host.querySelector('.visual-buf.active') || a;
+  if ((active.getAttribute('src') || active.src) === url) {
+    if (active.paused) active.play()?.catch(err => active.dataset.playError = String(err));
+    return;
+  }
+  const standby = active === a ? b : a;
+  const gen = Number(host.dataset.swapGen || '0') + 1;
+  host.dataset.swapGen = String(gen);
+  delete standby.dataset.playError;
+  standby.src = url;
+  standby.load();
+  standby.play()?.catch(err => { standby.dataset.playError = String(err); updateMediaStatus(); });
+  waitVisualFrame(standby).then(ok => {
+    if (host.dataset.swapGen !== String(gen)) return;
+    if (!ok) {
+      updateMediaStatus();
+      return;
+    }
+    standby.classList.add('active');
+    active.classList.remove('active');
+    updateMediaStatus();
+  });
 }
 
 function clearVideoSource(video) {
@@ -1204,7 +1260,8 @@ function updateMediaStatusNow() {
   const so = screenOpening();
   const visualDef = state.workspaceLayers.find(x => x.id === 'visual-content');
   const stageDef = state.workspaceLayers.find(x => x.id === 'stage-content');
-  const visualEl = visualDef ? document.querySelector(`[data-canvas-layer-id="${CSS.escape(visualDef.id)}"]`) : null;
+  const visualHost = visualDef ? document.querySelector(`[data-canvas-layer-id="${CSS.escape(visualDef.id)}"]`) : null;
+  const visualEl = visualHost?.querySelector?.('.visual-buf.active') || visualHost;
   const stageEl = stageDef ? (document.querySelector(`[data-canvas-layer-id="${CSS.escape(stageDef.id)}"] video`) || document.querySelector(`[data-canvas-layer-id="${CSS.escape(stageDef.id)}"]`)) : null;
   const visualTime = (visualEl && !isNaN(visualEl.currentTime) && visualEl.currentTime > 0) ? `${visualEl.currentTime.toFixed(1)}s` : '0.0s';
   const stageTime = (stageEl && !isNaN(stageEl.currentTime) && stageEl.currentTime > 0) ? `${stageEl.currentTime.toFixed(1)}s` : '0.0s';

@@ -104,6 +104,15 @@ html,body{
 
 
 /* Layer 01: Visual Content (Backmost - z: 10) */
+#stageComposition.live-pending{
+  opacity:0;
+  transition:opacity 0.7s ease;
+  background:transparent;
+}
+#stageComposition.live-armed{
+  opacity:1;
+  transition:opacity 0.7s ease;
+}
 .screens{
   position:absolute;
   left:0;
@@ -122,7 +131,7 @@ html,body{
   height:100%;
   object-fit:cover;
   opacity:0;
-  transition:opacity 0.4s ease;
+  transition:opacity 0.7s ease;
   background:transparent;
   pointer-events:none;
   z-index:1;

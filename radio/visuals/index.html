@@ -8,7 +8,7 @@
 <meta name="description" content="AllThings140Radio Live Visuals — Synchronized 24/7 dubstep visual transmission.">
 <title>AllThings140Radio // Visuals</title>
 <link rel="icon" href="../assets/allthings140-logo-64.png" sizes="64x64" type="image/png">
-<link rel="stylesheet" href="../room/stage.css?v=3.1.0">
+<link rel="stylesheet" href="../room/stage.css?v=3.2.0">
 <link rel="stylesheet" href="../room/overlay.css?v=2.4.0">
 <style>
 html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;background:#000;color:#fff;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
@@ -154,7 +154,6 @@ video#legacyFallbackVideo{width:100vw!important;height:100dvh!important;object-f
     const fallbackVisible = () => !document.getElementById("legacyFallback")?.hidden;
     
     const playVideo = () => {
-      if (document.hidden || !fallbackVisible()) return;
       const p = video.play();
       if (p !== undefined) {
         p.catch(() => {
@@ -193,31 +192,6 @@ video#legacyFallbackVideo{width:100vw!important;height:100dvh!important;object-f
       }
 
       video.poster = video.dataset.desktopPoster;
-      if (video.canPlayType("application/vnd.apple.mpegurl")) {
-        useDirectSource(video.dataset.desktopSrc);
-        return;
-      }
-      if (window.Hls && Hls.isSupported()) {
-        desktopHls = new Hls({
-          enableWorker: true,
-          maxBufferLength: 30,
-          maxMaxBufferLength: 60
-        });
-        desktopHls.loadSource(video.dataset.desktopSrc);
-        desktopHls.attachMedia(video);
-        desktopHls.on(Hls.Events.MANIFEST_PARSED, playVideo);
-        desktopHls.on(Hls.Events.ERROR, (_event, data) => {
-          if (!data.fatal || !desktopHls) return;
-          if (data.type === Hls.ErrorTypes.NETWORK_ERROR) desktopHls.startLoad();
-          else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) desktopHls.recoverMediaError();
-          else {
-            desktopHls.destroy();
-            desktopHls = null;
-            useDirectSource(video.dataset.desktopFallback);
-          }
-        });
-        return;
-      }
       useDirectSource(video.dataset.desktopFallback);
     };
 
@@ -229,14 +203,10 @@ video#legacyFallbackVideo{width:100vw!important;height:100dvh!important;object-f
       playVideo();
     });
     video.addEventListener("pause", () => {
-      if (!document.hidden && fallbackVisible()) playVideo();
+      if (fallbackVisible()) playVideo();
     });
     document.addEventListener("visibilitychange", () => {
-      if (document.hidden) {
-        video.pause();
-      } else {
-        playVideo();
-      }
+      if (!document.hidden) playVideo();
     });
   }
 
@@ -415,7 +385,7 @@ video#legacyFallbackVideo{width:100vw!important;height:100dvh!important;object-f
   resolveStatus().catch(() => {});
 })();
 </script>
-<script src="config-live.js?v=2.0.0"></script>
-<script src="../room/workstation-stage.js?v=4.0.0"></script>
+<script src="config-live.js?v=2.1.0"></script>
+<script src="../room/workstation-stage.js?v=4.1.0"></script>
 </body>
 </html>
