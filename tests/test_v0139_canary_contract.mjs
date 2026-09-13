@@ -33,9 +33,10 @@ assert.ok(radioIndex.includes('assets/main-vis-home-hq-v2.mp4'), 'Public home/ch
 console.log('  ✓ Public Chat tab preserves exact legacy background video stack');
 
 const visualsIndex = fs.readFileSync(path.join(ROOT, 'radio/visuals/index.html'), 'utf8');
-assert.ok(visualsIndex.includes('id="visualVideo"'), 'Visuals tab must preserve legacy #visualVideo');
-assert.ok(visualsIndex.includes('../assets/visuals-phone.mp4'), 'Visuals tab must preserve phone video source');
-assert.ok(visualsIndex.includes('../assets/visuals-desktop.mp4'), 'Visuals tab must preserve desktop video source');
+assert.ok(visualsIndex.includes('id="legacyFallbackVideo"') || visualsIndex.includes('id="visualVideo"'), 'Visuals tab must include a background video element');
+assert.ok(visualsIndex.includes('visuals-desktop-v9/index.m3u8'), 'Visuals tab must use HQ HLS from the master');
+assert.ok(!visualsIndex.includes('visuals-desktop.mp4'), 'Visuals tab must not keep the muddy desktop MP4');
+assert.ok(!visualsIndex.includes('phone-visuals'), 'Visuals tab must not keep a separate phone MP4');
 assert.ok(!visualsIndex.includes('chatVisualRenderer'), 'Visuals tab must not share Chat visual renderer');
 console.log('  ✓ Public Visuals tab preserves exact legacy standalone player');
 

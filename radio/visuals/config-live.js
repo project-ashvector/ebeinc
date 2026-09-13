@@ -18,7 +18,5 @@ window.AT140_GREEN_CONFIG={
   preserveFallbackSource:true,
   crossfadeMs:700,
   legacyFallbackHls:"https://allthings140radio.online/assets/visuals-desktop-v9/index.m3u8",
-  legacyFallbackDesktop:"https://allthings140radio.online/assets/visuals-desktop.mp4?v=7.0.0",
-  legacyFallbackMobile:"https://allthings140radio.online/assets/phone-visuals-authoritative-v1.mp4?v=1.0.0",
   streamUrl:"https://stream.ebeinc.online/live.mp3"
 };

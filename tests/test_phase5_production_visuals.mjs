@@ -25,8 +25,9 @@ check(live.includes('../room/stage.js?v=2.5.0'),'public Visuals uses the shared 
 check(live.includes('@media(max-width:680px)') && live.includes('.energy{min-width:0') && live.includes('.avatar small{display:none}'),'mobile viewer bounds fixed-size overlays inside the canonical canvas');
 check(roomEngine===greenEngine,'Green and public renderers remain byte-identical');
 check(roomEngine.includes('}, 25000);') && roomEngine.includes('full 15-second'),'fallback watchdog cannot preempt the bounded cold-media decode budget');
-check(legacy.includes('assets/visuals-desktop-v8/index.m3u8'),'legacy fallback preserves the Phase 2 desktop HLS');
-check(legacy.includes('phone-visuals-authoritative-v1.mp4'),'legacy fallback preserves the separate mobile Visuals asset');
+check(legacy.includes('assets/visuals-desktop-v9/index.m3u8'),'legacy Visuals uses HQ HLS from the master');
+check(!legacy.includes('phone-visuals-authoritative-v1.mp4'),'legacy Visuals must not keep a separate mobile MP4');
+check(!legacy.includes('visuals-desktop.mp4'),'legacy Visuals must not keep the muddy desktop MP4');
 check(legacyRoute===legacy,'routed legacy document is byte-identical to the Phase 2 Visuals page');
 check(read('radio/sw.js')===read('radio/sw-v47.js'),'service worker entry files remain synchronized');
 check(read('radio/sw.js').includes('allthings140-radio-v70'),'service worker cache namespace includes the current persistent-radio shell revision');

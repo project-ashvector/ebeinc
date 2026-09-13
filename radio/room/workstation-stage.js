@@ -117,14 +117,16 @@
     fallbackVideo.playsInline = true;
     fallbackVideo.loop = true;
 
-    const mp4Url = chooseLegacyFallbackUrl();
+    const visualsHlsOnly = !!C.visualsOnly;
+    const mp4Url = visualsHlsOnly ? '' : chooseLegacyFallbackUrl();
     const isMobile = window.matchMedia && window.matchMedia('(max-width: 680px)').matches;
-    const hlsUrl = !isMobile && C.legacyFallbackHls;
+    const hlsUrl = (visualsHlsOnly || !isMobile) && C.legacyFallbackHls;
     const playing = !fallbackVideo.paused && fallbackVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && fallbackVideo.videoWidth > 0;
     if (playing) return true;
 
     const playMp4 = () => {
-      if (mp4Url && fallbackVideo.getAttribute('src') !== mp4Url) {
+      if (!mp4Url) return fallbackVideo.play().catch(() => {});
+      if (fallbackVideo.getAttribute('src') !== mp4Url) {
         fallbackVideo.src = mp4Url;
         fallbackVideo.load();
       }
@@ -145,6 +147,7 @@
           if (!data.fatal || !fallbackHls) return;
           if (data.type === Hls.ErrorTypes.NETWORK_ERROR) fallbackHls.startLoad();
           else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) fallbackHls.recoverMediaError();
+          else if (visualsHlsOnly) fallbackHls.startLoad();
           else {
             fallbackHls.destroy();
             fallbackHls = null;
@@ -155,6 +158,12 @@
         try { await fallbackVideo.play(); } catch (_) {}
       }
     } else if (hlsUrl && fallbackVideo.canPlayType('application/vnd.apple.mpegurl')) {
+      if (fallbackVideo.src !== hlsUrl) {
+        fallbackVideo.src = hlsUrl;
+        fallbackVideo.load();
+      }
+      try { await fallbackVideo.play(); } catch (_) {}
+    } else if (hlsUrl) {
       if (fallbackVideo.src !== hlsUrl) {
         fallbackVideo.src = hlsUrl;
         fallbackVideo.load();

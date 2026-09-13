@@ -80,8 +80,6 @@ video#legacyFallbackVideo{width:100vw!important;height:100dvh!important;object-f
   <div id="legacyFallback" class="legacy-fallback" aria-hidden="true">
     <video id="legacyFallbackVideo" autoplay muted loop playsinline webkit-playsinline preload="metadata" disablepictureinpicture controlslist="nodownload noplaybackrate nofullscreen"
       data-desktop-src="../assets/visuals-desktop-v9/index.m3u8"
-      data-desktop-fallback="../assets/visuals-desktop.mp4?v=7.0.0"
-      data-mobile-src="../assets/phone-visuals-authoritative-v1.mp4?v=1.0.0"
       data-desktop-poster="../assets/visuals-desktop-v9-poster.webp"></video>
     <div id="legacyFallbackLabel" hidden></div>
   </div>
@@ -148,7 +146,6 @@ video#legacyFallbackVideo{width:100vw!important;height:100dvh!important;object-f
     video.muted = true;
     video.defaultMuted = true;
     video.playsInline = true;
-    const mobileQuery = window.matchMedia("(max-width: 680px)");
     let desktopHls = null;
     let selectedMode = "";
     const fallbackVisible = () => !document.getElementById("legacyFallback")?.hidden;
@@ -176,21 +173,13 @@ video#legacyFallbackVideo{width:100vw!important;height:100dvh!important;object-f
     };
 
     const selectVideoSource = () => {
-      const isMobile = mobileQuery.matches;
-      const mode = isMobile ? "mobile" : "desktop";
-      if (selectedMode === mode) return;
-      selectedMode = mode;
+      if (selectedMode === "hls") return;
+      selectedMode = "hls";
       if (desktopHls) {
         desktopHls.destroy();
         desktopHls = null;
       }
       video.removeAttribute("src");
-      if (isMobile) {
-        video.removeAttribute("poster");
-        useDirectSource(video.dataset.mobileSrc);
-        return;
-      }
-
       video.poster = video.dataset.desktopPoster;
       if (video.canPlayType("application/vnd.apple.mpegurl")) {
         useDirectSource(video.dataset.desktopSrc);
@@ -209,19 +198,14 @@ video#legacyFallbackVideo{width:100vw!important;height:100dvh!important;object-f
           if (!data.fatal || !desktopHls) return;
           if (data.type === Hls.ErrorTypes.NETWORK_ERROR) desktopHls.startLoad();
           else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) desktopHls.recoverMediaError();
-          else {
-            desktopHls.destroy();
-            desktopHls = null;
-            useDirectSource(video.dataset.desktopFallback);
-          }
+          else desktopHls.startLoad();
         });
         return;
       }
-      useDirectSource(video.dataset.desktopFallback);
+      useDirectSource(video.dataset.desktopSrc);
     };
 
     selectVideoSource();
-    mobileQuery.addEventListener("change", selectVideoSource);
     playVideo();
     video.addEventListener("ended", () => {
       video.currentTime = 0;
