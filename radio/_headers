@@ -50,6 +50,22 @@
   Cache-Control: public, max-age=31536000, immutable
   Access-Control-Allow-Origin: *
 
+/assets/visuals-desktop-v9/*
+  Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+
+/assets/visuals-desktop-v10/*
+  Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+
+/assets/visuals-desktop-v10-720p/*
+  Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+
+/assets/visuals-desktop-abr/*
+  Cache-Control: public, max-age=60
+  Access-Control-Allow-Origin: *
+
 /room/*
   X-Robots-Tag: noindex, nofollow, noarchive
   Cache-Control: no-store

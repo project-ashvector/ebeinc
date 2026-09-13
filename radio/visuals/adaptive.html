@@ -78,8 +78,8 @@ video#legacyFallbackVideo{width:100vw!important;height:100dvh!important;object-f
 <svg class="stage-mask-svg" width="0" height="0" style="position:absolute;pointer-events:none" aria-hidden="true"><defs><mask id="stage-screen-mask" maskContentUnits="objectBoundingBox"><rect width="1" height="1" fill="#fff"></rect><rect id="maskScreenHole" x="0.23" y="0.335" width="0.536" height="0.485" rx="0.015" fill="#000"></rect></mask></defs></svg>
 <main id="stage" data-renderer-shell="visuals-only">
   <div id="legacyFallback" class="legacy-fallback" aria-hidden="true">
-    <video id="legacyFallbackVideo" autoplay muted loop playsinline webkit-playsinline preload="metadata" disablepictureinpicture controlslist="nodownload noplaybackrate nofullscreen"
-      data-desktop-src="../assets/visuals-desktop-v10/index.m3u8"
+    <video id="legacyFallbackVideo" autoplay muted loop playsinline webkit-playsinline preload="auto" disablepictureinpicture controlslist="nodownload noplaybackrate nofullscreen"
+      data-desktop-src="../assets/visuals-desktop-abr/index.m3u8"
       data-desktop-poster="../assets/visuals-desktop-v10-poster.webp"></video>
     <div id="legacyFallbackLabel" hidden></div>
   </div>
@@ -119,6 +119,7 @@ video#legacyFallbackVideo{width:100vw!important;height:100dvh!important;object-f
 <audio id="audio" preload="none"></audio>
 
 <script src="../vendor-hls-1.7.1.min.js"></script>
+<script src="hls-fallback-player.js?v=1.0.0"></script>
 <script>
 (() => {
   "use strict";
@@ -142,81 +143,8 @@ video#legacyFallbackVideo{width:100vw!important;height:100dvh!important;object-f
   let resolving = false;
 
   function initVideo() {
-    if (!video) return;
-    video.muted = true;
-    video.defaultMuted = true;
-    video.playsInline = true;
-    let desktopHls = null;
-    let selectedMode = "";
-    const fallbackVisible = () => !document.getElementById("legacyFallback")?.hidden;
-
-    const playVideo = () => {
-      const p = video.play();
-      if (p !== undefined) {
-        p.catch(() => {
-          // Retry on user interaction if autoplay blocked
-          const unlock = () => {
-            video.play().catch(() => {});
-            document.removeEventListener("pointerdown", unlock);
-            document.removeEventListener("keydown", unlock);
-          };
-          document.addEventListener("pointerdown", unlock, { once: true });
-          document.addEventListener("keydown", unlock, { once: true });
-        });
-      }
-    };
-
-    const useDirectSource = source => {
-      video.src = source;
-      video.load();
-      playVideo();
-    };
-
-    const selectVideoSource = () => {
-      if (selectedMode === "hls") return;
-      selectedMode = "hls";
-      if (desktopHls) {
-        desktopHls.destroy();
-        desktopHls = null;
-      }
-      video.removeAttribute("src");
-      video.poster = video.dataset.desktopPoster;
-      if (video.canPlayType("application/vnd.apple.mpegurl")) {
-        useDirectSource(video.dataset.desktopSrc);
-        return;
-      }
-      if (window.Hls && Hls.isSupported()) {
-        desktopHls = new Hls({
-          enableWorker: true,
-          maxBufferLength: 30,
-          maxMaxBufferLength: 60
-        });
-        desktopHls.loadSource(video.dataset.desktopSrc);
-        desktopHls.attachMedia(video);
-        desktopHls.on(Hls.Events.MANIFEST_PARSED, playVideo);
-        desktopHls.on(Hls.Events.ERROR, (_event, data) => {
-          if (!data.fatal || !desktopHls) return;
-          if (data.type === Hls.ErrorTypes.NETWORK_ERROR) desktopHls.startLoad();
-          else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) desktopHls.recoverMediaError();
-          else desktopHls.startLoad();
-        });
-        return;
-      }
-      useDirectSource(video.dataset.desktopSrc);
-    };
-
-    selectVideoSource();
-    playVideo();
-    video.addEventListener("ended", () => {
-      video.currentTime = 0;
-      playVideo();
-    });
-    video.addEventListener("pause", () => {
-      if (fallbackVisible()) playVideo();
-    });
-    document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) playVideo();
-    });
+    if (!video || !window.AT140HlsFallback) return;
+    window.AT140HlsFallback.start(video);
   }
 
   function setButton(state, label) {
@@ -395,6 +323,6 @@ video#legacyFallbackVideo{width:100vw!important;height:100dvh!important;object-f
 })();
 </script>
 <script src="config-live.js?v=2.2.0"></script>
-<script src="../room/workstation-stage.js?v=4.2.0"></script>
+<script src="../room/workstation-stage.js?v=4.3.0"></script>
 </body>
 </html>

@@ -1,0 +1,121 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>visuals-hls-soak</title>
+<style>
+html,body{margin:0;background:#000;color:#fff;font:14px monospace}
+#legacyFallback{position:fixed;inset:0;z-index:5}
+video{width:100vw;height:100vh;object-fit:cover}
+#stageComposition{position:fixed;inset:0;z-index:10;background:#111;opacity:0;transition:opacity .7s ease}
+#stageComposition.live-pending{opacity:0}
+#stageComposition.live-armed{opacity:1}
+#out{position:fixed;z-index:20;left:8px;bottom:8px;white-space:pre}
+</style>
+<div id="legacyFallback">
+  <video id="legacyFallbackVideo" muted autoplay playsinline loop preload="auto"
+    data-desktop-src="../assets/visuals-desktop-abr/index.m3u8"
+    data-desktop-poster="../assets/visuals-desktop-v10-poster.webp"></video>
+</div>
+<div id="stageComposition" hidden></div>
+<pre id="out">starting</pre>
+<script src="../vendor-hls-1.7.1.min.js"></script>
+<script src="hls-fallback-player.js?v=1.0.0"></script>
+<script>
+(async () => {
+  const video = document.getElementById('legacyFallbackVideo');
+  const composition = document.getElementById('stageComposition');
+  const out = document.getElementById('out');
+  const report = {
+    startupMs: null,
+    variants: [],
+    errors: [],
+    retries: 0,
+    liveToFallback: [],
+    fallbackToLive: [],
+    hiddenPause: false,
+    blackFrames: 0,
+    engines: [],
+    ok: false
+  };
+  const snap = () => {
+    const hlsOn = window.AT140HlsFallback?.hasDecodedFrame();
+    const liveOn = composition.classList.contains('live-armed') && !composition.hidden;
+    if (!hlsOn && !liveOn) report.blackFrames += 1;
+    return { hlsOn, liveOn, paused: video.paused, w: video.videoWidth };
+  };
+  window.AT140HlsFallback.start(video);
+  const t0 = Date.now();
+  const ready = await window.AT140HlsFallback.waitForFrame(15000);
+  report.startupMs = Date.now() - t0;
+  report.ready = ready;
+  const stats = window.AT140HlsFallback.stats();
+  report.variants = stats.levels;
+  report.engines.push(stats.engine);
+  report.retries = stats.retries;
+  report.errors = stats.errors;
+
+  document.dispatchEvent(new Event('visibilitychange'));
+  if (document.hidden) report.hiddenPause = video.paused;
+  else {
+    Object.defineProperty(document, 'hidden', { configurable: true, get: () => true });
+    document.dispatchEvent(new Event('visibilitychange'));
+    await new Promise(r => setTimeout(r, 400));
+    report.hiddenPause = video.paused;
+    Object.defineProperty(document, 'hidden', { configurable: true, get: () => false });
+    document.dispatchEvent(new Event('visibilitychange'));
+  }
+
+  const toLive = async () => {
+    composition.hidden = false;
+    composition.classList.add('live-pending');
+    composition.classList.remove('live-armed');
+    await new Promise(r => setTimeout(r, 120));
+    const mid = snap();
+    composition.classList.remove('live-pending');
+    composition.classList.add('live-armed');
+    await new Promise(r => setTimeout(r, 750));
+    const end = snap();
+    return { mid, end, hlsKept: !mid.paused && mid.w > 0 };
+  };
+  const toFallback = async () => {
+    const before = snap();
+    composition.classList.remove('live-armed');
+    composition.classList.add('live-pending');
+    window.AT140HlsFallback.play();
+    const confirmed = await window.AT140HlsFallback.waitForFrame(8000);
+    await new Promise(r => setTimeout(r, 750));
+    composition.classList.remove('live-pending');
+    composition.hidden = true;
+    const end = snap();
+    return { before, confirmed, end, hlsPlaying: end.hlsOn };
+  };
+
+  for (let i = 0; i < 20; i++) {
+    report.fallbackToLive.push(await toLive());
+    report.liveToFallback.push(await toFallback());
+  }
+
+  const after = window.AT140HlsFallback.stats();
+  report.retries = after.retries;
+  report.errors = after.errors;
+  report.variants = after.levels;
+  report.currentLevel = after.currentLevel;
+  window.AT140HlsFallback.destroy();
+  const destroyed = !window.AT140HlsFallback.stats().url || window.AT140HlsFallback.stats().engine === 'idle';
+  window.AT140HlsFallback.start(video);
+  await window.AT140HlsFallback.waitForFrame(8000);
+  report.destroyRestarted = window.AT140HlsFallback.hasDecodedFrame();
+  report.destroyedIdle = destroyed;
+  report.ok = report.ready && report.blackFrames === 0 && !report.hiddenPause
+    && report.fallbackToLive.every(x => x.hlsKept)
+    && report.liveToFallback.every(x => x.hlsPlaying)
+    && report.destroyRestarted;
+  out.textContent = JSON.stringify(report, null, 2);
+  document.title = report.ok ? 'SOAK_OK' : 'SOAK_FAIL';
+  document.documentElement.dataset.soak = report.ok ? 'ok' : 'fail';
+  window.__SOAK_REPORT__ = report;
+  fetch('/__soak_report', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(report) }).catch(() => {});
+})().catch((err) => {
+  document.title = 'SOAK_FAIL';
+  document.getElementById('out').textContent = String(err && err.stack || err);
+});
+</script>

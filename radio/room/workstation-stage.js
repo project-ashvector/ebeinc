@@ -74,6 +74,7 @@
   let routingPollInFlight = false;
   let workstationLive = false;
   let workstationLivePollInFlight = false;
+  let testLiveFrameOverride = false;
   let workstationLeaseStartedAt = 0;
   let workstationServerOffset = 0;
   let scheduledVisualId = '';
@@ -107,6 +108,12 @@
     return mobile ? (C.legacyFallbackMobile || C.legacyFallbackDesktop) : (C.legacyFallbackDesktop || C.legacyFallbackMobile);
   }
 
+  function fallbackHasFrame() {
+    if (window.AT140HlsFallback) return window.AT140HlsFallback.hasDecodedFrame();
+    const fallbackVideo = $('#legacyFallbackVideo');
+    return Boolean(fallbackVideo && !fallbackVideo.paused && fallbackVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && fallbackVideo.videoWidth > 0);
+  }
+
   async function ensureFallbackReady() {
     const fallbackVideo = $('#legacyFallbackVideo');
     const fallback = $('#legacyFallback');
@@ -119,9 +126,17 @@
 
     const visualsHlsOnly = !!C.visualsOnly;
     const mp4Url = visualsHlsOnly ? '' : chooseLegacyFallbackUrl();
-    const isMobile = window.matchMedia && window.matchMedia('(max-width: 680px)').matches;
-    const hlsUrl = (visualsHlsOnly || !isMobile) && C.legacyFallbackHls;
-    const playing = !fallbackVideo.paused && fallbackVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && fallbackVideo.videoWidth > 0;
+    const hlsUrl = C.legacyFallbackHls || fallbackVideo.dataset.desktopSrc;
+    if (hlsUrl && !fallbackVideo.dataset.desktopSrc) fallbackVideo.dataset.desktopSrc = hlsUrl;
+
+    if (visualsHlsOnly && window.AT140HlsFallback) {
+      window.AT140HlsFallback.start(fallbackVideo);
+      window.AT140HlsFallback.play();
+      if (fallbackHasFrame()) return true;
+      return window.AT140HlsFallback.waitForFrame(8000);
+    }
+
+    const playing = fallbackHasFrame();
     if (playing) return true;
 
     const playMp4 = () => {
@@ -173,7 +188,7 @@
       await playMp4();
     }
 
-    if (fallbackVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && fallbackVideo.videoWidth > 0) return true;
+    if (fallbackHasFrame()) return true;
     try {
       await waitForDecodedFrame(fallbackVideo, 8000);
       return true;
@@ -259,17 +274,25 @@
         ? 'LEGACY VISUAL SAFETY MODE'
         : 'VISUAL SAFETY FALLBACK';
       await ensureFallbackReady();
+      const hlsReady = fallbackHasFrame() || await ensureFallbackReady();
+      if (!hlsReady) log('hls_not_ready_before_live_fade', { reason });
       if (composition) {
         composition.classList.remove('live-armed');
-        composition.classList.remove('live-pending');
-        composition.hidden = true;
+        composition.classList.add('live-pending');
       }
-      pauseCompositorMedia();
-      log('room_visual_mode', { mode: next, reason });
+      await new Promise(resolve => setTimeout(resolve, CROSSFADE_MS));
+      if (roomVisualMode === 'legacy') {
+        if (composition) {
+          composition.classList.remove('live-pending');
+          composition.hidden = true;
+        }
+        pauseCompositorMedia();
+      }
+      log('room_visual_mode', { mode: next, reason, hlsReady: fallbackHasFrame() });
       return;
     }
 
-    // Keep fallback visible and covering until a live visual frame exists.
+    // Keep HLS covering until a live visual frame exists. Never pause HLS.
     if (fallback) fallback.hidden = false;
     await ensureFallbackReady();
     if (composition) {
@@ -292,10 +315,6 @@
         composition.classList.add('live-armed');
       }
       await new Promise(resolve => setTimeout(resolve, CROSSFADE_MS));
-      if (roomVisualMode === 'new' && rendererMediaReady().ready) {
-        if (fallback) fallback.hidden = true;
-        if (fallbackVideo) { try { fallbackVideo.pause(); } catch (_) {} }
-      }
     } else if (roomVisualMode === 'new') {
       engageAutomaticLegacyFallback('live_first_frame_missing');
     }
@@ -558,6 +577,7 @@
 
 
   function rendererMediaReady() {
+    if (testLiveFrameOverride) return { ready: true, visualReady: true, stageReady: true, stageRequired: false };
     const activeVideo = videos[activeIndex];
     const stageVideo = document.getElementById('stageVideo');
     const layers = Array.isArray(layout?.layers) ? layout.layers : [];
@@ -1564,4 +1584,33 @@ Track: ${currentStationStatus?.current_title || 'LIVE RADIO'} (Seq: ${currentSta
     }
   });
   window.addEventListener('online', connect);
+  window.addEventListener('pagehide', () => {
+    if (fallbackHls) {
+      try { fallbackHls.destroy(); } catch (_) {}
+      fallbackHls = null;
+    }
+    if (window.AT140HlsFallback) window.AT140HlsFallback.destroy();
+  });
+  window.AT140VisualsHandoff = {
+    toLive: (reason = 'test_handoff') => setRoomVisualMode('new', reason),
+    toFallback: (reason = 'test_handoff') => setRoomVisualMode('legacy', reason),
+    markLiveDecoded: (value = true) => { testLiveFrameOverride = Boolean(value); },
+    snapshot: () => {
+      const composition = $('#stageComposition');
+      const fallback = $('#legacyFallback');
+      const fallbackVideo = $('#legacyFallbackVideo');
+      return {
+        mode: roomVisualMode,
+        reason: roomVisualModeReason,
+        fallbackHidden: Boolean(fallback?.hidden),
+        fallbackPaused: Boolean(fallbackVideo?.paused),
+        fallbackWidth: fallbackVideo?.videoWidth || 0,
+        hls: window.AT140HlsFallback ? window.AT140HlsFallback.stats() : null,
+        compositionHidden: Boolean(composition?.hidden),
+        livePending: Boolean(composition?.classList.contains('live-pending')),
+        liveArmed: Boolean(composition?.classList.contains('live-armed')),
+        liveReady: rendererMediaReady().ready
+      };
+    }
+  };
 })();

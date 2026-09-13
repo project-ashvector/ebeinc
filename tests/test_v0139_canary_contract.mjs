@@ -34,7 +34,7 @@ console.log('  ✓ Public Chat tab preserves exact legacy background video stack
 
 const visualsIndex = fs.readFileSync(path.join(ROOT, 'radio/visuals/index.html'), 'utf8');
 assert.ok(visualsIndex.includes('id="legacyFallbackVideo"') || visualsIndex.includes('id="visualVideo"'), 'Visuals tab must include a background video element');
-assert.ok(visualsIndex.includes('visuals-desktop-v10/index.m3u8'), 'Visuals tab must use HQ HLS from the master');
+assert.ok(visualsIndex.includes('visuals-desktop-abr/index.m3u8'), 'Visuals tab must use the ABR HLS ladder with v10 as the top rung');
 assert.ok(!visualsIndex.includes('visuals-desktop.mp4'), 'Visuals tab must not keep the muddy desktop MP4');
 assert.ok(!visualsIndex.includes('phone-visuals'), 'Visuals tab must not keep a separate phone MP4');
 assert.ok(!visualsIndex.includes('chatVisualRenderer'), 'Visuals tab must not share Chat visual renderer');
