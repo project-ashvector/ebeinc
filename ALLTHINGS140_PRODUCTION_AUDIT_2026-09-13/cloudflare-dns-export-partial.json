@@ -1,0 +1,23 @@
+{
+  "exported_at": "2026-09-14T05:15:00Z",
+  "zones": [
+    {
+      "zone": "allthings140radio.online",
+      "zone_id": "5af6587ed022402d109c0344d44a1b79",
+      "records": [
+        {
+          "error": "HTTP Error 403: Forbidden"
+        }
+      ]
+    },
+    {
+      "zone": "ebeinc.online",
+      "zone_id": "2adbaa250498efd7472709cc416280a0",
+      "records": [
+        {
+          "error": "HTTP Error 403: Forbidden"
+        }
+      ]
+    }
+  ]
+}
