@@ -47,14 +47,16 @@ let future = [];
 let editorZoom = 1;
 let snapEnabled = true;
 let currentView = 'Dashboard';
-let appVersion = '0.2.1';
+let appVersion = '0.2.2';
 let buildInfo = { gitCommit: 'unknown', buildUnix: '0' };
 let mediaLibrary = [];
 const layerLibraries = new Map();
 let stateNeedsSave = false;
 let visualsSearchFilter = '';
 let isPublishing = false;
-let workstationLive = { active: false, phase: 'READY', layoutHash: '', heartbeatTimer: null, heartbeatFailures: 0, startedAt: 0, error: '', greenAck: null, visualsAck: null };
+let workstationLive = { active: false, phase: 'READY', layoutHash: '', heartbeatTimer: null, heartbeatFailures: 0, startedAt: 0, error: '', greenAck: null, visualsAck: null, wantLive: false, recoverTimer: null, recoverAttempts: 0 };
+const LIVE_RECOVER_MAX_ATTEMPTS = 3;
+const LIVE_RECOVER_DELAY_MS = 2000;
 let liveRouting = { chat: 'legacy', visuals: 'legacy', lastChanged: null };
 let liveHealth = {
   vm2: 'ONLINE',
@@ -736,7 +738,7 @@ function dashboard() {
       <h2>${escapeHtml(liveBannerTitle)}</h2>
       <p>${escapeHtml(liveBannerCopy)}</p>
     </div>
-    <button id="dashboardLiveVisuals" class="${workstationLive.active ? 'btn-live-stop' : 'btn-live-primary'}">${workstationLive.active ? 'STOP LIVE VISUALS' : (hasValidStage ? '● LIVE VISUALS' : 'STAGE REQUIRED')}</button>
+    <button id="dashboardLiveVisuals" class="${workstationLive.active ? 'btn-live-stop' : 'btn-live-primary'}">${workstationLive.active ? 'STOP LIVE VISUALS' : (!hasValidStage ? 'STAGE REQUIRED' : (workstationLive.phase === 'CONNECTION LOST' ? 'RECONNECT ● LIVE' : (workstationLive.phase === 'READY' ? '● LIVE VISUALS' : workstationLive.phase)))}</button>
   </section>
   <div class="live-truth-grid">
     <article><small>CONNECTION</small><b>${metrics.ws === 'LIVE' ? 'HEALTHY' : metrics.ws}</b></article>
@@ -1822,7 +1824,7 @@ function bind(name) {
   $$('[data-view]').forEach(b => b.onclick = () => render(b.dataset.view));
   if (name === 'Dashboard') {
     const liveButton = $('#dashboardLiveVisuals');
-    if (liveButton) liveButton.onclick = () => workstationLive.active ? stopWorkstationLive() : startWorkstationLive();
+    if (liveButton) liveButton.onclick = () => livePrimaryAction();
     return;
   }
   if (name === 'Visual Workspace') return;
@@ -2153,6 +2155,7 @@ function connect() {
     socket.send(JSON.stringify({ type: 'join', environment: 'live', name: 'Visuals Workstation', avatar: 'orb-purple', audience: false, event_id: crypto.randomUUID() }));
     activity('Realtime connected', CANONICAL_REALTIME_WS);
     updateHealth();
+    adoptOrRecoverLiveSession('realtime-open').catch(() => {});
   };
   socket.onmessage = e => {
     if (ws !== socket) return;
@@ -2169,8 +2172,7 @@ function connect() {
         if (role === 'green-room-renderer') workstationLive.greenAck = d.ack;
         if (role === 'visuals-page-renderer') workstationLive.visualsAck = d.ack;
         if (workstationLive.active) {
-          renderLiveButtonState();
-          if (currentView === 'Dashboard') render('Dashboard');
+          syncLiveDashboard();
         }
         if (changed && state.lastPublishedHash === d.ack.layoutHash) {
           invoke('save_state', { state }).catch(() => {});
@@ -2810,6 +2812,146 @@ async function testVisualOnGreenWithProgress() {
   }
 }
 
+
+function syncLiveDashboard() {
+  renderLiveButtonState();
+  if (currentView === 'Dashboard') render('Dashboard');
+}
+
+function livePrimaryAction() {
+  if (workstationLive.active) return stopWorkstationLive();
+  if (workstationLive.phase === 'CONNECTION LOST') return recoverWorkstationLive();
+  return startWorkstationLive();
+}
+
+function clearLiveRecoverTimer() {
+  if (workstationLive.recoverTimer) {
+    clearTimeout(workstationLive.recoverTimer);
+    workstationLive.recoverTimer = null;
+  }
+}
+
+function scheduleLiveAutoRecover(reason = 'auto') {
+  if (!workstationLive.wantLive || workstationLive.active) return;
+  if (workstationLive.phase !== 'CONNECTION LOST' && workstationLive.phase !== 'READY') return;
+  if (workstationLive.recoverAttempts >= LIVE_RECOVER_MAX_ATTEMPTS) {
+    activity('LIVE auto-recover stopped', `max ${LIVE_RECOVER_MAX_ATTEMPTS} attempts · ${reason}`);
+    return;
+  }
+  clearLiveRecoverTimer();
+  const attempt = workstationLive.recoverAttempts + 1;
+  workstationLive.recoverTimer = setTimeout(async () => {
+    workstationLive.recoverTimer = null;
+    if (!workstationLive.wantLive || workstationLive.active) return;
+    if (metrics.ws !== 'LIVE') {
+      scheduleLiveAutoRecover('waiting for realtime ws');
+      return;
+    }
+    workstationLive.recoverAttempts = attempt;
+    activity('LIVE auto-recover attempt', `${attempt}/${LIVE_RECOVER_MAX_ATTEMPTS} · ${reason}`);
+    try {
+      await recoverWorkstationLive({ auto: true });
+    } catch (_) {}
+  }, LIVE_RECOVER_DELAY_MS * attempt);
+}
+
+function liveReadyForLease() {
+  const stageLayer = state?.workspaceLayers?.find(x => x.id === 'stage-content' || x.role === 'stage');
+  const stageMedia = stageLayer ? (selectedMedia(stageLayer) || stageLayer.selectedMedia) : null;
+  const hasValidStage = Boolean(stageMedia && (stageMedia.sourcePath || stageMedia.runtimePath));
+  const valid = (state?.playlist || []).filter(item => item.enabled !== false && !item.missingLocalSource);
+  return { hasValidStage, validCount: valid.length, ready: hasValidStage && valid.length > 0 };
+}
+
+async function persistWantLive(flag) {
+  workstationLive.wantLive = Boolean(flag);
+  try {
+    if (state && typeof state === 'object') {
+      state.wantLive = workstationLive.wantLive;
+      await invoke('save_state', { state });
+    }
+  } catch (_) {}
+}
+
+async function adoptOrRecoverLiveSession(reason = 'realtime-open') {
+  if (workstationLive.active || !workstationLive.wantLive) return;
+  try {
+    const health = await invoke('get_visual_health').catch(() => null);
+    const lease = health?.realtime?.workstationLive || health?.vm2?.workstationLive || health?.workstationLive || null;
+    const hash = state?.lastPublishedHash || workstationLive.layoutHash || '';
+    if (lease?.active && lease?.source === 'workstation' && hash && lease.layoutHash === hash) {
+      workstationLive.layoutHash = hash;
+      workstationLive.active = true;
+      workstationLive.phase = 'LIVE';
+      workstationLive.startedAt = Number(lease.startedAt) || Date.now();
+      workstationLive.recoverAttempts = 0;
+      clearLiveRecoverTimer();
+      startLiveHeartbeat();
+      activity('LIVE session adopted', `${reason} · rev ${hash.slice(0, 12)}`);
+      syncLiveDashboard();
+      return;
+    }
+  } catch (_) {}
+  if (workstationLive.phase === 'CONNECTION LOST' || workstationLive.wantLive) {
+    scheduleLiveAutoRecover(reason);
+  }
+}
+
+async function recoverWorkstationLive({ auto = false } = {}) {
+  if (workstationLive.active) return;
+  const ready = liveReadyForLease();
+  if (!ready.ready) {
+    workstationLive.phase = ready.hasValidStage ? 'ERROR' : 'READY';
+    activity('LIVE recover blocked', ready.hasValidStage ? 'visuals not ready' : 'STAGE REQUIRED');
+    syncLiveDashboard();
+    if (!auto) alert('RECONNECT blocked: stage/visuals not ready.');
+    return;
+  }
+  try {
+    workstationLive.phase = 'RECONNECTING';
+    syncLiveDashboard();
+    if (metrics.ws !== 'LIVE') {
+      await invoke('ensure_workstation_live_path');
+    }
+    const layoutHash = workstationLive.layoutHash || state?.lastPublishedHash || '';
+    if (!layoutHash) {
+      if (auto) {
+        activity('LIVE recover blocked', 'no layout hash · auto will not full-start');
+        workstationLive.phase = 'CONNECTION LOST';
+        syncLiveDashboard();
+        return;
+      }
+      activity('LIVE recover fallback', 'no layout hash · full LIVE start');
+      return startWorkstationLive();
+    }
+    // Lease-only recover: no media republish, no routing KV changes
+    await invoke('set_workstation_live', { action: 'start', layoutHash });
+    workstationLive.layoutHash = layoutHash;
+    state.lastPublishedHash = layoutHash;
+    await persistWantLive(true);
+    startLiveHeartbeat();
+    workstationLive.active = true;
+    workstationLive.phase = 'LIVE';
+    workstationLive.startedAt = Date.now();
+    workstationLive.recoverAttempts = 0;
+    clearLiveRecoverTimer();
+    activity(auto ? 'LIVE RECOVERED (auto)' : 'LIVE RECOVERED', `Revision: ${layoutHash.slice(0, 12)}`);
+    syncLiveDashboard();
+    checkProductionRenderers(layoutHash).then(() => syncLiveDashboard()).catch(() => {});
+  } catch (err) {
+    workstationLive.active = false;
+    workstationLive.phase = 'CONNECTION LOST';
+    workstationLive.error = String(err);
+    activity('LIVE recover failed', String(err));
+    syncLiveDashboard();
+    if (workstationLive.wantLive) scheduleLiveAutoRecover('recover-failed');
+    if (!auto) {
+      // Fall back to full start only on manual reconnect failure
+      try { return await startWorkstationLive(); } catch (_) {}
+    }
+  }
+}
+
 function renderLiveButtonState() {
   const button = $('#liveVisuals');
   const dashboardButton = $('#dashboardLiveVisuals');
@@ -2827,7 +2969,9 @@ function renderLiveButtonState() {
       target.className = 'btn-live-primary btn-stage-missing';
       target.disabled = false;
     } else {
-      target.textContent = workstationLive.phase === 'READY' ? '● LIVE VISUALS' : workstationLive.phase;
+      if (workstationLive.phase === 'READY') target.textContent = '● LIVE VISUALS';
+      else if (workstationLive.phase === 'CONNECTION LOST') target.textContent = 'RECONNECT ● LIVE';
+      else target.textContent = workstationLive.phase;
       target.className = 'btn-live-primary';
       target.disabled = !['READY', 'ERROR', 'CONNECTION LOST'].includes(workstationLive.phase);
     }
@@ -2881,7 +3025,9 @@ function startLiveHeartbeat() {
       workstationLive.phase = 'CONNECTION LOST';
       workstationLive.error = String(err);
       activity('Workstation live heartbeat lost', String(err));
-      renderLiveButtonState();
+      try { await invoke('set_workstation_live', { action: 'stop', layoutHash: workstationLive.layoutHash || null }); } catch (_) {}
+      syncLiveDashboard();
+      if (workstationLive.wantLive) scheduleLiveAutoRecover('heartbeat-lost');
     }
   }, 1500);
 }
@@ -2917,9 +3063,11 @@ async function startWorkstationLive() {
     workstationLive.active = true;
     workstationLive.phase = 'LIVE';
     workstationLive.startedAt = Date.now();
+    workstationLive.recoverAttempts = 0;
+    clearLiveRecoverTimer();
+    await persistWantLive(true);
     activity('SOURCE LIVE', `Revision: ${workstationLive.layoutHash.slice(0, 12)} · ${valid.length}/${valid.length} visuals ready`);
-    renderLiveButtonState();
-    if (currentView === 'Dashboard') render('Dashboard');
+    syncLiveDashboard();
 
     // Open destinations in browser
     openStagingBrowser(CANONICAL_GREEN_URL).catch(() => {});
@@ -2927,8 +3075,7 @@ async function startWorkstationLive() {
 
     // Check initial viewer ACKs reactively
     checkProductionRenderers(workstationLive.layoutHash).then(() => {
-      renderLiveButtonState();
-      if (currentView === 'Dashboard') render('Dashboard');
+      syncLiveDashboard();
     }).catch(() => {});
   } catch (err) {
     clearInterval(workstationLive.heartbeatTimer);
@@ -2947,6 +3094,8 @@ async function startWorkstationLive() {
 
 async function stopWorkstationLive() {
   clearInterval(workstationLive.heartbeatTimer); workstationLive.heartbeatTimer = null;
+  clearLiveRecoverTimer();
+  workstationLive.recoverAttempts = 0;
   workstationLive.phase = 'STOPPING'; renderLiveButtonState();
   try { await invoke('set_workstation_live', { action: 'stop', layoutHash: workstationLive.layoutHash || null }); } catch (_) {}
   try { await invoke('set_visual_routing', { chat: 'legacy', visuals: null, reason: 'workstation_live_stopped', confirmation: 'PROMOTE GREEN ROOM' }); } catch (_) {}
@@ -2955,8 +3104,9 @@ async function stopWorkstationLive() {
   workstationLive.layoutHash = '';
   workstationLive.greenAck = null;
   workstationLive.visualsAck = null;
+  await persistWantLive(false);
   activity('Live visuals stopped', 'Green Room returned to safe fallback');
-  renderLiveButtonState();
+  syncLiveDashboard();
 }
 
 function buildAppShell() {
@@ -3064,18 +3214,18 @@ Green staging was updated through Realtime. The status pill will change to RENDE
   };
   window.__triggerPublishStaging = triggerPublishStaging;
   $('#publish').onclick = triggerPublishStaging;
-  $('#liveVisuals').onclick = () => workstationLive.active ? stopWorkstationLive() : startWorkstationLive();
+  $('#liveVisuals').onclick = () => livePrimaryAction();
   renderLiveButtonState();
 }
 
 // Startup Sequence
-let info = { version: '0.2.1' };
+let info = { version: '0.2.2' };
 try {
   info = await invoke('app_info');
 } catch (e) {
-  info = { version: '0.2.1' };
+  info = { version: '0.2.2' };
 }
-appVersion = info.version || '0.2.1';
+appVersion = info.version || '0.2.2';
 buildInfo = info;
 
 try {
@@ -3091,6 +3241,7 @@ try {
   };
 }
 log = state.activity || [];
+workstationLive.wantLive = Boolean(state.wantLive);
 ensureLayerSystem();
 buildAppShell();
 if (state.recoveredFromBackup) {

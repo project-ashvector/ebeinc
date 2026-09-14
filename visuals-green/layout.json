@@ -153,9 +153,9 @@
       "z": 10
     }
   ],
-  "layoutHash": "33709230b376cfa71f164ac3a0836c3804af4b314051565cec2ab217da302994",
-  "layoutId": "layout-20260904T035853744Z",
-  "layoutRevision": "20260904T035853744Z",
+  "layoutHash": "9c2b790339e0cc1ed497d922608364fd112e5c72099ae4f10bcbb4b89f75ef5c",
+  "layoutId": "layout-20260913T233409007Z",
+  "layoutRevision": "20260913T233409007Z",
   "mediaBaseUrl": "https://visuals-realtime-staging.allthings140radio.online/media",
   "playlist": [
     {
@@ -921,8 +921,8 @@
   ],
   "previewMode": false,
   "productionLocked": false,
-  "publishedAt": "2026-09-04T03:59:14.431502094+00:00",
-  "revision": "20260904T035853744Z",
+  "publishedAt": "2026-09-13T23:34:29.660546175+00:00",
+  "revision": "20260913T233409007Z",
   "safePlaybackMode": true,
   "schemaVersion": 2,
   "screenOpening": {
