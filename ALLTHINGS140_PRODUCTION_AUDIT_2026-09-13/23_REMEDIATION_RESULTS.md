@@ -10,7 +10,9 @@ Post-audit remediation pass. Production stream was not interrupted.
 
 **after:** Secret scan of all 94 commits completed — no private keys, live API tokens, or credential files in diff (only `.env.example` / `config.example.env` placeholders). Push still blocked: `fatal: could not read Username for 'https://github.com'` and `git@github.com: Permission denied (publickey)`.
 
-**result:** **FAIL / BLOCKED** — local history is safe to push once credentials exist. Run `gh auth login` (or configure GitHub SSH deploy key for `project-ashvector/ebeinc`), then `git push origin main` (no force). Current branch: `fix/visuals-24-7-compositor` with additional uncommitted remediation edits.
+**result (remediation):** **FAIL / BLOCKED** — local history safe to push once credentials exist.
+
+**result (final closure):** **PASS** — `gh auth login` completed; `fix/visuals-24-7-compositor` merged into `main`; `git push origin main` → `f415ae8`; `origin/main...main` = **0/0**; branch preserved on remote.
 
 ---
 
@@ -30,7 +32,9 @@ Post-audit remediation pass. Production stream was not interrupted.
 
 **repair:** None applied — restoring live compositor requires operator to start **● LIVE VISUALS** in the workstation app on the authoritative machine, or power on the offline Tailscale visuals workstation.
 
-**result:** **BLOCKED — WORKSTATION OFFLINE / NOT IN LIVE MODE**. Fallback on GCP is **HEALTHY**.
+**result (remediation):** **BLOCKED — WORKSTATION OFFLINE / NOT IN LIVE MODE**. Fallback on GCP is **HEALTHY**.
+
+**result (final closure):** **PASS** — operator enabled **● LIVE VISUALS**; `workstationLive.active=true`, `source=workstation`, heartbeat age &lt;2s at verification. See `24_FINAL_CLOSURE.md`.
 
 ---
 
@@ -99,7 +103,7 @@ Post-audit remediation pass. Production stream was not interrupted.
 | File | Change | Result |
 |------|--------|--------|
 | `tests/test_radio_system.py` | Alert catalog + SW cache guards (audit) | 20/20 PASS |
-| `tests/test_realtime_http.py` | Set `ALLOWED_ORIGINS` / admin tokens / `MEDIA_ROOT` for `create_app()` | 1/10 PASS — tests still use legacy `ADMIN_TOKEN`; need follow-up update for `GREEN_ADMIN_TOKEN`/`LIVE_ADMIN_TOKEN` |
+| `tests/test_realtime_http.py` | Migrated to `GREEN_ADMIN_TOKEN`/`LIVE_ADMIN_TOKEN` + `?environment=` WS contract | **10/10 PASS** (final closure) |
 
 ---
 
@@ -116,3 +120,25 @@ Post-audit remediation pass. Production stream was not interrupted.
 | Android Auto contract | PASS |
 | Oracle stream after mcelog fix | PASS (no interruption) |
 | Hub tests | PASS 13/13 |
+
+---
+
+## Final closure (2026-09-14)
+
+See **`24_FINAL_CLOSURE.md`** for full evidence. Summary:
+
+| Area | Final result |
+|------|--------------|
+| Git/GitHub | PASS — synced, 104 commits on remote |
+| Realtime tests | 10/10 PASS |
+| Visuals LIVE | ONLINE (`workstationLive.active=true`) |
+| Fallback | HEALTHY (HLS 200) |
+| Radio/stream | PASS |
+| Alerts | Injection OFF, entitlement PASS |
+| Oracle | 0 failed units; RAM capacity warning |
+| Auth | PARTIAL (intentional) |
+| Subscriptions | PARTIAL (intentional) |
+| DNS export | BLOCKED |
+| Backups | PASS (prior drill) |
+| Android | PASS |
+| **Overall** | **HEALTHY WITH WARNINGS** |
