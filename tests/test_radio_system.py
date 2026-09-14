@@ -97,28 +97,22 @@ class RadioSystemTest(unittest.TestCase):
         self.assertEqual((status, schedule["takeovers"]), (200, []))
 
     def test_public_alert_catalog_uses_opaque_ids_and_safe_flags(self):
-        self.app.AD_DIR.mkdir(parents=True, exist_ok=True)
-        alert_path = self.app.AD_DIR / "private-server-name.mp3"
-        alert_path.write_bytes(b"ID3test-alert")
-        self.app.save_ad_meta({
-            "interval_seconds": 900,
-            "server_stream_alert_injection_enabled": True,
-            "client_account_alerts_enabled": False,
-            "ads": {alert_path.name: {"enabled": True, "client_delivery_enabled": True, "duration_seconds": 7.25}},
-        })
-        status, _, catalog = self.request("/api/public/alert-catalog")
-        self.assertEqual(status, 200)
-        self.assertEqual(catalog["interval_seconds"], 900)
-        self.assertTrue(catalog["server_stream_alert_injection_enabled"])
-        self.assertFalse(catalog["client_account_alerts_enabled"])
-        self.assertEqual(len(catalog["alerts"]), 1)
-        item = catalog["alerts"][0]
-        self.assertNotIn(alert_path.name, json.dumps(item))
+        # Alert catalog delivery moved to Cloudflare Pages (_worker.js + static
+        # assets). The Python public gateway intentionally does not expose it.
+        status, _, _ = self.request("/api/public/alert-catalog")
+        self.assertEqual(status, 404)
+
+        manifest_path = ROOT / "radio/assets/client-alerts/manifest.json"
+        worker = (ROOT / "radio/_worker.js").read_text(encoding="utf-8")
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        self.assertEqual(manifest["interval_seconds"], 900)
+        self.assertGreaterEqual(len(manifest["alerts"]), 1)
+        item = manifest["alerts"][0]
+        self.assertNotIn(".mp3", item["id"])
         self.assertRegex(item["id"], r"^[a-f0-9]{32}$")
-        request = urllib.request.Request(self.base_url + item["url"], headers={"Range": "bytes=0-2"})
-        with urllib.request.urlopen(request, timeout=3) as response:
-            self.assertEqual(response.status, 206)
-            self.assertEqual(response.read(), b"ID3")
+        self.assertTrue(item["url"].startswith("/api/public/alert-media/"))
+        self.assertIn('SERVER_STREAM_ALERT_INJECTION_ENABLED === "true"', worker)
+        self.assertIn('CLIENT_ACCOUNT_ALERTS_ENABLED !== "false"', worker)
 
     def test_shared_stream_rejects_client_alerts_when_global_injection_is_off(self):
         self.app.AD_DIR.mkdir(parents=True, exist_ok=True)
@@ -316,14 +310,15 @@ class RadioSystemTest(unittest.TestCase):
         self.assertEqual(row["status"], "pending")
 
     def test_worker_and_service_worker_guards(self):
-        worker = (ROOT / "_worker.js").read_text(encoding="utf-8")
-        service_worker = (ROOT / "radio/sw-v47.js").read_text(encoding="utf-8")
+        worker = (ROOT / "radio/_worker.js").read_text(encoding="utf-8")
+        service_worker = (ROOT / "radio/sw.js").read_text(encoding="utf-8")
         app = (ROOT / "radio/app.js").read_text(encoding="utf-8")
+        cache_match = re.search(r'const CACHE = "(allthings140-radio-v\d+)"', service_worker)
+        self.assertIsNotNone(cache_match, "service worker cache version must be declared")
         self.assertNotIn('ebmarah-laptop-ai.tail', worker)
         self.assertIn('const OBS_STREAM_ORIGIN = "https://stream.ebeinc.online/live.mp3"', worker)
         self.assertIn('url.pathname.startsWith("/api/")', service_worker)
         self.assertIn('fetch("/api/public/submissions"', app)
-        self.assertIn('allthings140-radio-v63', service_worker)
         self.assertIn('support.css?v=1.1.0', service_worker)
         self.assertIn('support.js?v=1.1.0', service_worker)
         self.assertIn('const networkFirst =', service_worker)
